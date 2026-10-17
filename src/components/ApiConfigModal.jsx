@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, Save, Terminal, Info, ExternalLink, ShieldAlert, CheckCircle2, RefreshCw } from 'lucide-react';
-import { getApiConfig, saveApiConfig, checkBackendHealth, getGoogleAuthUrl, fetchGscSites } from '../services/seoApi';
+import { Terminal, ShieldAlert, CheckCircle2, RefreshCw, ExternalLink } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { getApiConfig, saveApiConfig, checkBackendHealth, getGoogleAuthUrl, fetchGscSites } from '@/services/seoApi';
 
 export default function ApiConfigModal({ isOpen, onClose, onConfigSaved, activeError }) {
   const [config, setConfig] = useState({
@@ -52,8 +62,6 @@ export default function ApiConfigModal({ isOpen, onClose, onConfigSaved, activeE
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const handleConnectGoogle = async () => {
     try {
       setOauthError('');
@@ -78,103 +86,98 @@ export default function ApiConfigModal({ isOpen, onClose, onConfigSaved, activeE
   const isConnected = backendStatus.hasToken || Boolean(config.apiToken);
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-dialog">
-        <div className="modal-header">
-          <div className="modal-title-wrap">
-            <Terminal size={18} className="modal-icon" />
-            <h3 className="modal-title">Live API Configuration</h3>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent onClose={onClose} className="max-w-lg p-6">
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-md bg-blue-50 text-blue-600">
+              <Terminal className="h-4 w-4" />
+            </div>
+            <DialogTitle>Google API Configuration</DialogTitle>
           </div>
-          <button className="modal-close-btn" onClick={onClose}>
-            <X size={18} />
-          </button>
-        </div>
+        </DialogHeader>
 
-        <div className="modal-body">
-          {/* Status banner */}
-          <div className="google-auth-card">
-            <div className="google-auth-header">
-              <div className="google-auth-status">
-                {isConnected ? (
-                  <span className="badge-connected">
-                    <CheckCircle2 size={15} /> Google Account Connected
-                  </span>
-                ) : (
-                  <span className="badge-disconnected">
-                    <ShieldAlert size={15} /> Google Account Not Connected
-                  </span>
-                )}
-              </div>
+        <div className="space-y-4 py-2">
+          {/* Connection status card */}
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <Badge variant={isConnected ? 'success' : 'destructive'} className="py-1 px-2.5 gap-1.5 font-medium">
+                {isConnected ? <CheckCircle2 className="h-3.5 w-3.5" /> : <ShieldAlert className="h-3.5 w-3.5" />}
+                <span>{isConnected ? 'Account Connected' : 'Not Connected'}</span>
+              </Badge>
 
-              <button
+              <Button
                 type="button"
-                className="btn btn-secondary google-btn"
+                variant="outline"
+                size="sm"
                 onClick={handleConnectGoogle}
+                className="bg-white gap-2 font-medium"
               >
                 <img
                   src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png"
                   alt="Google"
-                  width="16"
-                  height="16"
+                  width="14"
+                  height="14"
                 />
                 <span>{isConnected ? 'Reconnect Google' : 'Connect with Google'}</span>
-              </button>
+              </Button>
             </div>
-
-            <p className="auth-hint">
-              OAuth 2.0 uses your Google Cloud Client ID & Secret to query live Search Console and GA4 metrics.
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Google OAuth 2.0 retrieves authenticated data directly from your verified Google Search Console and GA4 properties.
             </p>
-            {oauthError && <div className="oauth-error-text">{oauthError}</div>}
+            {oauthError && <p className="text-xs text-red-600 font-medium">{oauthError}</p>}
           </div>
 
-          {/* Cloud API Enablement Notice if encountered */}
+          {/* Cloud API Enable Notice */}
           {activeError && activeError.includes('has not been used in project') && (
-            <div className="api-enable-notice">
-              <div className="notice-title">
-                <ShieldAlert size={16} /> Action Required in Google Cloud Console
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3.5 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-amber-800">
+                <ShieldAlert className="h-4 w-4" />
+                <span>Action Needed in Google Cloud Console</span>
               </div>
-              <p>One or more APIs need to be enabled for your project (<strong>554369952704</strong>):</p>
-              <div className="enable-links">
+              <p className="text-xs text-amber-700">
+                Enable the following APIs in project <strong>554369952704</strong>:
+              </p>
+              <div className="flex flex-col gap-1.5 pt-1">
                 <a
                   href="https://console.developers.google.com/apis/api/searchconsole.googleapis.com/overview?project=554369952704"
                   target="_blank"
                   rel="noreferrer"
-                  className="enable-link"
+                  className="text-xs font-medium text-blue-700 underline flex items-center gap-1.5"
                 >
-                  <ExternalLink size={13} /> Enable Google Search Console API
+                  <ExternalLink className="h-3 w-3" /> Enable Google Search Console API
                 </a>
                 <a
                   href="https://console.developers.google.com/apis/api/analyticsdata.googleapis.com/overview?project=554369952704"
                   target="_blank"
                   rel="noreferrer"
-                  className="enable-link"
+                  className="text-xs font-medium text-blue-700 underline flex items-center gap-1.5"
                 >
-                  <ExternalLink size={13} /> Enable Google Analytics Data API
+                  <ExternalLink className="h-3 w-3" /> Enable Google Analytics Data API
                 </a>
               </div>
-              <span className="notice-sub">After clicking Enable, wait 1-2 minutes and click Refresh.</span>
             </div>
           )}
 
-          {/* GSC Site Selection */}
-          <div className="form-group" style={{ marginTop: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label className="form-label">Google Search Console Property</label>
+          {/* GSC Property */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-slate-700">Search Console Property</label>
               {sites.length > 0 && (
                 <button
                   type="button"
-                  className="link-btn"
                   onClick={() => loadSites(config.apiToken)}
                   disabled={loadingSites}
+                  className="text-[11px] text-blue-600 hover:underline flex items-center gap-1"
                 >
-                  <RefreshCw size={12} className={loadingSites ? 'spinning' : ''} /> Refresh properties
+                  <RefreshCw className={`h-3 w-3 ${loadingSites ? 'animate-spin' : ''}`} /> Refresh
                 </button>
               )}
             </div>
 
             {sites.length > 0 ? (
               <select
-                className="form-input"
+                className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-xs outline-none focus:ring-1 focus:ring-blue-500"
                 value={config.gscSiteUrl}
                 onChange={(e) => setConfig({ ...config, gscSiteUrl: e.target.value })}
               >
@@ -186,43 +189,45 @@ export default function ApiConfigModal({ isOpen, onClose, onConfigSaved, activeE
                 ))}
               </select>
             ) : (
-              <input
+              <Input
                 type="text"
-                className="form-input"
-                placeholder="e.g. sc-domain:mamajanrocks.com or https://mamajanmusic.com/"
+                placeholder="e.g. sc-domain:yourdomain.com or https://yourdomain.com/"
                 value={config.gscSiteUrl}
                 onChange={(e) => setConfig({ ...config, gscSiteUrl: e.target.value })}
               />
             )}
-            <span className="form-help">Enter your exact property URL or Domain (e.g. sc-domain:yourdomain.com)</span>
+            <p className="text-[11px] text-slate-400">Search Console property URL or Domain prefix</p>
           </div>
 
           {/* GA4 Property ID */}
-          <div className="form-group">
-            <label className="form-label">Google Analytics 4 Property ID</label>
-            <input
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-700">Google Analytics 4 Property ID</label>
+            <Input
               type="text"
-              className="form-input"
-              placeholder="e.g. 516707960 or properties/516707960"
+              placeholder="e.g. 516707960"
               value={config.ga4PropertyId}
               onChange={(e) => setConfig({ ...config, ga4PropertyId: e.target.value })}
             />
-            <span className="form-help">From GA4 Admin &gt; Property Details (e.g. 516707960)</span>
+            <p className="text-[11px] text-slate-400">Numerical GA4 property identifier</p>
           </div>
 
-          {saveStatus && <div className="save-success-msg"><Check size={14} /> {saveStatus}</div>}
+          {saveStatus && (
+            <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span>{saveStatus}</span>
+            </div>
+          )}
         </div>
 
-        <div className="modal-footer">
-          <button className="btn btn-secondary" onClick={onClose}>
-            Close
-          </button>
-          <button className="btn btn-primary" onClick={handleSave}>
-            <Save size={15} />
-            <span>Save Settings</span>
-          </button>
-        </div>
-      </div>
-    </div>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="default" onClick={handleSave}>
+            Save Configuration
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

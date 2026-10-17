@@ -1,115 +1,86 @@
-import React, { useState } from 'react';
+import React from 'react';
 import MetricBox from './MetricBox';
-import { Search, Monitor, Smartphone, Layers } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Search, Monitor, Smartphone, Tablet } from 'lucide-react';
 
-export default function SearchConsoleSection({ gscOverview, deviceTraffic, queryBreakdown, periodName, prevPeriodName }) {
-  const [deviceTab, setDeviceTab] = useState('overall'); // 'overall' | 'desktop' | 'mobile'
-
+export default function SearchConsoleSection({ gscOverview, deviceTraffic, periodName, prevPeriodName }) {
   if (!gscOverview) return null;
 
-  const currentQueries = queryBreakdown ? queryBreakdown[deviceTab] || [] : [];
-
   return (
-    <section className="dashboard-section">
-      <div className="section-header">
-        <div className="section-title-wrap">
-          <Search size={18} className="section-icon" />
-          <h2 className="section-title">02. Google Search Console Overview</h2>
+    <Card className="border border-slate-200/80 bg-white/50 backdrop-blur-xs shadow-xs mb-6">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-md bg-indigo-50 text-indigo-600">
+            <Search className="h-4 w-4" />
+          </div>
+          <CardTitle className="text-base font-semibold text-slate-900">
+            Google Search Console Overview
+          </CardTitle>
         </div>
-        <span className="section-badge">{periodName} vs {prevPeriodName}</span>
-      </div>
+        <Badge variant="outline" className="font-normal text-slate-500 bg-slate-50">
+          {periodName} vs {prevPeriodName}
+        </Badge>
+      </CardHeader>
 
-      {/* Primary KPI Boxes */}
-      <div className="metrics-grid grid-4">
-        {gscOverview.map((item) => (
-          <MetricBox
-            key={item.key}
-            title={item.label}
-            value={item.current.toLocaleString ? item.current.toLocaleString() : item.current}
-            previousValue={item.previous.toLocaleString ? item.previous.toLocaleString() : item.previous}
-            diff={item.diff}
-            invertColor={item.invertColor}
-            subtitle={
-              item.key === 'position'
-                ? 'Average rank across indexed queries'
-                : item.key === 'ctr'
-                ? 'Click-Through Rate'
-                : 'Search performance'
-            }
-          />
-        ))}
-      </div>
+      <CardContent className="pt-5 space-y-6">
+        {/* Core KPI cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {gscOverview.map((item) => (
+            <MetricBox
+              key={item.key}
+              title={item.label}
+              value={item.current?.toLocaleString ? item.current.toLocaleString() : item.current}
+              previousValue={item.previous?.toLocaleString ? item.previous.toLocaleString() : item.previous}
+              diff={item.diff}
+              invertColor={item.invertColor}
+              subtitle={
+                item.key === 'position'
+                  ? 'Average ranking position'
+                  : item.key === 'ctr'
+                  ? 'Click-Through Rate'
+                  : 'Total organic impressions & clicks'
+              }
+            />
+          ))}
+        </div>
 
-      {/* Device Breakdown */}
-      {deviceTraffic && deviceTraffic.length > 0 && (
-        <div className="sub-section">
-          <h3 className="sub-section-title">Device Breakdown (Search Console Clicks)</h3>
-          <div className="device-cards-grid">
-            {deviceTraffic.map((d) => (
-              <div key={d.device} className="device-box">
-                <div className="device-box-header">
-                  <div className="device-title">
-                    {d.device === 'Desktop' ? <Monitor size={16} /> : <Smartphone size={16} />}
-                    <span>{d.device}</span>
+        {/* Device breakdown cards */}
+        {deviceTraffic && deviceTraffic.length > 0 && (
+          <div className="pt-4 border-t border-slate-100">
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+              Device Breakdown (Organic Search)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+              {deviceTraffic.map((d) => (
+                <div
+                  key={d.device}
+                  className="rounded-lg border border-slate-200 bg-white p-4 flex flex-col justify-between shadow-2xs"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 font-medium text-slate-800 text-sm">
+                      {d.device.toLowerCase() === 'desktop' ? (
+                        <Monitor className="h-4 w-4 text-slate-500" />
+                      ) : d.device.toLowerCase() === 'mobile' ? (
+                        <Smartphone className="h-4 w-4 text-slate-500" />
+                      ) : (
+                        <Tablet className="h-4 w-4 text-slate-500" />
+                      )}
+                      <span>{d.device}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-baseline justify-between text-xs">
+                    <span className="text-base font-bold text-slate-900">{d.current.toLocaleString()} clicks</span>
+                    {d.impressions !== undefined && (
+                      <span className="text-slate-500">{d.impressions.toLocaleString()} imp</span>
+                    )}
                   </div>
                 </div>
-                <div className="device-metric-row">
-                  <span className="device-curr">{d.current.toLocaleString()} clicks</span>
-                  {d.impressions !== undefined && (
-                    <span className="device-prev">{d.impressions.toLocaleString()} impressions</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Branded vs Non-Branded Breakdown */}
-      {queryBreakdown && (
-        <div className="sub-section">
-          <div className="sub-header-with-tabs">
-            <h3 className="sub-section-title">Branded vs Non-Branded Search Queries</h3>
-
-            <div className="tab-pill-group">
-              <button
-                className={`tab-pill ${deviceTab === 'overall' ? 'active' : ''}`}
-                onClick={() => setDeviceTab('overall')}
-              >
-                <Layers size={13} />
-                <span>Overall</span>
-              </button>
-              <button
-                className={`tab-pill ${deviceTab === 'desktop' ? 'active' : ''}`}
-                onClick={() => setDeviceTab('desktop')}
-              >
-                <Monitor size={13} />
-                <span>Desktop</span>
-              </button>
-              <button
-                className={`tab-pill ${deviceTab === 'mobile' ? 'active' : ''}`}
-                onClick={() => setDeviceTab('mobile')}
-              >
-                <Smartphone size={13} />
-                <span>Mobile</span>
-              </button>
+              ))}
             </div>
           </div>
-
-          <div className="metrics-grid grid-4">
-            {currentQueries.map((item, idx) => (
-              <MetricBox
-                key={idx}
-                title={item.label}
-                value={item.current.toLocaleString()}
-                previousValue={item.previous.toLocaleString()}
-                diff={item.diff}
-                subtitle={`${deviceTab.toUpperCase()} Query Segment`}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-    </section>
+        )}
+      </CardContent>
+    </Card>
   );
 }

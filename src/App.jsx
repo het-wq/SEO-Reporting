@@ -4,9 +4,12 @@ import TrafficSection from './components/TrafficSection';
 import SearchConsoleSection from './components/SearchConsoleSection';
 import KeywordsSection from './components/KeywordsSection';
 import ApiConfigModal from './components/ApiConfigModal';
-import { fetchLiveSeoData, getApiConfig, saveApiConfig, checkBackendHealth, getGoogleAuthUrl, fetchGscSites } from './services/seoApi';
-import { calculateDateRanges } from './utils/dateUtils';
-import { AlertCircle, CheckCircle2, ShieldAlert, ExternalLink, Link2, Settings, ArrowRight } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { fetchLiveSeoData, getApiConfig, saveApiConfig, checkBackendHealth, getGoogleAuthUrl, fetchGscSites } from '@/services/seoApi';
+import { calculateDateRanges } from '@/utils/dateUtils';
+import { AlertCircle, CheckCircle2, ShieldAlert, ExternalLink, Link2, Settings } from 'lucide-react';
 import './App.css';
 
 export default function App() {
@@ -128,7 +131,7 @@ export default function App() {
   const siteName = cfg.gscSiteUrl ? cfg.gscSiteUrl.replace('sc-domain:', '') : 'Mama Jan';
 
   return (
-    <div className="app-container">
+    <div className="min-h-screen bg-slate-50/50 flex flex-col font-sans">
       <Header
         reportData={report}
         siteName={siteName}
@@ -143,17 +146,17 @@ export default function App() {
         dateRangeInfo={dateRangeInfo}
       />
 
-      <main className="dashboard-content">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Success toast */}
         {successToast && (
-          <div className="success-alert">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle2 size={16} />
+          <div className="mb-5 flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 shadow-2xs">
+            <div className="flex items-center gap-2 font-medium">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
               <span>{successToast}</span>
             </div>
             <button
               onClick={() => setSuccessToast('')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#16a34a', fontSize: '16px' }}
+              className="text-emerald-600 hover:text-emerald-800 text-base font-bold cursor-pointer"
             >
               ×
             </button>
@@ -162,88 +165,99 @@ export default function App() {
 
         {/* Action required alert for enabling Google Cloud APIs */}
         {errorMessage && errorMessage.includes('has not been used in project') && (
-          <div className="api-cloud-notice-card">
-            <div className="notice-card-header">
-              <ShieldAlert size={18} className="text-warning" />
-              <h3>Action Needed in Google Cloud Console</h3>
-            </div>
-            <p>
-              Your Google OAuth authorization succeeded! To query live Search Console & GA4 data,
-              please enable the APIs for your project (<strong>554369952704</strong>):
-            </p>
-            <div className="notice-links-row">
-              <a
-                href="https://console.developers.google.com/apis/api/searchconsole.googleapis.com/overview?project=554369952704"
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-secondary action-link"
-              >
-                <ExternalLink size={14} />
-                <span>1. Enable Google Search Console API</span>
-              </a>
-              <a
-                href="https://console.developers.google.com/apis/api/analyticsdata.googleapis.com/overview?project=554369952704"
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-secondary action-link"
-              >
-                <ExternalLink size={14} />
-                <span>2. Enable Google Analytics Data API</span>
-              </a>
-            </div>
-            <span className="notice-footer-text">
-              After clicking Enable on Google Cloud, wait ~1 minute and click the Refresh button in the top right.
-            </span>
-          </div>
+          <Card className="mb-6 border-amber-200 bg-amber-50/70 shadow-xs">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="h-5 w-5 text-amber-600" />
+                <CardTitle className="text-sm font-semibold text-amber-900">
+                  Action Needed in Google Cloud Console
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-0">
+              <p className="text-xs text-amber-800 leading-relaxed">
+                Your Google OAuth authorization succeeded! To query live Search Console & GA4 data,
+                please enable the APIs for your project (<strong>554369952704</strong>):
+              </p>
+              <div className="flex flex-wrap gap-2.5 pt-1">
+                <Button variant="outline" size="sm" asChild className="bg-white border-amber-300 text-amber-900 hover:bg-amber-100/50">
+                  <a
+                    href="https://console.developers.google.com/apis/api/searchconsole.googleapis.com/overview?project=554369952704"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 mr-1 text-amber-700" />
+                    <span>1. Enable Google Search Console API</span>
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" asChild className="bg-white border-amber-300 text-amber-900 hover:bg-amber-100/50">
+                  <a
+                    href="https://console.developers.google.com/apis/api/analyticsdata.googleapis.com/overview?project=554369952704"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 mr-1 text-amber-700" />
+                    <span>2. Enable Google Analytics Data API</span>
+                  </a>
+                </Button>
+              </div>
+              <p className="text-[11px] text-amber-700/80">
+                After clicking Enable on Google Cloud, wait ~1 minute and click the Refresh button in the top right.
+              </p>
+            </CardContent>
+          </Card>
         )}
 
         {/* Generic error banner */}
         {errorMessage && !errorMessage.includes('has not been used in project') && (
-          <div className="error-alert">
-            <AlertCircle size={16} />
+          <div className="mb-5 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 shadow-2xs">
+            <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
-        {/* Not connected state */}
+        {/* Not connected hero state */}
         {!isConnected && (
-          <div className="not-connected-hero">
-            <div className="hero-icon-box">
-              <Link2 size={36} />
-            </div>
-            <h2>Connect Google API</h2>
-            <p>
-              All demo/PDF data has been removed. Connect your Google account to fetch live metrics directly
-              from Google Search Console and Google Analytics 4.
-            </p>
-            <div className="hero-btn-row">
-              <button className="btn btn-primary hero-btn" onClick={handleStartGoogleOAuth}>
-                <img
-                  src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png"
-                  alt="Google"
-                  width="16"
-                  height="16"
-                />
-                <span>Connect with Google</span>
-              </button>
-              <button className="btn btn-secondary" onClick={() => setIsModalOpen(true)}>
-                <Settings size={15} />
-                <span>Configure Properties</span>
-              </button>
-            </div>
-          </div>
+          <Card className="max-w-xl mx-auto my-12 text-center p-8 border-slate-200 shadow-sm">
+            <CardContent className="space-y-4 p-0">
+              <div className="h-14 w-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                <Link2 className="h-7 w-7" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-xl font-bold text-slate-900">Connect Google API</h2>
+                <p className="text-sm text-slate-500 max-w-sm mx-auto">
+                  Connect your Google account to fetch live metrics directly from Google Search Console and Google Analytics 4.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <Button variant="default" onClick={handleStartGoogleOAuth} className="gap-2">
+                  <img
+                    src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png"
+                    alt="Google"
+                    width="16"
+                    height="16"
+                  />
+                  <span>Connect with Google</span>
+                </Button>
+                <Button variant="outline" onClick={() => setIsModalOpen(true)} className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  <span>Configure Properties</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Connected state & live report */}
         {isConnected && (
           <>
             {isLoading && !report ? (
-              <div className="loading-state">
-                <div className="spinner"></div>
-                <p>Querying Google Search Console & GA4 live data...</p>
+              <div className="py-24 text-center space-y-3">
+                <div className="h-8 w-8 rounded-full border-3 border-blue-600 border-t-transparent animate-spin mx-auto" />
+                <p className="text-sm text-slate-500 font-medium">Querying Google Search Console & GA4 live data...</p>
               </div>
             ) : (
-              <div className="sections-container">
+              <div className="space-y-6">
                 {/* 01. Google Analytics 4 Traffic */}
                 {report?.gaOverview && (
                   <TrafficSection
@@ -273,17 +287,19 @@ export default function App() {
 
                 {/* Property configuration helper if neither GSC nor GA4 returned data yet */}
                 {!report?.gscOverview && !report?.gaOverview && !isLoading && (
-                  <div className="empty-properties-card">
-                    <h3>No Property Data Loaded Yet</h3>
-                    <p>
-                      Enter your Search Console Site URL (e.g. <code>sc-domain:yourdomain.com</code>)
-                      and GA4 Property ID (e.g. <code>516707960</code>) in API Settings.
-                    </p>
-                    <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-                      <Settings size={15} />
-                      <span>Configure Properties in API Settings</span>
-                    </button>
-                  </div>
+                  <Card className="max-w-md mx-auto my-12 text-center border-dashed border-slate-300 p-8 shadow-none">
+                    <CardContent className="space-y-3 p-0">
+                      <h3 className="text-base font-semibold text-slate-900">No Property Data Loaded Yet</h3>
+                      <p className="text-xs text-slate-500 leading-relaxed">
+                        Enter your Search Console Site URL (e.g. <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800">sc-domain:yourdomain.com</code>)
+                        and GA4 Property ID (e.g. <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800">516707960</code>) in API Settings.
+                      </p>
+                      <Button variant="default" size="sm" onClick={() => setIsModalOpen(true)} className="gap-2 mt-2">
+                        <Settings className="h-4 w-4" />
+                        <span>Configure Properties in API Settings</span>
+                      </Button>
+                    </CardContent>
+                  </Card>
                 )}
               </div>
             )}

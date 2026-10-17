@@ -1,101 +1,112 @@
 import React, { useState } from 'react';
-import { KeyRound, Search, TrendingUp, Award } from 'lucide-react';
+import { KeyRound, Search, Award } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
 
 export default function KeywordsSection({ topKeywords, periodName }) {
   const [searchTerm, setSearchTerm] = useState('');
 
-  if (!topKeywords) return null;
+  if (!topKeywords || topKeywords.length === 0) return null;
 
   const filtered = topKeywords.filter((k) =>
     k.keyword.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <section className="dashboard-section">
-      <div className="section-header">
-        <div className="section-title-wrap">
-          <KeyRound size={18} className="section-icon" />
-          <h2 className="section-title">04. Top Performing Keywords ({periodName})</h2>
+    <Card className="border border-slate-200/80 bg-white/50 backdrop-blur-xs shadow-xs mb-6">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-md bg-amber-50 text-amber-600">
+            <KeyRound className="h-4 w-4" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-semibold text-slate-900">
+              Top Performing Search Queries
+            </CardTitle>
+            <p className="text-xs text-slate-500">Live ranking data from Google Search Console</p>
+          </div>
         </div>
 
-        <div className="search-filter-box">
-          <Search size={14} className="search-filter-icon" />
-          <input
+        {/* Keyword search input */}
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+          <Input
             type="text"
-            className="search-filter-input"
-            placeholder="Search keywords..."
+            placeholder="Filter queries..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8 h-9 bg-white"
           />
         </div>
-      </div>
+      </CardHeader>
 
-      <div className="table-card">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th style={{ width: '60px' }}>Rank</th>
-              <th>Top Queries / Keywords</th>
-              <th style={{ width: '120px' }}>Position</th>
-              <th style={{ width: '120px' }}>Rank Tier</th>
-              <th style={{ width: '120px' }}>Change</th>
-            </tr>
-          </thead>
-          <tbody>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-16 text-center">Rank</TableHead>
+              <TableHead>Query / Keyword</TableHead>
+              <TableHead className="w-28 text-center">Position</TableHead>
+              <TableHead className="w-28 text-center">Clicks</TableHead>
+              <TableHead className="w-28 text-center">Impressions</TableHead>
+              <TableHead className="w-24 text-center">CTR</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {filtered.map((item, idx) => {
-              const isTop10 = item.ranking <= 10;
               const isTop5 = item.ranking <= 5;
+              const isTop10 = item.ranking <= 10;
 
               return (
-                <tr key={idx} className={isTop5 ? 'highlight-row' : ''}>
-                  <td className="rank-cell">
-                    <span className={`rank-badge ${isTop5 ? 'badge-gold' : isTop10 ? 'badge-blue' : 'badge-gray'}`}>
-                      #{idx + 1}
-                    </span>
-                  </td>
-                  <td className="keyword-cell">
-                    <span className="keyword-text">{item.keyword}</span>
-                  </td>
-                  <td>
-                    <span className="position-pill">Pos {item.ranking}</span>
-                  </td>
-                  <td>
-                    <span className="status-tag">
-                      {isTop5 ? (
-                        <>
-                          <Award size={12} className="award-icon" /> Top 5
-                        </>
-                      ) : (
-                        item.status
-                      )}
-                    </span>
-                  </td>
-                  <td>
-                    <span
-                      className={`change-tag ${
-                        item.change.startsWith('+')
-                          ? 'positive'
-                          : item.change.startsWith('-')
-                          ? 'negative'
-                          : 'neutral'
-                      }`}
+                <TableRow key={idx} className={isTop5 ? 'bg-amber-50/20' : ''}>
+                  <TableCell className="text-center font-medium">
+                    <Badge
+                      variant={isTop5 ? 'warning' : isTop10 ? 'info' : 'secondary'}
+                      className="text-[11px] px-1.5"
                     >
-                      {item.change}
-                    </span>
-                  </td>
-                </tr>
+                      #{idx + 1}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-medium text-slate-900">
+                    <div className="flex items-center gap-1.5">
+                      <span>{item.keyword}</span>
+                      {isTop5 && <Award className="h-3.5 w-3.5 text-amber-500" />}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center font-semibold text-slate-700">
+                    {item.ranking}
+                  </TableCell>
+                  <TableCell className="text-center text-slate-700">
+                    {item.clicks !== undefined ? item.clicks.toLocaleString() : '-'}
+                  </TableCell>
+                  <TableCell className="text-center text-slate-700">
+                    {item.impressions !== undefined ? item.impressions.toLocaleString() : '-'}
+                  </TableCell>
+                  <TableCell className="text-center text-slate-700">
+                    {item.ctr || '-'}
+                  </TableCell>
+                </TableRow>
               );
             })}
             {filtered.length === 0 && (
-              <tr>
-                <td colSpan="5" className="no-data-cell">
-                  No matching keywords found for "{searchTerm}"
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                  No matching queries found for "{searchTerm}"
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
-      </div>
-    </section>
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }

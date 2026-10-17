@@ -1,5 +1,7 @@
 import React from 'react';
 import { RefreshCw, Settings, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import DateFilter from './DateFilter';
 
 export default function Header({
@@ -16,52 +18,63 @@ export default function Header({
   siteName,
 }) {
   return (
-    <header className="dashboard-header">
-      <div className="header-brand">
-        <div className="brand-logo-badge">SEO</div>
-        <div>
-          <h1 className="header-title">{siteName || reportData?.client || 'Live SEO'} Dashboard</h1>
-          <p className="header-subtitle">
-            Google Search Console & Google Analytics 4 Performance Review
-          </p>
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+        {/* Brand */}
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900 text-white font-bold text-sm shadow-xs">
+            SEO
+          </div>
+          <div>
+            <h1 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
+              {siteName || reportData?.client || 'Live SEO'} Dashboard
+            </h1>
+            <p className="text-xs text-slate-500">
+              Google Search Console & Google Analytics 4 Performance Review
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="header-controls">
-        {/* Connection status indicator */}
-        <div className={`data-source-badge ${isConnected ? 'api-badge' : 'disconnected-badge'}`}>
-          {isConnected ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-          <span>{isConnected ? 'Google API Connected' : 'Not Connected'}</span>
+        {/* Controls */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Connection status badge */}
+          <Badge variant={isConnected ? 'success' : 'destructive'} className="py-1 px-2.5 gap-1.5 font-medium">
+            {isConnected ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
+            <span>{isConnected ? 'API Connected' : 'Not Connected'}</span>
+          </Badge>
+
+          {/* Date Filter */}
+          <DateFilter
+            filterType={filterType}
+            onFilterTypeChange={onFilterTypeChange}
+            filterParams={filterParams}
+            onFilterParamsChange={onFilterParamsChange}
+            dateRangeInfo={dateRangeInfo}
+          />
+
+          {/* Refresh button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={onRefresh}
+            title="Refresh Data from Google API"
+            disabled={isLoading || !isConnected}
+            className="h-9 w-9 bg-white"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+
+          {/* Settings button */}
+          <Button
+            variant="default"
+            size="default"
+            onClick={onOpenApiSettings}
+            className="flex items-center gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            <span>API Settings</span>
+          </Button>
         </div>
-
-        {/* Dynamic Date Filter (last 7 days, 14 days, month wise, date wise) */}
-        <DateFilter
-          filterType={filterType}
-          onFilterTypeChange={onFilterTypeChange}
-          filterParams={filterParams}
-          onFilterParamsChange={onFilterParamsChange}
-          dateRangeInfo={dateRangeInfo}
-        />
-
-        {/* Refresh button */}
-        <button
-          className="btn btn-secondary icon-btn"
-          onClick={onRefresh}
-          title="Refresh Data from Google API"
-          disabled={isLoading || !isConnected}
-        >
-          <RefreshCw size={16} className={isLoading ? 'spinning' : ''} />
-        </button>
-
-        {/* API Settings button */}
-        <button
-          className="btn btn-primary"
-          onClick={onOpenApiSettings}
-          title="Configure Google Search Console & GA4 Properties"
-        >
-          <Settings size={15} />
-          <span>API Settings</span>
-        </button>
       </div>
     </header>
   );
