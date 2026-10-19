@@ -18,6 +18,17 @@ dist-ssr
 .env.*
 !.env.example
 
+# Uploaded SEO reports & extracted data (not committed; re-seeded locally)
+uploads/*
+!uploads/.gitkeep
+data/reports/*
+!data/reports/.gitkeep
+data/tokens.json
+data/cache.json
+google-credentials*.json
+*.pem
+*.key
+
 # Editor & OS files
 .vscode/*
 !.vscode/extensions.json

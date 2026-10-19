@@ -1,61 +1,85 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { google } from 'googleapis';
+import reportsRouter from './routes/reports.js';
+import analyticsRouter from './routes/analytics.js';
+import searchConsoleRouter from './routes/searchConsole.js';
+import rankingsRouter from './routes/rankings.js';
+import localSeoRouter from './routes/localSeo.js';
+import backlinksRouter from './routes/backlinks.js';
+import aiVisibilityRouter from './routes/aiVisibility.js';
+import integrationsRouter from './routes/integrations.js';
+import dashboardRouter from './routes/dashboard.js';
 
-dotenv.config();
+import {
+  getOAuthClient,
+  getAuth,
+  getAuthStatus,
+  loadStoredTokens,
+  saveStoredTokens,
+  clearStoredTokens,
+  REQUIRED_SCOPES,
+  classifyGoogleError,
+} from './services/googleAuth.js';
+import { seedIfEmpty, UPLOAD_DIR } from './data/reportStore.js';
+import { getGA4Overview } from './services/ga4Service.js';
+import { getGscPerformance, getGscQueries, getGscDevices } from './services/gscService.js';
 
 const app = express();
 const port = process.env.PORT || 5001;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use('/uploads', express.static(UPLOAD_DIR));
 
-const CLIENT_ID = process.env.VITE_GOOGLE_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+// Seed PDF reports storage for historical document viewer
+seedIfEmpty().catch((err) => console.error('Failed to seed initial report:', err));
 
-const getRedirectUri = (req) => {
-  if (process.env.REDIRECT_URI) return process.env.REDIRECT_URI;
-  if (req && req.headers && req.headers.host) {
-    const proto = req.headers['x-forwarded-proto'] || (req.headers.host.includes('localhost') ? 'http' : 'https');
-    return `${proto}://${req.headers.host}/api/auth/google/callback`;
-  }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}/api/auth/google/callback`;
-  }
-  return 'http://localhost:5001/api/auth/google/callback';
-};
+// -----------------------------------------------------------------------------
+// Modular REST APIs
+// -----------------------------------------------------------------------------
+app.use('/api/analytics', analyticsRouter);
+app.use('/api/search-console', searchConsoleRouter);
+app.use('/api/rankings', rankingsRouter);
+app.use('/api/local-seo', localSeoRouter);
+app.use('/api/backlinks', backlinksRouter);
+app.use('/api/ai-visibility', aiVisibilityRouter);
+app.use('/api/integrations', integrationsRouter);
+app.use('/api/dashboard', dashboardRouter);
+app.use('/api/reports', reportsRouter);
 
-const getOAuthClient = (req) => {
-  const redirectUri = getRedirectUri(req);
-  return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, redirectUri);
-};
-
-let storedTokens = null;
-
+// -----------------------------------------------------------------------------
+// Health & Authentication Endpoints
+// -----------------------------------------------------------------------------
 app.get('/api/health', (req, res) => {
+  const authStatus = getAuthStatus();
   res.json({
     status: 'ok',
-    configured: Boolean(CLIENT_ID && CLIENT_SECRET),
-    hasToken: Boolean(storedTokens && storedTokens.access_token),
+    configured: authStatus.configured,
+    hasToken: authStatus.authenticated,
+    authType: authStatus.authType,
     environment: process.env.VERCEL ? 'vercel' : 'local',
+    ga4PropertyId: process.env.GA4_PROPERTY_ID || '516707960',
+    gscSiteUrl: process.env.GSC_SITE_URL || 'sc-domain:appliancecareofatlanta.com',
   });
 });
 
 app.get('/api/auth/google/url', (req, res) => {
-  if (!CLIENT_ID || !CLIENT_SECRET) {
-    return res.status(400).json({ error: 'Google OAuth Client ID or Client Secret not configured in environment' });
+  const clientId = process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    return res.status(400).json({
+      error: 'Google OAuth Client ID or Client Secret not configured in environment',
+      status: 'missing_credentials',
+    });
   }
 
   const oauthClient = getOAuthClient(req);
-  const scopes = [
-    'https://www.googleapis.com/auth/webmasters.readonly',
-    'https://www.googleapis.com/auth/analytics.readonly',
-  ];
-
   const url = oauthClient.generateAuthUrl({
     access_type: 'offline',
-    scope: scopes,
+    scope: REQUIRED_SCOPES,
     prompt: 'consent',
   });
 
@@ -71,12 +95,10 @@ app.get('/api/auth/google/callback', async (req, res) => {
   try {
     const oauthClient = getOAuthClient(req);
     const { tokens } = await oauthClient.getToken(code);
-    storedTokens = tokens;
+    saveStoredTokens(tokens);
 
     const host = req.headers.host || 'localhost:5173';
     const proto = req.headers['x-forwarded-proto'] || (host.includes('localhost') ? 'http' : 'https');
-
-    // In local dev, backend is 5001 and frontend is 5173; in Vercel both are on the same host
     const frontendBase = host.includes('localhost:5001') ? 'http://localhost:5173' : `${proto}://${host}`;
 
     res.redirect(`${frontendBase}/?auth=success&access_token=${tokens.access_token}`);
@@ -91,46 +113,30 @@ app.post('/api/auth/set-token', (req, res) => {
   if (!access_token) {
     return res.status(400).json({ error: 'access_token required' });
   }
-  storedTokens = { access_token, refresh_token };
-  res.json({ success: true, message: 'Tokens stored' });
+  saveStoredTokens({ access_token, refresh_token });
+  res.json({ success: true, message: 'Tokens stored successfully' });
 });
 
-const getAuth = (req) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    const client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET);
-    client.setCredentials({ access_token: token });
-    return client;
-  }
-  if (storedTokens) {
-    const client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET);
-    client.setCredentials(storedTokens);
-    return client;
-  }
-  return null;
-};
+app.post('/api/auth/disconnect', (req, res) => {
+  clearStoredTokens();
+  res.json({ success: true, message: 'Disconnected Google account' });
+});
 
+// Backward-compatible GSC endpoints
 app.get('/api/gsc/sites', async (req, res) => {
   try {
     const auth = getAuth(req);
     if (!auth) {
       return res.status(401).json({ error: 'Not authenticated with Google. Please click "Connect with Google".' });
     }
-
     const searchconsole = google.searchconsole({ version: 'v1', auth });
     const response = await searchconsole.sites.list();
     res.json({ sites: response.data.siteEntry || [] });
   } catch (error) {
-    console.error('Failed to list sites:', error.message);
-    res.status(500).json({ error: error.message });
+    const classified = classifyGoogleError(error, 'Google Search Console');
+    res.status(classified.code || 500).json(classified);
   }
 });
-
-const calcDiff = (curr, prev) => {
-  if (prev === 0 || !prev) return curr > 0 ? 100 : 0;
-  return Math.round(((curr - prev) / prev) * 10000) / 100;
-};
 
 app.post('/api/gsc/report', async (req, res) => {
   try {
@@ -144,88 +150,41 @@ app.post('/api/gsc/report', async (req, res) => {
       return res.status(400).json({ error: 'siteUrl is required' });
     }
 
-    const searchconsole = google.searchconsole({ version: 'v1', auth });
+    const [perf, queries, devices] = await Promise.all([
+      getGscPerformance({ auth, siteUrl, startDate, endDate, prevStartDate, prevEndDate }),
+      getGscQueries({ auth, siteUrl, startDate, endDate, rowLimit: 50 }),
+      getGscDevices({ auth, siteUrl, startDate, endDate, prevStartDate, prevEndDate }),
+    ]);
 
-    const currentRes = await searchconsole.searchanalytics.query({
-      siteUrl,
-      requestBody: { startDate, endDate, dimensions: ['date'] },
-    });
-
-    let prevRes = { data: { rows: [] } };
-    if (prevStartDate && prevEndDate) {
-      try {
-        prevRes = await searchconsole.searchanalytics.query({
-          siteUrl,
-          requestBody: { startDate: prevStartDate, endDate: prevEndDate, dimensions: ['date'] },
-        });
-      } catch (e) {
-        console.warn('Could not fetch previous GSC period:', e.message);
-      }
-    }
-
-    const queriesRes = await searchconsole.searchanalytics.query({
-      siteUrl,
-      requestBody: { startDate, endDate, dimensions: ['query'], rowLimit: 50 },
-    });
-
-    const devicesRes = await searchconsole.searchanalytics.query({
-      siteUrl,
-      requestBody: { startDate, endDate, dimensions: ['device'] },
-    });
-
-    const cRows = currentRes.data.rows || [];
-    const clicks = cRows.reduce((acc, r) => acc + (r.clicks || 0), 0);
-    const impressions = cRows.reduce((acc, r) => acc + (r.impressions || 0), 0);
-    const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
-    const position = cRows.length > 0 ? cRows.reduce((acc, r) => acc + (r.position || 0), 0) / cRows.length : 0;
-
-    const pRows = prevRes.data.rows || [];
-    const prevClicks = pRows.reduce((acc, r) => acc + (r.clicks || 0), 0);
-    const prevImpressions = pRows.reduce((acc, r) => acc + (r.impressions || 0), 0);
-    const prevCtr = prevImpressions > 0 ? (prevClicks / prevImpressions) * 100 : 0;
-    const prevPosition = pRows.length > 0 ? pRows.reduce((acc, r) => acc + (r.position || 0), 0) / pRows.length : 0;
-
-    const topKeywords = (queriesRes.data.rows || []).map((row) => ({
-      keyword: row.keys[0],
-      ranking: Math.round(row.position * 10) / 10,
-      clicks: row.clicks,
-      impressions: row.impressions,
-      ctr: (row.ctr * 100).toFixed(2) + '%',
-      status: row.position <= 5 ? 'Top 5' : row.position <= 10 ? 'Top 10' : row.position <= 20 ? 'Top 20' : 'Page 3+',
-      change: '0',
-    }));
-
-    const deviceRows = devicesRes.data.rows || [];
-    const deviceTraffic = deviceRows.map((d) => ({
-      device: d.keys[0].charAt(0).toUpperCase() + d.keys[0].slice(1).toLowerCase(),
-      current: d.clicks || 0,
-      impressions: d.impressions || 0,
-      previous: 0,
-      diff: 0,
-    }));
+    const deviceTraffic = [
+      { device: 'Desktop', current: devices.desktop.current, impressions: devices.desktop.impressions, previous: devices.desktop.previous, diff: devices.desktop.diffPct },
+      { device: 'Mobile', current: devices.mobile.current, impressions: devices.mobile.impressions, previous: devices.mobile.previous, diff: devices.mobile.diffPct },
+      { device: 'Tablet', current: devices.tablet.current, impressions: devices.tablet.impressions, previous: devices.tablet.previous, diff: devices.tablet.diffPct },
+    ];
 
     res.json({
-      clicks,
-      prevClicks,
-      diffClicks: calcDiff(clicks, prevClicks),
-      impressions,
-      prevImpressions,
-      diffImpressions: calcDiff(impressions, prevImpressions),
-      ctr: ctr.toFixed(2) + '%',
-      prevCtr: prevCtr.toFixed(2) + '%',
-      diffCtr: Math.round((ctr - prevCtr) * 100) / 100,
-      position: position > 0 ? position.toFixed(1) : '0.0',
-      prevPosition: prevPosition > 0 ? prevPosition.toFixed(1) : '0.0',
-      diffPosition: Math.round((prevPosition - position) * 10) / 10,
-      topKeywords,
+      clicks: perf.clicks.current,
+      prevClicks: perf.clicks.previous,
+      diffClicks: perf.clicks.diffPct,
+      impressions: perf.impressions.current,
+      prevImpressions: perf.impressions.previous,
+      diffImpressions: perf.impressions.diffPct,
+      ctr: perf.avgCtr.currentText,
+      prevCtr: perf.avgCtr.previousText,
+      diffCtr: perf.avgCtr.diffPct,
+      position: perf.avgPosition.currentText,
+      prevPosition: perf.avgPosition.previousText,
+      diffPosition: perf.avgPosition.diffPct,
+      topKeywords: queries,
       deviceTraffic,
     });
   } catch (error) {
-    console.error('GSC Report Error:', error.message);
-    res.status(500).json({ error: error.message });
+    const classified = classifyGoogleError(error, 'Google Search Console');
+    res.status(classified.code || 500).json(classified);
   }
 });
 
+// Backward-compatible GA4 endpoint
 app.post('/api/ga4/report', async (req, res) => {
   try {
     const auth = getAuth(req);
@@ -238,84 +197,37 @@ app.post('/api/ga4/report', async (req, res) => {
       return res.status(400).json({ error: 'GA4 Property ID is required' });
     }
 
-    const cleanPropId = propertyId.startsWith('properties/') ? propertyId : `properties/${propertyId}`;
-    const analyticsdata = google.analyticsdata({ version: 'v1beta', auth });
-
-    const dateRanges = [{ startDate, endDate }];
-    if (prevStartDate && prevEndDate) {
-      dateRanges.push({ startDate: prevStartDate, endDate: prevEndDate });
-    }
-
-    const response = await analyticsdata.properties.runReport({
-      property: cleanPropId,
-      requestBody: {
-        dateRanges,
-        dimensions: [{ name: 'sessionDefaultChannelGroup' }],
-        metrics: [
-          { name: 'sessions' },
-          { name: 'activeUsers' },
-          { name: 'newUsers' },
-          { name: 'averageSessionDuration' },
-        ],
-      },
-    });
-
-    const rows = response.data.rows || [];
-    let totalSessions = 0;
-    let organicSessions = 0;
-    let directSessions = 0;
-    let newUsers = 0;
-    let totalDuration = 0;
-
-    let prevTotalSessions = 0;
-    let prevOrganicSessions = 0;
-    let prevDirectSessions = 0;
-    let prevNewUsers = 0;
-
-    rows.forEach((r) => {
-      const channel = r.dimensionValues?.[0]?.value || '';
-      const sessions = parseInt(r.metricValues?.[0]?.value || '0', 10);
-      const active = parseInt(r.metricValues?.[1]?.value || '0', 10);
-      const nu = parseInt(r.metricValues?.[2]?.value || '0', 10);
-      const duration = parseFloat(r.metricValues?.[3]?.value || '0');
-
-      totalSessions += sessions;
-      newUsers += nu;
-      totalDuration += duration * sessions;
-
-      if (channel.toLowerCase().includes('organic')) {
-        organicSessions += sessions;
-      } else if (channel.toLowerCase().includes('direct')) {
-        directSessions += sessions;
-      }
-    });
-
-    const avgDurationSec = totalSessions > 0 ? Math.round(totalDuration / totalSessions) : 0;
-    const mins = Math.floor(avgDurationSec / 60);
-    const secs = avgDurationSec % 60;
-    const timeOnSite = `${mins}m ${secs}s`;
+    const data = await getGA4Overview({ auth, propertyId, startDate, endDate, prevStartDate, prevEndDate });
 
     res.json({
-      overall: totalSessions,
-      prevOverall: prevTotalSessions,
-      diffOverall: calcDiff(totalSessions, prevTotalSessions),
-      organic: organicSessions,
-      prevOrganic: prevOrganicSessions,
-      diffOrganic: calcDiff(organicSessions, prevOrganicSessions),
-      direct: directSessions,
-      prevDirect: prevDirectSessions,
-      diffDirect: calcDiff(directSessions, prevDirectSessions),
-      organicNewUsers: newUsers,
-      prevOrganicNewUsers: prevNewUsers,
-      diffOrganicNewUsers: calcDiff(newUsers, prevNewUsers),
-      timeOnSite,
-      prevTimeOnSite: '0m 0s',
-      diffTimeOnSite: 0,
+      overall: data.overall.current,
+      prevOverall: data.overall.previous,
+      diffOverall: data.overall.diffPct,
+      organic: data.organic.current,
+      prevOrganic: data.organic.previous,
+      diffOrganic: data.organic.diffPct,
+      direct: data.direct.current,
+      prevDirect: data.direct.previous,
+      diffDirect: data.direct.diffPct,
+      organicNewUsers: data.organicNewUsers.current,
+      prevOrganicNewUsers: data.organicNewUsers.previous,
+      diffOrganicNewUsers: data.organicNewUsers.diffPct,
+      timeOnSite: data.timeOnSiteOrganic.current,
+      prevTimeOnSite: data.timeOnSiteOrganic.previous,
+      diffTimeOnSite: data.timeOnSiteOrganic.diffPct,
     });
   } catch (error) {
-    console.error('GA4 Report Error:', error.message);
-    res.status(500).json({ error: error.message });
+    const classified = classifyGoogleError(error, 'Google Analytics 4');
+    res.status(classified.code || 500).json(classified);
   }
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception thrown:', err);
 });
 
 export default app;
