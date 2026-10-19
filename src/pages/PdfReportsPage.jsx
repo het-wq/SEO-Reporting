@@ -34,7 +34,7 @@ export default function PdfReportsPage() {
     setUploadSuccess('');
     try {
       const newReport = await uploadReport(selectedFile, {
-        client: report?.client || 'Appliance Care of Atlanta',
+        client: report?.client || 'Boulder Decision',
         period: period || selectedFile.name.replace(/\.pdf$/i, ''),
         previousPeriod: report?.period || '',
       });

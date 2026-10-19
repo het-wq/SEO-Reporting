@@ -101,7 +101,7 @@ export default function OverviewPage() {
               <h3 className="font-semibold text-sm text-amber-900">Google API Authorization or Permission Required</h3>
               <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
                 {gscSource?.error?.includes('permission') || ga4Source?.error?.includes('permission')
-                  ? `Your connected Google account does not have permission for Google Search Console property "${gscSource?.siteUrl || 'sc-domain:appliancecareofatlanta.com'}" or GA4 property "${ga4Source?.propertyId || '516707960'}". Please ensure your Google account is added as a user or owner in GSC/GA4.`
+                  ? `Your connected Google account does not have permission for Google Search Console property "${gscSource?.siteUrl || 'sc-domain:boulderdecision.com'}" or GA4 property "${ga4Source?.propertyId || 'Boulder Decision GA4'}". Please ensure your Google account is added as a user or owner in GSC/GA4.`
                   : `Unable to fetch live metrics: ${gscSource?.error || ga4Source?.error || 'Authentication credentials required'}`}
               </p>
             </div>

@@ -62,8 +62,8 @@ app.get('/api/health', (req, res) => {
     hasToken: authStatus.authenticated,
     authType: authStatus.authType,
     environment: process.env.VERCEL ? 'vercel' : 'local',
-    ga4PropertyId: process.env.GA4_PROPERTY_ID || '516707960',
-    gscSiteUrl: process.env.GSC_SITE_URL || 'sc-domain:appliancecareofatlanta.com',
+    ga4PropertyId: process.env.GA4_PROPERTY_ID || '',
+    gscSiteUrl: process.env.GSC_SITE_URL || 'sc-domain:boulderdecision.com',
   });
 });
 

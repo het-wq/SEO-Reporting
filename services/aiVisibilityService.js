@@ -4,7 +4,7 @@
  * Never invents citations or fake engine counts.
  */
 
-export const getAiVisibilityOverview = async ({ brandName = 'Appliance Care of Atlanta' } = {}) => {
+export const getAiVisibilityOverview = async ({ brandName = process.env.CLIENT_NAME || 'Boulder Decision' } = {}) => {
   const apiKey = process.env.AI_VISIBILITY_API_KEY;
 
   if (apiKey) {

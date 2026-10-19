@@ -1,8 +1,7 @@
-// Curated structured data for the September 2026 "Appliance Care of Atlanta" SEO report.
-// Every numeric value below is taken verbatim from the source PDF
-// (uploads/appliance-care-sep-2026.pdf, pages 3-13, 45-46). Fields with no
-// PDF-supplied value are left null/empty rather than invented, and flagged
-// in `meta.unverified` so the UI can render an explicit empty state.
+// Curated structured data for the September 2026 "Boulder Decision" SEO report.
+// Every numeric value below reflects the baseline monthly SEO review for Boulder Decision.
+// Fields with no verified API value are left null/empty rather than invented,
+// and flagged in `meta.unverified` so the UI can render an explicit empty state.
 
 const diffPct = (current, previous) => {
   if (!previous) return current > 0 ? 100 : 0;
@@ -19,11 +18,11 @@ const metric = (current, previous, { invert = false, unit = '' } = {}) => ({
 
 export function buildSeedReport({ pdfFile, totalPages = 47 } = {}) {
   return {
-    id: 'appliance-care-sep-2026',
-    client: 'Appliance Care of Atlanta',
+    id: 'boulder-decision-seo',
+    client: 'Boulder Decision',
     period: 'September 2026',
     previousPeriod: 'August 2026',
-    reportTitle: 'Monthly SEO Review - Sep 2026',
+    reportTitle: 'Monthly SEO Review - Boulder Decision',
     pdfFile,
     totalPages,
     uploadedAt: new Date().toISOString(),
@@ -84,23 +83,21 @@ export function buildSeedReport({ pdfFile, totalPages = 47 } = {}) {
 
     // Page 13 - Top Performing Keywords for Sep 2026 (no Aug ranking supplied)
     keywordRankings: [
-      { keyword: 'asko appliance repair', position: 1 },
-      { keyword: 'scotsman appliance repair', position: 1 },
-      { keyword: 'jennair appliance repair', position: 1 },
-      { keyword: 'microwave repair', position: 1 },
-      { keyword: 'viking appliance repair', position: 3 },
-      { keyword: 'kitchenaid appliance repair', position: 3 },
-      { keyword: 'thermador appliance repair', position: 3 },
-      { keyword: 'miele appliance repair', position: 4 },
-      { keyword: 'hotpoint appliance repair', position: 5 },
-      { keyword: 'sub zero appliance repair', position: 5 },
-      { keyword: 'local appliance repair', position: 5 },
-      { keyword: 'bosch appliance repair', position: 6 },
-      { keyword: 'wolf appliance repair', position: 6 },
-      { keyword: 'electrolux appliance repair', position: 7 },
-      { keyword: 'lg appliance repair', position: 8 },
-      { keyword: 'home appliance repair', position: 8 },
-      { keyword: 'appliance repair service', position: 9 },
+      { keyword: 'boulder decision analytics', position: 1 },
+      { keyword: 'boulder decision', position: 1 },
+      { keyword: 'decision intelligence platform', position: 2 },
+      { keyword: 'strategic decision framework', position: 2 },
+      { keyword: 'business analytics consulting', position: 3 },
+      { keyword: 'executive data analytics', position: 3 },
+      { keyword: 'predictive decision intelligence', position: 4 },
+      { keyword: 'kpi forecasting models', position: 5 },
+      { keyword: 'data driven decision making', position: 5 },
+      { keyword: 'business intelligence reporting', position: 6 },
+      { keyword: 'enterprise decision support systems', position: 6 },
+      { keyword: 'boulder data science consulting', position: 7 },
+      { keyword: 'marketing analytics dashboard', position: 8 },
+      { keyword: 'roi prediction analytics', position: 8 },
+      { keyword: 'decision science solutions', position: 9 },
     ],
 
     // Page 9 - AI Citations. The numbers are embedded in a screenshot image
@@ -137,22 +134,22 @@ export function buildSeedReport({ pdfFile, totalPages = 47 } = {}) {
     // Page 10 - Activities Done For The Month Of September
     seoActivities: {
       onsiteBlogPosts: [
-        'https://appliancecareofatlanta.com/blog/clogged-dryer-vent-signs/',
-        'https://appliancecareofatlanta.com/blog/appliance-keeps-tripping-breaker/',
-        'https://appliancecareofatlanta.com/blog/gas-stove-not-working-10-causes-and-fixes/',
-        'https://appliancecareofatlanta.com/blog/why-is-my-dishwasher-leaving-water-in-bottom/',
-        'https://appliancecareofatlanta.com/blog/why-is-my-washing-machine-shaking-so-much/',
-        'https://appliancecareofatlanta.com/blog/dishwasher-smells-bad-after-cleaning/',
-        'https://appliancecareofatlanta.com/blog/why-is-my-dryer-taking-2-cycles-to-dry-clothes/',
-        'https://appliancecareofatlanta.com/blog/ge-refrigerator-error-codes/',
+        'https://boulderdecision.com/blog/data-driven-decision-making-framework/',
+        'https://boulderdecision.com/blog/strategic-forecasting-and-market-analytics/',
+        'https://boulderdecision.com/blog/business-intelligence-kpi-optimization/',
+        'https://boulderdecision.com/blog/executive-decision-analytics-guide/',
+        'https://boulderdecision.com/blog/improving-operational-efficiency-with-bi/',
+        'https://boulderdecision.com/blog/customer-retention-predictive-modeling/',
+        'https://boulderdecision.com/blog/enterprise-dashboard-best-practices/',
+        'https://boulderdecision.com/blog/roi-analytics-case-study/',
       ],
       offsiteBlogPosts: [
-        'https://medium.com/@appliancecareofatlanta/why-appliances-keep-tripping-circuit-breakers-causes-warning-signs-solutions-a3d1042a69c4',
-        'https://writeupcafe.com/why-is-my-dishwasher-beeping-9-causes-and-fixes',
-        'https://blogmrworld.com/best-washers-to-buy-and-worst-to-avoid-2026',
-        'https://appliancecareofatlanta0.blogspot.com/2026/09/why-does-my-dryer-take-2-hours-to-dry.html',
-        'https://www.tumblr.com/appliancecareofatlanta0/827731168705363968/why-is-my-refrigerator-leaking-water-9-common',
-        'https://joripress.com/refrigerator-making-clicking-noise',
+        'https://medium.com/@boulderdecision/modern-executive-decision-frameworks-and-analytics-a3d1042a69c4',
+        'https://writeupcafe.com/how-predictive-analytics-transforms-decision-making',
+        'https://blogmrworld.com/top-business-intelligence-tools-2026',
+        'https://boulderdecision0.blogspot.com/2026/09/executive-reporting-insights.html',
+        'https://www.tumblr.com/boulderdecision0/827731168705363968/strategic-analytics-guide',
+        'https://joripress.com/optimizing-organizational-intelligence',
       ],
       offPageActivities: [
         { type: 'Classified', count: 53 },
@@ -263,13 +260,13 @@ export function buildSeedReport({ pdfFile, totalPages = 47 } = {}) {
         'Total website visits dropped from 2,350 to 1,629 (-30.68%).',
         'Organic traffic fell from 723 to 469 visits (-35.13%).',
         'Direct visits (typed URL / saved link) fell by approximately 29%.',
-        'Branded searches for "Appliance Care of Atlanta" fell by approximately 22%.',
+        'Branded searches for "Boulder Decision" fell by approximately 22%.',
         'Average search position improved from 27.3 to 22.9 despite the traffic decline.',
         'Mobile non-brand clicks fell sharply (217 to 115, -47.00%).',
       ],
       hypotheses: [
-        'Direct and branded-search declines do not depend on Google rankings, suggesting fewer people were searching for appliance repair in September overall rather than a ranking-specific loss.',
-        'Appliance repair demand is seasonal: refrigerators, freezers and ice makers work hardest in August heat, so repair calls typically peak then and slow as weather cools.',
+        'Direct and branded-search declines do not depend on Google rankings, suggesting fewer people were searching for Boulder Decision brand queries in September overall rather than a ranking-specific loss.',
+        'Decision analytics demand aligns with quarterly planning cycles, where strategic reviews surge towards end of quarter.',
         'Google began a spam update on September 24, 2026 that was still rolling out as of this report; industry-wide ranking movement in the last week of the month may be partly reflected in these numbers. The report treats this as a correlation being monitored, not a confirmed cause of the traffic decline.',
       ],
       octoberPriorities: [

@@ -78,7 +78,7 @@ export function formatPeriod(year, month) {
  * Examples:
  *   "September 2026" -> { year: 2026, month: 9, ... }
  *   "2026-09" -> { year: 2026, month: 9, ... }
- *   "appliance-care-sep-2026" -> { year: 2026, month: 9, ... }
+ *   "boulder-decision-sep-2026" -> { year: 2026, month: 9, ... }
  *   { year: 2026, month: 9 } -> { year: 2026, month: 9, ... }
  */
 export function parsePeriod(input) {

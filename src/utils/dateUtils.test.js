@@ -58,8 +58,8 @@ assert(
 const fromKey = parsePeriod('2026-09');
 assert(fromKey.label === 'September 2026', 'Parse 2026-09');
 
-const fromId = parsePeriod('appliance-care-sep-2026');
-assert(fromId.label === 'September 2026', 'Parse appliance-care-sep-2026');
+const fromId = parsePeriod('boulder-decision-sep-2026');
+assert(fromId.label === 'September 2026', 'Parse boulder-decision-sep-2026');
 
 // 5. Percentage calculations
 assert(calculatePercentageChange(1629, 2350) === -30.68, 'Traffic change %');

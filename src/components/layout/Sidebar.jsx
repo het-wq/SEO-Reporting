@@ -76,11 +76,11 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggleCol
       >
         <div className={cn('flex items-center gap-2.5 px-4 py-4 border-b border-slate-100', collapsed && 'justify-center px-2')}>
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white font-bold text-xs">
-            ACA
+            BD
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="text-sm font-bold text-slate-900 truncate">Appliance Care</p>
+              <p className="text-sm font-bold text-slate-900 truncate">Boulder Decision</p>
               <p className="text-[11px] text-slate-500 truncate">SEO Reporting Dashboard</p>
             </div>
           )}
@@ -107,10 +107,10 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggleCol
             <div className="flex items-center justify-between gap-2.5 px-4 py-4 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white font-bold text-xs">
-                  ACA
+                  BD
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-900">Appliance Care</p>
+                  <p className="text-sm font-bold text-slate-900">Boulder Decision</p>
                   <p className="text-[11px] text-slate-500">SEO Reporting Dashboard</p>
                 </div>
               </div>

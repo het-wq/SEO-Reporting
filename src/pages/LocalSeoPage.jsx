@@ -66,7 +66,7 @@ export default function LocalSeoPage() {
                 <ul className="space-y-1.5 text-slate-600">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                    <span><strong>BrightLocal API v4:</strong> Automates local 3x3 geo-grid ranking scans across Atlanta neighborhoods.</span>
+                    <span><strong>BrightLocal API v4:</strong> Automates local 3x3 geo-grid ranking scans across targeted service areas.</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 shrink-0" />
@@ -74,7 +74,7 @@ export default function LocalSeoPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                    <span><strong>Google Search Console:</strong> Verified organic search rankings for Atlanta local repair queries are available right now.</span>
+                    <span><strong>Google Search Console:</strong> Verified organic search rankings for local business queries are available right now.</span>
                   </li>
                 </ul>
               </div>
@@ -86,7 +86,7 @@ export default function LocalSeoPage() {
                 </Button>
                 <Button variant="outline" size="sm" onClick={navigateToKeywords} className="gap-1.5 text-xs bg-white text-slate-700">
                   <KeyRound className="h-3.5 w-3.5" />
-                  <span>View Local Atlanta Search Queries</span>
+                  <span>View Local Search Queries</span>
                 </Button>
               </div>
             </CardContent>

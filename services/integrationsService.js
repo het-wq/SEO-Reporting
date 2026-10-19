@@ -35,9 +35,9 @@ export const getAllIntegrationsStatus = async (req) => {
     console.warn('Error reading auth status:', err.message);
   }
 
-  const ga4PropId = process.env.GA4_PROPERTY_ID || '516707960';
-  const gscSiteUrl = process.env.GSC_SITE_URL || 'sc-domain:appliancecareofatlanta.com';
-  let brandTerms = ['appliance care of atlanta', 'appliance care', 'appliancecare'];
+  const ga4PropId = process.env.GA4_PROPERTY_ID || '';
+  const gscSiteUrl = process.env.GSC_SITE_URL || 'sc-domain:boulderdecision.com';
+  let brandTerms = ['boulder decision', 'boulder decisions', 'boulderdecision'];
   try {
     brandTerms = parseBrandTerms();
   } catch (err) {
@@ -250,7 +250,7 @@ export const testIntegration = async (providerId, req) => {
       };
     }
 
-    const siteUrl = req?.body?.siteUrl || process.env.GSC_SITE_URL || 'sc-domain:appliancecareofatlanta.com';
+    const siteUrl = req?.body?.siteUrl || process.env.GSC_SITE_URL || 'sc-domain:boulderdecision.com';
 
     try {
       const searchconsole = google.searchconsole({ version: 'v1', auth });

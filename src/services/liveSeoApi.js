@@ -4,9 +4,9 @@ const STORAGE_KEY = 'seo_api_config';
 
 export const defaultConfig = {
   endpointUrl: BACKEND_BASE,
-  ga4PropertyId: '516707960',
-  gscSiteUrl: 'sc-domain:appliancecareofatlanta.com',
-  brandKeywords: 'Appliance Care of Atlanta,Appliance Care,ApplianceCare,appliancecareofatlanta',
+  ga4PropertyId: '',
+  gscSiteUrl: 'sc-domain:boulderdecision.com',
+  brandKeywords: 'Boulder Decision,Boulder Decisions,boulderdecision,boulderdecisions',
   apiToken: '',
   googleConnected: false,
 };

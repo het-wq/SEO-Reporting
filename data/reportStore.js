@@ -12,8 +12,8 @@ export const UPLOAD_DIR = isVercel ? path.join(os.tmpdir(), 'uploads') : path.jo
 export const PAGES_DIR = path.join(UPLOAD_DIR, 'pages');
 export const REPORTS_DIR = isVercel ? path.join(os.tmpdir(), 'reports') : path.join(ROOT, 'data', 'reports');
 
-const SEED_ID = 'appliance-care-sep-2026';
-const SEED_PDF_FILENAME = 'appliance-care-sep-2026.pdf';
+const SEED_ID = 'boulder-decision-seo';
+const SEED_PDF_FILENAME = 'boulder-decision-seo.pdf';
 
 export async function ensureDirs() {
   await fs.mkdir(UPLOAD_DIR, { recursive: true });

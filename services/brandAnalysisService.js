@@ -16,11 +16,11 @@ export const parseBrandTerms = (termsInput) => {
   }
 
   return [
-    'appliance care of atlanta',
-    'appliance care',
-    'appliancecare',
-    'appliance care atlanta',
-    'appliancecareofatlanta',
+    'boulder decision',
+    'boulder decisions',
+    'boulderdecision',
+    'boulderdecisions',
+    'boulder decision analytics',
   ];
 };
 

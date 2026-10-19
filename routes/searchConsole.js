@@ -14,7 +14,7 @@ const router = express.Router();
 const parseParams = (req) => {
   const q = req.method === 'POST' ? req.body : req.query;
   return {
-    siteUrl: q.siteUrl || process.env.GSC_SITE_URL || 'sc-domain:appliancecareofatlanta.com',
+    siteUrl: q.siteUrl || process.env.GSC_SITE_URL || 'sc-domain:boulderdecision.com',
     startDate: q.startDate,
     endDate: q.endDate,
     prevStartDate: q.prevStartDate,

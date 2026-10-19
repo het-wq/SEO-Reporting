@@ -25,8 +25,8 @@ export const getLiveDashboardReport = async ({
   forceRefresh = false,
 }) => {
   const auth = getAuth(req);
-  const ga4PropertyId = overridePropId || process.env.GA4_PROPERTY_ID || '516707960';
-  const gscSiteUrl = overrideSiteUrl || process.env.GSC_SITE_URL || 'sc-domain:appliancecareofatlanta.com';
+  const ga4PropertyId = overridePropId || process.env.GA4_PROPERTY_ID || '';
+  const gscSiteUrl = overrideSiteUrl || process.env.GSC_SITE_URL || 'sc-domain:boulderdecision.com';
 
   const cacheKey = `${startDate}_${endDate}_${prevStartDate}_${prevEndDate}_${ga4PropertyId}_${gscSiteUrl}`;
   if (!forceRefresh && cache.has(cacheKey)) {
@@ -243,7 +243,7 @@ export const getLiveDashboardReport = async ({
     observations: observations.length > 0 ? observations : ['Monitoring search queries, device splits, and channel acquisition.'],
     hypotheses: [
       'Algorithm adjustments and SERP layout features may influence impression share and click-through rates.',
-      'Seasonal demand and local Atlanta service area search volume directly impact query trends.',
+      'Targeted service area search volume and industry demand patterns influence query trends.',
     ],
     googleUpdate: {
       name: 'Google Core Search Algorithm',
@@ -253,13 +253,13 @@ export const getLiveDashboardReport = async ({
     octoberPriorities: [
       'Expand landing page optimization for top non-brand queries with high impression volume.',
       'Enhance mobile user experience and Core Web Vitals to sustain search rankings.',
-      'Target high-intent appliance repair keywords currently ranking in positions 4-10.',
+      'Target high-intent Boulder Decision keywords currently ranking in positions 4-10.',
     ],
   };
 
   const report = {
     id: `live-${startDate}-${endDate}`,
-    client: 'Appliance Care of Atlanta',
+    client: process.env.CLIENT_NAME || 'Boulder Decision',
     isLive: true,
     period: periodLabel || `${startDate} to ${endDate}`,
     previousPeriod: previousPeriodLabel || `${prevStartDate} to ${prevEndDate}`,

@@ -29,7 +29,7 @@ export default function AppHeader({ pageTitle, onOpenMobileSidebar, onExportCsv 
 
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              <span>Appliance Care of Atlanta</span>
+              <span>Boulder Decision</span>
               <ChevronRight className="h-3 w-3" />
               <span className="font-medium text-slate-700">{pageTitle}</span>
             </div>
@@ -93,7 +93,7 @@ export default function AppHeader({ pageTitle, onOpenMobileSidebar, onExportCsv 
               <p className="px-2 py-1.5 text-xs text-slate-500">Signed in as <span className="font-medium text-slate-700">Agency Admin</span></p>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setSelectedId((id) => id)}>
-                Appliance Care of Atlanta
+                Boulder Decision
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

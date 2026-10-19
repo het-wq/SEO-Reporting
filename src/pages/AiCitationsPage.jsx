@@ -65,7 +65,7 @@ export default function AiCitationsPage() {
                 <ul className="space-y-1.5 text-slate-600">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-violet-600 shrink-0" />
-                    <span><strong>Perplexity Search API:</strong> Queries live Perplexity AI citations and grounded web sources for Appliance Care of Atlanta.</span>
+                    <span><strong>Perplexity Search API:</strong> Queries live Perplexity AI citations and grounded web sources for Boulder Decision.</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-violet-600 shrink-0" />

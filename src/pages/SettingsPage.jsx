@@ -241,12 +241,12 @@ export default function SettingsPage() {
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1">GA4 Property ID</label>
               <Input
-                placeholder="e.g. 516707960"
+                placeholder="e.g. 123456789"
                 value={config.ga4PropertyId}
                 onChange={(e) => setConfig((prev) => ({ ...prev, ga4PropertyId: e.target.value }))}
                 className="font-mono text-xs"
               />
-              <p className="text-[11px] text-slate-400 mt-1">Appliance Care of Atlanta default property: <strong>516707960</strong></p>
+              <p className="text-[11px] text-slate-400 mt-1">Boulder Decision GA4 numeric Property ID (from Google Analytics Admin)</p>
             </div>
 
             {testResults.ga4 && (
@@ -290,12 +290,12 @@ export default function SettingsPage() {
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1">Search Console Site URL</label>
               <Input
-                placeholder="e.g. sc-domain:appliancecareofatlanta.com"
+                placeholder="e.g. sc-domain:boulderdecision.com or https://boulderdecision.com"
                 value={config.gscSiteUrl}
                 onChange={(e) => setConfig((prev) => ({ ...prev, gscSiteUrl: e.target.value }))}
                 className="font-mono text-xs"
               />
-              <p className="text-[11px] text-slate-400 mt-1">Domain property or full URL prefix (e.g. https://...)</p>
+              <p className="text-[11px] text-slate-400 mt-1">Boulder Decision domain property (e.g. sc-domain:boulderdecision.com) or URL prefix</p>
             </div>
 
             {testResults.gsc && (

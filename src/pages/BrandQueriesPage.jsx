@@ -107,7 +107,7 @@ export default function BrandQueriesPage() {
   const prevLabel = previousPeriod?.label || 'Previous Period';
   const curLabel = selectedPeriod?.label || 'Selected Period';
 
-  const brandTerms = brandQueries.brandTerms || ['Appliance Care of Atlanta', 'Appliance Care'];
+  const brandTerms = brandQueries.brandTerms || ['Boulder Decision', 'Boulder Decisions', 'boulderdecision', 'boulderdecisions'];
   const topBrandQueries = brandQueries.topBrandQueries || [];
   const topNonBrandQueries = brandQueries.topNonBrandQueries || [];
 

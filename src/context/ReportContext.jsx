@@ -143,7 +143,7 @@ export function ReportProvider({ children }) {
     report,
     hasReportData: Boolean(report && (report.traffic?.hasData || report.searchConsole?.hasData)),
     isLive: true,
-    clientName: 'Appliance Care of Atlanta',
+    clientName: report?.client || 'Boulder Decision',
     loading,
     error,
     dateRangeInfo,
