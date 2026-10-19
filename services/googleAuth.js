@@ -62,6 +62,10 @@ export const clearStoredTokens = () => {
 };
 
 export const getRedirectUri = (req) => {
+  if (process.env.VERCEL && req?.headers?.host) {
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    return `${proto}://${req.headers.host}/api/auth/google/callback`;
+  }
   if (process.env.REDIRECT_URI) return process.env.REDIRECT_URI;
   if (req && req.headers && req.headers.host) {
     const proto = req.headers['x-forwarded-proto'] || (req.headers.host.includes('localhost') ? 'http' : 'https');
