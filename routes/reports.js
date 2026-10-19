@@ -10,7 +10,8 @@ import {
   getReport,
   saveReport,
 } from '../data/reportStore.js';
-import { extractPdfText, renderPdfPages, parseComparisonRows } from '../services/pdfExtract.js';
+// Dynamically load pdfExtract only if PDF processing is invoked
+const getPdfExtract = async () => import('../services/pdfExtract.js');
 
 const router = express.Router();
 
@@ -86,6 +87,7 @@ router.get('/:id/page-image/:page', async (req, res) => {
 
     const pdfAbsPath = path.join(UPLOAD_DIR, report.pdfFile.replace(/^\/uploads\//, ''));
     const pdfBuffer = await fs.readFile(pdfAbsPath);
+    const { renderPdfPages } = await getPdfExtract();
     const rendered = await renderPdfPages(pdfBuffer, [pageNum], 1.3);
     if (!rendered.length) return res.status(404).json({ error: 'Page could not be rendered' });
 
@@ -104,6 +106,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded (expected field "file")' });
 
     const pdfBuffer = await fs.readFile(req.file.path);
+    const { extractPdfText, parseComparisonRows } = await getPdfExtract();
     const { pageCount, pages } = await extractPdfText(pdfBuffer);
 
     const autoDetected = {};

@@ -33,8 +33,10 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static(UPLOAD_DIR));
 
-// Seed PDF reports storage for historical document viewer
-seedIfEmpty().catch((err) => console.error('Failed to seed initial report:', err));
+// Seed PDF reports storage for historical document viewer (local only, read-only on Vercel)
+if (!process.env.VERCEL) {
+  seedIfEmpty().catch((err) => console.error('Failed to seed initial report:', err));
+}
 
 // -----------------------------------------------------------------------------
 // Modular REST APIs
@@ -220,6 +222,15 @@ app.post('/api/ga4/report', async (req, res) => {
     const classified = classifyGoogleError(error, 'Google Analytics 4');
     res.status(classified.code || 500).json(classified);
   }
+});
+
+// Catch-all handler so serverless function invocations never hang or time out
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Endpoint not found',
+    requestedUrl: req.originalUrl || req.url,
+    method: req.method,
+  });
 });
 
 process.on('unhandledRejection', (reason, promise) => {

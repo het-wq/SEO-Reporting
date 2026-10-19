@@ -4,9 +4,12 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import os from 'os';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const TOKENS_FILE = path.join(ROOT, 'data', 'tokens.json');
+const isVercel = Boolean(process.env.VERCEL);
+const TOKENS_FILE = isVercel ? path.join(os.tmpdir(), 'tokens.json') : path.join(ROOT, 'data', 'tokens.json');
 
 export const getClientId = () => process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
 export const getClientSecret = () => process.env.GOOGLE_CLIENT_SECRET;
@@ -182,7 +185,7 @@ export const getAuthStatus = () => {
     hasOAuthToken,
     hasServiceAccount,
     scopes: REQUIRED_SCOPES,
-    clientId: CLIENT_ID ? `${CLIENT_ID.substring(0, 16)}...` : null,
+    clientId: clientId ? `${clientId.substring(0, 16)}...` : null,
   };
 };
 

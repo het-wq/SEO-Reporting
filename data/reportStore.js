@@ -1,14 +1,16 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 import { buildSeedReport } from './seedReport.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
+const isVercel = Boolean(process.env.VERCEL);
 
-export const UPLOAD_DIR = path.join(ROOT, 'uploads');
+export const UPLOAD_DIR = isVercel ? path.join(os.tmpdir(), 'uploads') : path.join(ROOT, 'uploads');
 export const PAGES_DIR = path.join(UPLOAD_DIR, 'pages');
-export const REPORTS_DIR = path.join(ROOT, 'data', 'reports');
+export const REPORTS_DIR = isVercel ? path.join(os.tmpdir(), 'reports') : path.join(ROOT, 'data', 'reports');
 
 const SEED_ID = 'appliance-care-sep-2026';
 const SEED_PDF_FILENAME = 'appliance-care-sep-2026.pdf';
