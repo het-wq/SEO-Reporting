@@ -7,6 +7,7 @@ export const defaultConfig = {
   ga4PropertyId: '',
   gscSiteUrl: 'https://boulderdecisions.com/',
   brandKeywords: 'Boulder Decision,Boulder Decisions,boulderdecision,boulderdecisions,boulder decisions',
+  nonBrandKeywords: '',
   apiToken: '',
   googleConnected: false,
 };
@@ -74,6 +75,20 @@ export const saveApiConfig = (newConfig) => {
     console.error('Failed to save api config:', e);
   }
   return newConfig;
+};
+
+export const saveBrandAndNonBrandKeywords = ({ brandKeywords, nonBrandKeywords }) => {
+  const current = getApiConfig();
+  const updated = {
+    ...current,
+    ...(brandKeywords !== undefined ? {
+      brandKeywords: Array.isArray(brandKeywords) ? brandKeywords.join(',') : brandKeywords
+    } : {}),
+    ...(nonBrandKeywords !== undefined ? {
+      nonBrandKeywords: Array.isArray(nonBrandKeywords) ? nonBrandKeywords.join(',') : nonBrandKeywords
+    } : {}),
+  };
+  return saveApiConfig(updated);
 };
 
 const getHeaders = () => {
@@ -187,8 +202,18 @@ export const fetchDashboardLiveReport = async ({
   periodLabel,
   previousPeriodLabel,
   forceRefresh = false,
+  brandTerms,
+  nonBrandTerms,
 }) => {
   const cfg = getApiConfig();
+  const effectiveBrandTerms = brandTerms !== undefined
+    ? (Array.isArray(brandTerms) ? brandTerms : String(brandTerms).split(',').map((s) => s.trim()).filter(Boolean))
+    : (cfg.brandKeywords ? cfg.brandKeywords.split(',').map((s) => s.trim()).filter(Boolean) : undefined);
+
+  const effectiveNonBrandTerms = nonBrandTerms !== undefined
+    ? (Array.isArray(nonBrandTerms) ? nonBrandTerms : String(nonBrandTerms).split(',').map((s) => s.trim()).filter(Boolean))
+    : (cfg.nonBrandKeywords ? cfg.nonBrandKeywords.split(',').map((s) => s.trim()).filter(Boolean) : undefined);
+
   const res = await fetch(`${BACKEND_BASE}/api/dashboard/live-report`, {
     method: 'POST',
     headers: getHeaders(),
@@ -196,11 +221,12 @@ export const fetchDashboardLiveReport = async ({
     body: JSON.stringify({
       startDate,
       endDate,
-      prevStartDate,
-      prevEndDate,
+      prevStartDate: prevStartDate || undefined,
+      prevEndDate: prevEndDate || undefined,
       propertyId: cfg.ga4PropertyId,
       siteUrl: cfg.gscSiteUrl,
-      brandTerms: cfg.brandKeywords ? cfg.brandKeywords.split(',') : undefined,
+      brandTerms: effectiveBrandTerms,
+      nonBrandTerms: effectiveNonBrandTerms,
       periodLabel,
       previousPeriodLabel,
       forceRefresh,

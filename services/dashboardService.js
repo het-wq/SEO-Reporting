@@ -20,6 +20,7 @@ export const getLiveDashboardReport = async ({
   propertyId: overridePropId,
   siteUrl: overrideSiteUrl,
   brandTerms: overrideBrandTerms,
+  nonBrandTerms: overrideNonBrandTerms,
   periodLabel,
   previousPeriodLabel,
   forceRefresh = false,
@@ -28,7 +29,9 @@ export const getLiveDashboardReport = async ({
   const ga4PropertyId = overridePropId || process.env.GA4_PROPERTY_ID || '';
   const gscSiteUrl = overrideSiteUrl || process.env.GSC_SITE_URL || 'https://boulderdecisions.com/';
 
-  const cacheKey = `${startDate}_${endDate}_${prevStartDate}_${prevEndDate}_${ga4PropertyId}_${gscSiteUrl}`;
+  const brandKey = Array.isArray(overrideBrandTerms) ? overrideBrandTerms.join(',') : (overrideBrandTerms || '');
+  const nonBrandKey = Array.isArray(overrideNonBrandTerms) ? overrideNonBrandTerms.join(',') : (overrideNonBrandTerms || '');
+  const cacheKey = `${startDate}_${endDate}_${prevStartDate}_${prevEndDate}_${ga4PropertyId}_${gscSiteUrl}_${brandKey}_${nonBrandKey}`;
   if (!forceRefresh && cache.has(cacheKey)) {
     const cached = cache.get(cacheKey);
     if (Date.now() - cached.timestamp < CACHE_TTL_MS) {
@@ -152,6 +155,7 @@ export const getLiveDashboardReport = async ({
         prevStartDate,
         prevEndDate,
         brandTerms: overrideBrandTerms,
+        nonBrandTerms: overrideNonBrandTerms,
       });
     } catch (err) {
       errors.brand = err.message;
@@ -209,6 +213,7 @@ export const getLiveDashboardReport = async ({
   const brandQueries = brandAnalysis || {
     source: 'Google Search Console (Brand Engine)',
     brandTerms: overrideBrandTerms || [],
+    nonBrandTerms: overrideNonBrandTerms || [],
     all: { brandClicks: defaultMetric, nonBrandClicks: defaultMetric, brandImpressions: defaultMetric, nonBrandImpressions: defaultMetric },
     desktop: { brandClicks: defaultMetric, nonBrandClicks: defaultMetric, brandImpressions: defaultMetric, nonBrandImpressions: defaultMetric },
     mobile: { brandClicks: defaultMetric, nonBrandClicks: defaultMetric, brandImpressions: defaultMetric, nonBrandImpressions: defaultMetric },

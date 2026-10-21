@@ -24,10 +24,27 @@ export const parseBrandTerms = (termsInput) => {
   ];
 };
 
-export const isBrandQuery = (query, brandTerms) => {
+export const parseNonBrandTerms = (termsInput) => {
+  if (Array.isArray(termsInput) && termsInput.length > 0) {
+    return termsInput.map((t) => String(t).trim().toLowerCase()).filter(Boolean);
+  }
+
+  const envTerms = process.env.NON_BRAND_KEYWORDS;
+  if (envTerms) {
+    return envTerms.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
+  }
+
+  return [];
+};
+
+export const isBrandQuery = (query, brandTerms = [], nonBrandTerms = []) => {
   if (!query) return false;
   const q = String(query).toLowerCase().trim();
-  return brandTerms.some((term) => q.includes(term));
+  // If explicitly listed in nonBrandTerms, classify as non-brand
+  if (Array.isArray(nonBrandTerms) && nonBrandTerms.some((term) => q.includes(term))) {
+    return false;
+  }
+  return Array.isArray(brandTerms) && brandTerms.some((term) => q.includes(term));
 };
 
 /**
@@ -41,11 +58,13 @@ export const getBrandAnalysis = async ({
   prevStartDate,
   prevEndDate,
   brandTerms: userTerms,
+  nonBrandTerms: userNonBrandTerms,
 }) => {
   if (!auth) throw new Error('Not authenticated with Google');
   if (!siteUrl) throw new Error('Search Console siteUrl is required');
 
   const brandTerms = parseBrandTerms(userTerms);
+  const nonBrandTerms = parseNonBrandTerms(userNonBrandTerms);
   const searchconsole = google.searchconsole({ version: 'v1', auth });
 
   // Query with dimensions ['query', 'device']
@@ -105,7 +124,7 @@ export const getBrandAnalysis = async ({
     const device = (row.keys?.[1] || '').toLowerCase();
     const clicks = row.clicks || 0;
     const impressions = row.impressions || 0;
-    const isBrand = isBrandQuery(query, brandTerms);
+    const isBrand = isBrandQuery(query, brandTerms, nonBrandTerms);
 
     // Aggregate overall
     if (isBrand) {
@@ -151,7 +170,7 @@ export const getBrandAnalysis = async ({
     const device = (row.keys?.[1] || '').toLowerCase();
     const clicks = row.clicks || 0;
     const impressions = row.impressions || 0;
-    const isBrand = isBrandQuery(query, brandTerms);
+    const isBrand = isBrandQuery(query, brandTerms, nonBrandTerms);
 
     if (isBrand) {
       prevStats.all.brandClicks += clicks;
@@ -226,6 +245,7 @@ export const getBrandAnalysis = async ({
   return {
     source: 'Google Search Console (Brand vs Non-Brand Engine)',
     brandTerms,
+    nonBrandTerms,
     totalRowsAnalyzed: cRows.length,
     brandQueryCount: brandQueriesMap.size,
     nonBrandQueryCount: nonBrandQueriesMap.size,

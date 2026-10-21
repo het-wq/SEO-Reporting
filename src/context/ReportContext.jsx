@@ -15,9 +15,13 @@ export function ReportProvider({ children }) {
   // Default to standard industry 28-day reporting period for live API reporting
   const [filterType, setFilterType] = useState('last_28_days');
   const [filterParams, setFilterParams] = useState({
-    month: '2026-09',
+    month: '2026-10',
     startDate: '',
     endDate: '',
+    comparisonEnabled: true,
+    comparisonMode: 'previous_period', // 'previous_period' | 'previous_year' | 'custom' | 'none'
+    compareStartDate: '',
+    compareEndDate: '',
   });
 
   const [report, setReport] = useState(null);
@@ -45,13 +49,23 @@ export function ReportProvider({ children }) {
   }), [dateRangeInfo]);
 
   const previousPeriod = useMemo(() => ({
-    label: dateRangeInfo.prevPeriodLabel,
-    startDate: dateRangeInfo.prevStartDate,
-    endDate: dateRangeInfo.prevEndDate,
+    label: dateRangeInfo.comparisonEnabled ? dateRangeInfo.prevPeriodLabel : 'No comparison',
+    startDate: dateRangeInfo.comparisonEnabled ? dateRangeInfo.prevStartDate : '',
+    endDate: dateRangeInfo.comparisonEnabled ? dateRangeInfo.prevEndDate : '',
+    enabled: Boolean(dateRangeInfo.comparisonEnabled),
+    mode: dateRangeInfo.comparisonMode,
   }), [dateRangeInfo]);
 
   const comparisonLabel = useMemo(() => {
-    return `${dateRangeInfo.label} (${dateRangeInfo.startDate} – ${dateRangeInfo.endDate}) vs (${dateRangeInfo.prevStartDate} – ${dateRangeInfo.prevEndDate})`;
+    if (!dateRangeInfo.comparisonEnabled) {
+      return `${dateRangeInfo.label} (${dateRangeInfo.startDate} – ${dateRangeInfo.endDate})`;
+    }
+    const modeTag = dateRangeInfo.comparisonMode === 'previous_year'
+      ? 'YoY'
+      : dateRangeInfo.comparisonMode === 'custom'
+        ? 'Custom'
+        : 'Prior';
+    return `${dateRangeInfo.label} (${dateRangeInfo.startDate} – ${dateRangeInfo.endDate}) vs (${dateRangeInfo.prevStartDate} – ${dateRangeInfo.prevEndDate}) [${modeTag}]`;
   }, [dateRangeInfo]);
 
   // Load integrations telemetry
@@ -76,10 +90,10 @@ export function ReportProvider({ children }) {
       const liveData = await fetchDashboardLiveReport({
         startDate: dateRangeInfo.startDate,
         endDate: dateRangeInfo.endDate,
-        prevStartDate: dateRangeInfo.prevStartDate,
-        prevEndDate: dateRangeInfo.prevEndDate,
+        prevStartDate: dateRangeInfo.comparisonEnabled ? dateRangeInfo.prevStartDate : undefined,
+        prevEndDate: dateRangeInfo.comparisonEnabled ? dateRangeInfo.prevEndDate : undefined,
         periodLabel: dateRangeInfo.label,
-        previousPeriodLabel: dateRangeInfo.prevPeriodLabel,
+        previousPeriodLabel: dateRangeInfo.comparisonEnabled ? dateRangeInfo.prevPeriodLabel : 'No comparison',
         forceRefresh: isRefresh,
       });
 
@@ -155,6 +169,7 @@ export function ReportProvider({ children }) {
     setDateFilter,
     selectPeriod,
     refresh,
+    loadLiveReport,
     integrations,
     backendHealth,
     availablePeriods: [

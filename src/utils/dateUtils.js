@@ -233,6 +233,85 @@ export const addDays = (d, days) => {
   return result;
 };
 
+export const subtractYears = (dateStr, years = 1) => {
+  if (!dateStr) return '';
+  const parts = String(dateStr).split('-');
+  if (parts.length !== 3) return '';
+  const y = parseInt(parts[0], 10) - years;
+  const m = parseInt(parts[1], 10);
+  const d = parseInt(parts[2], 10);
+  if (m === 2 && d === 29) {
+    return `${y}-02-28`;
+  }
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+};
+
+/**
+ * Computes comparison date range based on comparisonMode:
+ * - 'previous_period' (default): preceding period of exact same duration
+ * - 'previous_year': exact same calendar dates from the previous year (YoY)
+ * - 'custom': user-specified compareStartDate and compareEndDate
+ * - 'none' / disabled: no comparison
+ */
+export const computeComparisonRange = ({
+  startDate,
+  endDate,
+  comparisonEnabled = true,
+  comparisonMode = 'previous_period',
+  compareStartDate = '',
+  compareEndDate = '',
+}) => {
+  if (comparisonEnabled === false || comparisonMode === 'none') {
+    return {
+      comparisonEnabled: false,
+      comparisonMode: 'none',
+      prevStartDate: '',
+      prevEndDate: '',
+      prevPeriodLabel: 'No comparison',
+    };
+  }
+
+  if (comparisonMode === 'previous_year') {
+    const prevStart = subtractYears(startDate, 1);
+    const prevEnd = subtractYears(endDate, 1);
+    return {
+      comparisonEnabled: true,
+      comparisonMode: 'previous_year',
+      prevStartDate: prevStart,
+      prevEndDate: prevEnd,
+      prevPeriodLabel: `${prevStart} to ${prevEnd} (YoY)`,
+    };
+  }
+
+  if (comparisonMode === 'custom' && compareStartDate && compareEndDate) {
+    return {
+      comparisonEnabled: true,
+      comparisonMode: 'custom',
+      prevStartDate: compareStartDate,
+      prevEndDate: compareEndDate,
+      prevPeriodLabel: `${compareStartDate} to ${compareEndDate} (Custom)`,
+    };
+  }
+
+  // Default: previous period of exact duration
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const diffTime = Math.abs(end - start);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+  const prevEnd = addDays(start, -1);
+  const prevStart = addDays(prevEnd, -(diffDays));
+  const prevStartStr = formatDate(prevStart);
+  const prevEndStr = formatDate(prevEnd);
+
+  return {
+    comparisonEnabled: true,
+    comparisonMode: 'previous_period',
+    prevStartDate: prevStartStr,
+    prevEndDate: prevEndStr,
+    prevPeriodLabel: `${prevStartStr} to ${prevEndStr} (Prior Period)`,
+  };
+};
+
 /**
  * Get date range with matching prior comparison period for live Search Console & GA4
  */
@@ -241,118 +320,60 @@ export const calculateDateRanges = (filterType = 'last_28_days', params = {}) =>
   // Anchor to 3 days ago to guarantee complete Google Search Console and GA4 data availability
   const anchor = addDays(now, -3);
 
+  let label = 'Last 28 Days';
+  let start = addDays(anchor, -27);
+  let end = anchor;
+
   if (filterType === 'last_7_days') {
-    const end = anchor;
-    const start = addDays(end, -6);
-    const prevEnd = addDays(start, -1);
-    const prevStart = addDays(prevEnd, -6);
-    return {
-      label: 'Last 7 Days',
-      startDate: formatDate(start),
-      endDate: formatDate(end),
-      prevStartDate: formatDate(prevStart),
-      prevEndDate: formatDate(prevEnd),
-      periodLabel: `${formatDate(start)} to ${formatDate(end)}`,
-      prevPeriodLabel: `${formatDate(prevStart)} to ${formatDate(prevEnd)}`,
-    };
-  }
-
-  if (filterType === 'last_14_days') {
-    const end = anchor;
-    const start = addDays(end, -13);
-    const prevEnd = addDays(start, -1);
-    const prevStart = addDays(prevEnd, -13);
-    return {
-      label: 'Last 14 Days',
-      startDate: formatDate(start),
-      endDate: formatDate(end),
-      prevStartDate: formatDate(prevStart),
-      prevEndDate: formatDate(prevEnd),
-      periodLabel: `${formatDate(start)} to ${formatDate(end)}`,
-      prevPeriodLabel: `${formatDate(prevStart)} to ${formatDate(prevEnd)}`,
-    };
-  }
-
-  if (filterType === 'last_28_days') {
-    const end = anchor;
-    const start = addDays(end, -27);
-    const prevEnd = addDays(start, -1);
-    const prevStart = addDays(prevEnd, -27);
-    return {
-      label: 'Last 28 Days',
-      startDate: formatDate(start),
-      endDate: formatDate(end),
-      prevStartDate: formatDate(prevStart),
-      prevEndDate: formatDate(prevEnd),
-      periodLabel: `${formatDate(start)} to ${formatDate(end)}`,
-      prevPeriodLabel: `${formatDate(prevStart)} to ${formatDate(prevEnd)}`,
-    };
-  }
-
-  if (filterType === 'last_30_days') {
-    const end = anchor;
-    const start = addDays(end, -29);
-    const prevEnd = addDays(start, -1);
-    const prevStart = addDays(prevEnd, -29);
-    return {
-      label: 'Last 30 Days',
-      startDate: formatDate(start),
-      endDate: formatDate(end),
-      prevStartDate: formatDate(prevStart),
-      prevEndDate: formatDate(prevEnd),
-      periodLabel: `${formatDate(start)} to ${formatDate(end)}`,
-      prevPeriodLabel: `${formatDate(prevStart)} to ${formatDate(prevEnd)}`,
-    };
-  }
-
-  if (filterType === 'month_wise') {
+    label = 'Last 7 Days';
+    end = anchor;
+    start = addDays(end, -6);
+  } else if (filterType === 'last_14_days') {
+    label = 'Last 14 Days';
+    end = anchor;
+    start = addDays(end, -13);
+  } else if (filterType === 'last_28_days') {
+    label = 'Last 28 Days';
+    end = anchor;
+    start = addDays(end, -27);
+  } else if (filterType === 'last_30_days') {
+    label = 'Last 30 Days';
+    end = anchor;
+    start = addDays(end, -29);
+  } else if (filterType === 'month_wise') {
     const monthStr = params.month || '2026-10';
     const [yearStr, mStr] = monthStr.split('-');
     const year = parseInt(yearStr, 10);
     const month = parseInt(mStr, 10) - 1;
 
-    const start = new Date(year, month, 1);
-    const end = new Date(year, month + 1, 0);
-
-    const prevStart = new Date(year, month - 1, 1);
-    const prevEnd = new Date(year, month, 0);
-
-    const currentMonthName = `${MONTH_NAMES[month]} ${year}`;
-    const prevMonthName = `${MONTH_NAMES[prevStart.getMonth()]} ${prevStart.getFullYear()}`;
-
-    return {
-      label: currentMonthName,
-      startDate: formatDate(start),
-      endDate: formatDate(end),
-      prevStartDate: formatDate(prevStart),
-      prevEndDate: formatDate(prevEnd),
-      periodLabel: currentMonthName,
-      prevPeriodLabel: prevMonthName,
-    };
-  }
-
-  if (filterType === 'date_wise') {
+    start = new Date(year, month, 1);
+    end = new Date(year, month + 1, 0);
+    label = `${MONTH_NAMES[month]} ${year}`;
+  } else if (filterType === 'date_wise') {
     const startStr = params.startDate || formatDate(addDays(anchor, -13));
     const endStr = params.endDate || formatDate(anchor);
-
-    const start = new Date(startStr);
-    const end = new Date(endStr);
-    const diffTime = Math.abs(end - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-
-    const prevEnd = addDays(start, -1);
-    const prevStart = addDays(prevEnd, -(diffDays - 1));
-
-    return {
-      label: `Custom: ${startStr} to ${endStr}`,
-      startDate: startStr,
-      endDate: endStr,
-      prevStartDate: formatDate(prevStart),
-      prevEndDate: formatDate(prevEnd),
-      periodLabel: `${startStr} to ${endStr}`,
-      prevPeriodLabel: `${formatDate(prevStart)} to ${formatDate(prevEnd)} (${diffDays}d prior)`,
-    };
+    start = new Date(startStr);
+    end = new Date(endStr);
+    label = `Custom: ${startStr} to ${endStr}`;
   }
 
-  return calculateDateRanges('last_14_days');
+  const startStr = formatDate(start);
+  const endStr = formatDate(end);
+
+  const comparison = computeComparisonRange({
+    startDate: startStr,
+    endDate: endStr,
+    comparisonEnabled: params.comparisonEnabled !== false && params.comparisonMode !== 'none',
+    comparisonMode: params.comparisonMode || 'previous_period',
+    compareStartDate: params.compareStartDate,
+    compareEndDate: params.compareEndDate,
+  });
+
+  return {
+    label,
+    startDate: startStr,
+    endDate: endStr,
+    periodLabel: `${startStr} to ${endStr}`,
+    ...comparison,
+  };
 };

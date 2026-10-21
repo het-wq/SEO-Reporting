@@ -129,7 +129,11 @@ export default function DateFilter({
           <Badge variant="outline" className="font-normal text-slate-700 bg-slate-50/50">
             {dateRangeInfo.startDate} &rarr; {dateRangeInfo.endDate}
           </Badge>
-          <span className="text-[11px] text-slate-400">vs {dateRangeInfo.prevStartDate} &rarr; {dateRangeInfo.prevEndDate}</span>
+          {dateRangeInfo.comparisonEnabled ? (
+            <span className="text-[11px] text-slate-400">vs {dateRangeInfo.prevStartDate} &rarr; {dateRangeInfo.prevEndDate}</span>
+          ) : (
+            <span className="text-[11px] text-slate-400">(Current only)</span>
+          )}
         </div>
       )}
     </div>

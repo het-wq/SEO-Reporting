@@ -21,6 +21,7 @@ const parseParams = (req) => {
     prevEndDate: q.prevEndDate,
     limit: parseInt(q.limit || q.rowLimit || '250', 10),
     brandTerms: q.brandTerms,
+    nonBrandTerms: q.nonBrandTerms,
   };
 };
 
@@ -118,7 +119,7 @@ const handleBrand = async (req, res) => {
     const auth = getAuth(req);
     if (!auth) return res.status(401).json({ error: 'Not authenticated with Google', status: 'unauthenticated' });
 
-    const { siteUrl, startDate, endDate, prevStartDate, prevEndDate, brandTerms } = parseParams(req);
+    const { siteUrl, startDate, endDate, prevStartDate, prevEndDate, brandTerms, nonBrandTerms } = parseParams(req);
     if (!startDate || !endDate) return res.status(400).json({ error: 'startDate and endDate required' });
 
     const brand = await getBrandAnalysis({
@@ -129,6 +130,7 @@ const handleBrand = async (req, res) => {
       prevStartDate,
       prevEndDate,
       brandTerms,
+      nonBrandTerms,
     });
 
     res.json(brand);
