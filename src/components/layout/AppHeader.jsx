@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, RefreshCw, Download, Printer, ChevronRight, User, AlertCircle } from 'lucide-react';
+import { Menu, RefreshCw, Download, Printer, ChevronRight, User, AlertCircle, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,9 +11,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import MonthSelector from '@/components/dashboard/MonthSelector';
 import { useReport } from '@/context/ReportContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AppHeader({ pageTitle, onOpenMobileSidebar, onExportCsv }) {
   const { comparisonLabel, loading, error, refresh } = useReport();
+  const { user, signOut } = useAuth();
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md print:hidden">
@@ -85,15 +87,45 @@ export default function AppHeader({ pageTitle, onOpenMobileSidebar, onExportCsv 
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-slate-100">
-                <User className="h-4 w-4 text-slate-600" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full bg-violet-100/80 text-violet-800 hover:bg-violet-200/80 border border-violet-200 cursor-pointer shadow-xs"
+                title="Account menu"
+              >
+                <span className="text-xs font-bold uppercase">
+                  {(user?.user_metadata?.full_name || user?.email || 'AD').slice(0, 2)}
+                </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <p className="px-2 py-1.5 text-xs text-slate-500">Signed in as <span className="font-medium text-slate-700">Agency Admin</span></p>
+            <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-xl">
+              <div className="px-2 py-1.5 space-y-0.5">
+                <p className="text-xs font-bold text-slate-900 truncate">
+                  {user?.user_metadata?.full_name || 'Agency Admin'}
+                </p>
+                <p className="text-[11px] text-slate-500 truncate">
+                  {user?.email || 'admin@boulderdecisions.com'}
+                </p>
+                <div className="pt-1">
+                  <Badge
+                    variant="outline"
+                    className={`text-[9px] font-semibold px-1.5 py-0.2 ${
+                      user?.isGuest
+                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    }`}
+                  >
+                    {user?.isGuest ? 'Demo Admin' : 'Supabase Authenticated'}
+                  </Badge>
+                </div>
+              </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => setSelectedId((id) => id)}>
-                Boulder Decision
+              <DropdownMenuItem
+                onSelect={() => signOut()}
+                className="text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer text-xs font-semibold"
+              >
+                <LogOut className="h-3.5 w-3.5 mr-2" />
+                Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

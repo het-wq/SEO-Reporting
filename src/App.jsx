@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ReportProvider, useReport } from '@/context/ReportContext';
 import { saveApiConfig, setCookie } from '@/services/liveSeoApi';
 import Sidebar, { NAV_ITEMS } from '@/components/layout/Sidebar';
 import AppHeader from '@/components/layout/AppHeader';
 
+import AuthPage from '@/pages/AuthPage';
 import OverviewPage from '@/pages/OverviewPage';
 import TrafficPage from '@/pages/TrafficPage';
 import SearchConsolePage from '@/pages/SearchConsolePage';
@@ -84,10 +86,33 @@ function DashboardShell() {
   );
 }
 
-export default function App() {
+function AppContent() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950 text-white gap-3 font-sans">
+        <div className="h-9 w-9 border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs text-slate-400">Loading Boulder Decision Dashboard...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthPage />;
+  }
+
   return (
     <ReportProvider>
       <DashboardShell />
     </ReportProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
