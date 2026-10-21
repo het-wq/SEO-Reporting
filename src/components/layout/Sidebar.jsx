@@ -8,10 +8,6 @@ import {
   KeyRound,
   MapPin,
   ListChecks,
-  Wrench,
-  Link2,
-  Sparkles,
-  FileText,
   Settings,
   ChevronsLeft,
   ChevronsRight,
@@ -28,10 +24,6 @@ export const NAV_ITEMS = [
   { key: 'keywords', label: 'Keyword Rankings', icon: KeyRound },
   { key: 'local-seo', label: 'Local SEO', icon: MapPin },
   { key: 'seo-activities', label: 'SEO Activities', icon: ListChecks },
-  { key: 'technical-seo', label: 'Technical SEO', icon: Wrench },
-  { key: 'backlinks', label: 'Backlinks', icon: Link2 },
-  { key: 'ai-citations', label: 'AI Citations', icon: Sparkles },
-  { key: 'pdf-reports', label: 'PDF Reports', icon: FileText },
   { key: 'settings', label: 'Settings', icon: Settings },
 ];
 

@@ -3,7 +3,6 @@ import {
   Settings as SettingsIcon,
   CheckCircle2,
   AlertCircle,
-  Link2,
   ExternalLink,
   ShieldCheck,
   RefreshCw,
@@ -11,7 +10,6 @@ import {
   Globe,
   Tag,
   MapPin,
-  Sparkles,
   Save,
   Check,
   RotateCcw,
@@ -370,7 +368,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* Card 4: Local SEO Provider */}
-        <Card className="border-slate-200 shadow-xs flex flex-col justify-between">
+        <Card className="border-slate-200 shadow-xs flex flex-col justify-between md:col-span-2">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -391,32 +389,6 @@ export default function SettingsPage() {
               className="w-full text-xs font-semibold bg-slate-50 hover:bg-slate-100"
             >
               <span>Check Local SEO Status</span>
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Card 5: Backlink Intelligence Provider */}
-        <Card className="border-slate-200 shadow-xs flex flex-col justify-between">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Link2 className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-sm font-bold text-slate-900">Backlinks & Authority Provider</CardTitle>
-              </div>
-              <Badge variant="outline" className="text-[10px]">Moz / OpenPageRank</Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-0">
-            <p className="text-xs text-slate-600 leading-relaxed">
-              External link counts and Domain Authority (DA) require a backlink provider API (Moz API, OpenPageRank, or DataForSEO). Configure credentials in .env to enable live metrics.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => runTest('backlinks')}
-              className="w-full text-xs font-semibold bg-slate-50 hover:bg-slate-100"
-            >
-              <span>Check Backlinks Status</span>
             </Button>
           </CardContent>
         </Card>

@@ -12,10 +12,6 @@ import BrandQueriesPage from '@/pages/BrandQueriesPage';
 import KeywordRankingsPage from '@/pages/KeywordRankingsPage';
 import LocalSeoPage from '@/pages/LocalSeoPage';
 import SeoActivitiesPage from '@/pages/SeoActivitiesPage';
-import TechnicalSeoPage from '@/pages/TechnicalSeoPage';
-import BacklinksPage from '@/pages/BacklinksPage';
-import AiCitationsPage from '@/pages/AiCitationsPage';
-import PdfReportsPage from '@/pages/PdfReportsPage';
 import SettingsPage from '@/pages/SettingsPage';
 
 import './App.css';
@@ -29,10 +25,6 @@ const PAGES = {
   keywords: KeywordRankingsPage,
   'local-seo': LocalSeoPage,
   'seo-activities': SeoActivitiesPage,
-  'technical-seo': TechnicalSeoPage,
-  backlinks: BacklinksPage,
-  'ai-citations': AiCitationsPage,
-  'pdf-reports': PdfReportsPage,
   settings: SettingsPage,
 };
 
