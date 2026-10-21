@@ -11,7 +11,7 @@ const handleKeywords = async (req, res) => {
     if (!auth) return res.status(401).json({ error: 'Not authenticated with Google', status: 'unauthenticated' });
 
     const q = req.method === 'POST' ? req.body : req.query;
-    const siteUrl = q.siteUrl || process.env.GSC_SITE_URL || 'sc-domain:boulderdecision.com';
+    const siteUrl = q.siteUrl || process.env.GSC_SITE_URL || 'https://boulderdecisions.com/';
     const startDate = q.startDate;
     const endDate = q.endDate;
     const limit = parseInt(q.limit || '500', 10);

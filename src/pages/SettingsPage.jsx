@@ -288,14 +288,25 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-3 pt-0">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Search Console Site URL</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-semibold text-slate-700">Search Console Site URL</label>
+                {config.gscSiteUrl !== 'https://boulderdecisions.com/' && (
+                  <button
+                    type="button"
+                    onClick={() => setConfig((prev) => ({ ...prev, gscSiteUrl: 'https://boulderdecisions.com/' }))}
+                    className="text-[11px] text-blue-600 hover:text-blue-700 underline font-medium"
+                  >
+                    Set to https://boulderdecisions.com/
+                  </button>
+                )}
+              </div>
               <Input
-                placeholder="e.g. sc-domain:boulderdecision.com or https://boulderdecision.com"
+                placeholder="e.g. https://boulderdecisions.com/ or sc-domain:boulderdecisions.com"
                 value={config.gscSiteUrl}
                 onChange={(e) => setConfig((prev) => ({ ...prev, gscSiteUrl: e.target.value }))}
                 className="font-mono text-xs"
               />
-              <p className="text-[11px] text-slate-400 mt-1">Boulder Decision domain property (e.g. sc-domain:boulderdecision.com) or URL prefix</p>
+              <p className="text-[11px] text-slate-400 mt-1">Boulder Decisions site URL (e.g. https://boulderdecisions.com/ or sc-domain:boulderdecisions.com)</p>
             </div>
 
             {testResults.gsc && (
@@ -332,9 +343,20 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-3 pt-0">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
-                Brand Matching Terms (comma-separated, case-insensitive)
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-semibold text-slate-700">
+                  Brand Matching Terms (comma-separated, case-insensitive)
+                </label>
+                {config.brandKeywords?.toLowerCase()?.includes('appliance') && (
+                  <button
+                    type="button"
+                    onClick={() => setConfig((prev) => ({ ...prev, brandKeywords: 'Boulder Decision,Boulder Decisions,boulderdecision,boulderdecisions,boulder decisions' }))}
+                    className="text-[11px] text-blue-600 hover:text-blue-700 underline font-medium"
+                  >
+                    Reset to Boulder Decisions
+                  </button>
+                )}
+              </div>
               <Input
                 value={config.brandKeywords}
                 onChange={(e) => setConfig((prev) => ({ ...prev, brandKeywords: e.target.value }))}

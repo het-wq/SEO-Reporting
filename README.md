@@ -43,7 +43,7 @@ Copy `.env.example` to `.env`:
 PORT=5001
 VITE_BACKEND_URL=http://localhost:5001
 GA4_PROPERTY_ID=516707960
-GSC_SITE_URL=sc-domain:boulderdecision.com
+GSC_SITE_URL=https://boulderdecisions.com/
 VITE_GOOGLE_CLIENT_ID=554369952704-mgvmq1tuv1p87rslahtlot1cna8lrt14.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_client_secret_here
 ```

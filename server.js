@@ -63,7 +63,7 @@ app.get('/api/health', (req, res) => {
     authType: authStatus.authType,
     environment: process.env.VERCEL ? 'vercel' : 'local',
     ga4PropertyId: process.env.GA4_PROPERTY_ID || '',
-    gscSiteUrl: process.env.GSC_SITE_URL || 'sc-domain:boulderdecision.com',
+    gscSiteUrl: process.env.GSC_SITE_URL || 'https://boulderdecisions.com/',
   });
 });
 

@@ -6,7 +6,7 @@ const router = express.Router();
 const handleOverview = async (req, res) => {
   try {
     const q = req.method === 'POST' ? req.body : req.query;
-    const targetDomain = q.targetDomain || process.env.TARGET_DOMAIN || 'boulderdecision.com';
+    const targetDomain = q.targetDomain || process.env.TARGET_DOMAIN || 'boulderdecisions.com';
     const data = await getBacklinksOverview({ targetDomain });
     res.json(data);
   } catch (err) {

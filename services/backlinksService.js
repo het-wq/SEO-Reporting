@@ -4,7 +4,7 @@
  * Never invents backlink data.
  */
 
-export const getBacklinksOverview = async ({ targetDomain = process.env.TARGET_DOMAIN || 'boulderdecision.com' } = {}) => {
+export const getBacklinksOverview = async ({ targetDomain = process.env.TARGET_DOMAIN || 'boulderdecisions.com' } = {}) => {
   const mozAccessId = process.env.MOZ_ACCESS_ID;
   const mozSecret = process.env.MOZ_SECRET_KEY;
   const openPageRankKey = process.env.OPENPAGERANK_API_KEY;

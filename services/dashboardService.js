@@ -26,7 +26,7 @@ export const getLiveDashboardReport = async ({
 }) => {
   const auth = getAuth(req);
   const ga4PropertyId = overridePropId || process.env.GA4_PROPERTY_ID || '';
-  const gscSiteUrl = overrideSiteUrl || process.env.GSC_SITE_URL || 'sc-domain:boulderdecision.com';
+  const gscSiteUrl = overrideSiteUrl || process.env.GSC_SITE_URL || 'https://boulderdecisions.com/';
 
   const cacheKey = `${startDate}_${endDate}_${prevStartDate}_${prevEndDate}_${ga4PropertyId}_${gscSiteUrl}`;
   if (!forceRefresh && cache.has(cacheKey)) {

@@ -5,8 +5,8 @@ const STORAGE_KEY = 'seo_api_config';
 export const defaultConfig = {
   endpointUrl: BACKEND_BASE,
   ga4PropertyId: '',
-  gscSiteUrl: 'sc-domain:boulderdecision.com',
-  brandKeywords: 'Boulder Decision,Boulder Decisions,boulderdecision,boulderdecisions',
+  gscSiteUrl: 'https://boulderdecisions.com/',
+  brandKeywords: 'Boulder Decision,Boulder Decisions,boulderdecision,boulderdecisions,boulder decisions',
   apiToken: '',
   googleConnected: false,
 };
@@ -14,7 +14,17 @@ export const defaultConfig = {
 export const getApiConfig = () => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return { ...defaultConfig, ...JSON.parse(saved) };
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Migrate away from legacy Atlanta/Appliance demo values
+      if (parsed.gscSiteUrl && (parsed.gscSiteUrl.includes('appliancecareofatlanta') || parsed.gscSiteUrl.includes('boulderdecision.com'))) {
+        parsed.gscSiteUrl = defaultConfig.gscSiteUrl;
+      }
+      if (parsed.brandKeywords && parsed.brandKeywords.toLowerCase().includes('appliance care')) {
+        parsed.brandKeywords = defaultConfig.brandKeywords;
+      }
+      return { ...defaultConfig, ...parsed };
+    }
   } catch (e) {
     console.error('Failed to load api config:', e);
   }

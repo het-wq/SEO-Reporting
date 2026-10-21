@@ -36,8 +36,8 @@ export const getAllIntegrationsStatus = async (req) => {
   }
 
   const ga4PropId = process.env.GA4_PROPERTY_ID || '';
-  const gscSiteUrl = process.env.GSC_SITE_URL || 'sc-domain:boulderdecision.com';
-  let brandTerms = ['boulder decision', 'boulder decisions', 'boulderdecision'];
+  const gscSiteUrl = process.env.GSC_SITE_URL || 'https://boulderdecisions.com/';
+  let brandTerms = ['boulder decision', 'boulder decisions', 'boulderdecision', 'boulderdecisions', 'boulder decisions'];
   try {
     brandTerms = parseBrandTerms();
   } catch (err) {
@@ -250,7 +250,7 @@ export const testIntegration = async (providerId, req) => {
       };
     }
 
-    const siteUrl = req?.body?.siteUrl || process.env.GSC_SITE_URL || 'sc-domain:boulderdecision.com';
+    const siteUrl = req?.body?.siteUrl || process.env.GSC_SITE_URL || 'https://boulderdecisions.com/';
 
     try {
       const searchconsole = google.searchconsole({ version: 'v1', auth });
