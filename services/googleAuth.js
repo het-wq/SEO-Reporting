@@ -134,8 +134,12 @@ export const getAuth = (req) => {
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
     if (token && token !== 'undefined' && token !== 'null') {
-      const client = new google.auth.OAuth2(getClientId(), getClientSecret());
-      client.setCredentials({ access_token: token });
+      const stored = loadStoredTokens();
+      const client = getOAuthClient(req);
+      client.setCredentials({
+        access_token: token,
+        refresh_token: stored?.refresh_token,
+      });
       return client;
     }
   }
