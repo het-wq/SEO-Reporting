@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ReportProvider, useReport } from '@/context/ReportContext';
-import { saveApiConfig } from '@/services/liveSeoApi';
+import { saveApiConfig, setCookie } from '@/services/liveSeoApi';
 import Sidebar, { NAV_ITEMS } from '@/components/layout/Sidebar';
 import AppHeader from '@/components/layout/AppHeader';
 
@@ -39,8 +39,17 @@ function DashboardShell() {
     const urlParams = new URLSearchParams(window.location.search);
     const authStatus = urlParams.get('auth');
     const token = urlParams.get('access_token');
+    const refreshToken = urlParams.get('refresh_token');
+    const expiryDate = urlParams.get('expiry_date');
 
     if (authStatus === 'success' && token) {
+      const tokensObj = {
+        access_token: token,
+        refresh_token: refreshToken || undefined,
+        expiry_date: expiryDate ? Number(expiryDate) : undefined,
+      };
+      setCookie('seo_auth_tokens', JSON.stringify(tokensObj), 365);
+      setCookie('seo_logged_in', 'true', 365);
       saveApiConfig({ apiToken: token, googleConnected: true });
       window.history.replaceState({}, document.title, window.location.pathname);
       refresh();

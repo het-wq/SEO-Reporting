@@ -19,6 +19,10 @@ import {
   loadStoredTokens,
   saveStoredTokens,
   clearStoredTokens,
+  buildAuthCookie,
+  clearAuthCookie,
+  parseCookies,
+  getTokensFromRequest,
   REQUIRED_SCOPES,
   classifyGoogleError,
 } from './services/googleAuth.js';
@@ -29,7 +33,8 @@ import { getGscPerformance, getGscQueries, getGscDevices } from './services/gscS
 const app = express();
 const port = process.env.PORT || 5001;
 
-app.use(cors());
+// Allow CORS with credentials for persistent cookie sessions
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static(UPLOAD_DIR));
 
@@ -55,7 +60,18 @@ app.use('/api/reports', reportsRouter);
 // Health & Authentication Endpoints
 // -----------------------------------------------------------------------------
 app.get('/api/health', (req, res) => {
-  const authStatus = getAuthStatus();
+  const authStatus = getAuthStatus(req);
+  const cookies = parseCookies(req);
+  const proto = req.headers['x-forwarded-proto'] || (req.headers.host?.includes('localhost') ? 'http' : 'https');
+
+  // If authenticated from disk tokens and client lacks cookie, automatically attach persistent cookie
+  if (!cookies.seo_auth_tokens) {
+    const tokens = getTokensFromRequest(req);
+    if (tokens && (tokens.access_token || tokens.refresh_token)) {
+      res.setHeader('Set-Cookie', buildAuthCookie(tokens, proto === 'https'));
+    }
+  }
+
   res.json({
     status: 'ok',
     configured: authStatus.configured,
@@ -101,9 +117,20 @@ app.get('/api/auth/google/callback', async (req, res) => {
 
     const host = req.headers.host || 'localhost:5173';
     const proto = req.headers['x-forwarded-proto'] || (host.includes('localhost') ? 'http' : 'https');
+    const isHttps = proto === 'https';
     const frontendBase = host.includes('localhost:5001') ? 'http://localhost:5173' : `${proto}://${host}`;
 
-    res.redirect(`${frontendBase}/?auth=success&access_token=${tokens.access_token}`);
+    // Enable one-time login: Save credentials in 1-year persistent cookie
+    res.setHeader('Set-Cookie', buildAuthCookie(tokens, isHttps));
+
+    const queryParams = new URLSearchParams({
+      auth: 'success',
+      access_token: tokens.access_token || '',
+      refresh_token: tokens.refresh_token || '',
+      expiry_date: String(tokens.expiry_date || ''),
+    });
+
+    res.redirect(`${frontendBase}/?${queryParams.toString()}`);
   } catch (error) {
     console.error('Error exchanging code for tokens:', error);
     res.redirect(`/?auth=error&message=${encodeURIComponent(error.message)}`);
@@ -111,17 +138,22 @@ app.get('/api/auth/google/callback', async (req, res) => {
 });
 
 app.post('/api/auth/set-token', (req, res) => {
-  const { access_token, refresh_token } = req.body;
+  const { access_token, refresh_token, expiry_date } = req.body;
   if (!access_token) {
     return res.status(400).json({ error: 'access_token required' });
   }
-  saveStoredTokens({ access_token, refresh_token });
-  res.json({ success: true, message: 'Tokens stored successfully' });
+  const tokens = { access_token, refresh_token, expiry_date };
+  saveStoredTokens(tokens);
+  const proto = req.headers['x-forwarded-proto'] || (req.headers.host?.includes('localhost') ? 'http' : 'https');
+  res.setHeader('Set-Cookie', buildAuthCookie(tokens, proto === 'https'));
+  res.json({ success: true, message: 'Tokens stored in memory and cookie successfully' });
 });
 
 app.post('/api/auth/disconnect', (req, res) => {
   clearStoredTokens();
-  res.json({ success: true, message: 'Disconnected Google account' });
+  const proto = req.headers['x-forwarded-proto'] || (req.headers.host?.includes('localhost') ? 'http' : 'https');
+  res.setHeader('Set-Cookie', clearAuthCookie(proto === 'https'));
+  res.json({ success: true, message: 'Disconnected Google account and cleared cookies' });
 });
 
 // Backward-compatible GSC endpoints

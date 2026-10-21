@@ -1,6 +1,6 @@
 import express from 'express';
 import { getAllIntegrationsStatus, testIntegration } from '../services/integrationsService.js';
-import { clearStoredTokens, saveStoredTokens } from '../services/googleAuth.js';
+import { clearStoredTokens, saveStoredTokens, clearAuthCookie } from '../services/googleAuth.js';
 
 const router = express.Router();
 
@@ -33,7 +33,9 @@ router.post('/test', async (req, res) => {
 router.post('/disconnect', (req, res) => {
   try {
     clearStoredTokens();
-    res.json({ success: true, message: 'Google authentication disconnected' });
+    const proto = req.headers['x-forwarded-proto'] || (req.headers.host?.includes('localhost') ? 'http' : 'https');
+    res.setHeader('Set-Cookie', clearAuthCookie(proto === 'https'));
+    res.json({ success: true, message: 'Google authentication disconnected and cookies cleared' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

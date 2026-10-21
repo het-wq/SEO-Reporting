@@ -125,30 +125,89 @@ export const getServiceAccountAuth = () => {
   return null;
 };
 
+export const parseCookies = (req) => {
+  const list = {};
+  const rc = req?.headers?.cookie;
+  if (!rc) return list;
+  rc.split(';').forEach((cookie) => {
+    const parts = cookie.split('=');
+    const name = parts.shift().trim();
+    const value = decodeURIComponent(parts.join('='));
+    list[name] = value;
+  });
+  return list;
+};
+
+export const getTokensFromRequest = (req) => {
+  // 1. From cookie (seo_auth_tokens)
+  try {
+    const cookies = parseCookies(req);
+    if (cookies.seo_auth_tokens) {
+      const parsed = JSON.parse(cookies.seo_auth_tokens);
+      if (parsed && (parsed.access_token || parsed.refresh_token)) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    // ignore parse error
+  }
+
+  // 2. From custom x-auth-tokens header
+  try {
+    const header = req?.headers?.['x-auth-tokens'];
+    if (header) {
+      const parsed = JSON.parse(decodeURIComponent(header));
+      if (parsed && (parsed.access_token || parsed.refresh_token)) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  // 3. Fallback to stored tokens on disk
+  return loadStoredTokens();
+};
+
+export const buildAuthCookie = (tokens, isHttps = false) => {
+  const payload = encodeURIComponent(JSON.stringify(tokens));
+  return [
+    `seo_auth_tokens=${payload}; Path=/; Max-Age=31536000; SameSite=Lax; ${isHttps ? 'Secure;' : ''}`,
+    `seo_logged_in=true; Path=/; Max-Age=31536000; SameSite=Lax; ${isHttps ? 'Secure;' : ''}`,
+  ];
+};
+
+export const clearAuthCookie = (isHttps = false) => {
+  return [
+    `seo_auth_tokens=; Path=/; Max-Age=0; SameSite=Lax; ${isHttps ? 'Secure;' : ''}`,
+    `seo_logged_in=; Path=/; Max-Age=0; SameSite=Lax; ${isHttps ? 'Secure;' : ''}`,
+  ];
+};
+
 /**
  * Retrieve authenticated client for calling Google APIs
  */
 export const getAuth = (req) => {
+  const requestTokens = getTokensFromRequest(req);
+
   // 1. Bearer Token passed from client in Authorization header
   const authHeader = req?.headers?.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
     if (token && token !== 'undefined' && token !== 'null') {
-      const stored = loadStoredTokens();
       const client = getOAuthClient(req);
       client.setCredentials({
         access_token: token,
-        refresh_token: stored?.refresh_token,
+        refresh_token: requestTokens?.refresh_token,
       });
       return client;
     }
   }
 
-  // 2. Stored OAuth tokens
-  const stored = loadStoredTokens();
-  if (stored && (stored.access_token || stored.refresh_token)) {
+  // 2. Cookie or Stored OAuth tokens
+  if (requestTokens && (requestTokens.access_token || requestTokens.refresh_token)) {
     const client = getOAuthClient(req);
-    client.setCredentials(stored);
+    client.setCredentials(requestTokens);
     return client;
   }
 
@@ -164,12 +223,12 @@ export const getAuth = (req) => {
 /**
  * Get unified connection status
  */
-export const getAuthStatus = () => {
+export const getAuthStatus = (req) => {
   const clientId = getClientId();
   const clientSecret = getClientSecret();
   const isOauthConfigured = Boolean(clientId && clientSecret);
-  const stored = loadStoredTokens();
-  const hasOAuthToken = Boolean(stored && (stored.access_token || stored.refresh_token));
+  const requestTokens = getTokensFromRequest(req);
+  const hasOAuthToken = Boolean(requestTokens && (requestTokens.access_token || requestTokens.refresh_token));
   const hasServiceAccount = Boolean(
     (process.env.GOOGLE_APPLICATION_CREDENTIALS && fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) ||
     process.env.GOOGLE_SERVICE_ACCOUNT_JSON

@@ -11,7 +11,36 @@ export const defaultConfig = {
   googleConnected: false,
 };
 
+export const getCookie = (name) => {
+  try {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+  } catch (e) {
+    // ignore
+  }
+  return null;
+};
+
+export const setCookie = (name, value, days = 365) => {
+  try {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+  } catch (e) {
+    // ignore
+  }
+};
+
+export const deleteCookie = (name) => {
+  try {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+  } catch (e) {
+    // ignore
+  }
+};
+
 export const getApiConfig = () => {
+  let isCookieLoggedIn = Boolean(getCookie('seo_logged_in') || getCookie('seo_auth_tokens'));
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -23,12 +52,16 @@ export const getApiConfig = () => {
       if (parsed.brandKeywords && parsed.brandKeywords.toLowerCase().includes('appliance care')) {
         parsed.brandKeywords = defaultConfig.brandKeywords;
       }
-      return { ...defaultConfig, ...parsed };
+      return {
+        ...defaultConfig,
+        ...parsed,
+        googleConnected: parsed.googleConnected || isCookieLoggedIn,
+      };
     }
   } catch (e) {
     console.error('Failed to load api config:', e);
   }
-  return defaultConfig;
+  return { ...defaultConfig, googleConnected: isCookieLoggedIn };
 };
 
 export const saveApiConfig = (newConfig) => {
@@ -49,13 +82,26 @@ const getHeaders = () => {
   if (cfg.apiToken) {
     headers['Authorization'] = `Bearer ${cfg.apiToken}`;
   }
+  const tokenCookie = getCookie('seo_auth_tokens');
+  if (tokenCookie) {
+    headers['x-auth-tokens'] = tokenCookie;
+  }
   return headers;
 };
 
 export const checkBackendHealth = async () => {
   try {
-    const res = await fetch(`${BACKEND_BASE}/api/health`);
-    if (res.ok) return await res.json();
+    const res = await fetch(`${BACKEND_BASE}/api/health`, {
+      credentials: 'include',
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.hasToken) {
+        setCookie('seo_logged_in', 'true', 365);
+        saveApiConfig({ googleConnected: true });
+      }
+      return data;
+    }
   } catch {
     // Backend offline
   }
@@ -63,7 +109,9 @@ export const checkBackendHealth = async () => {
 };
 
 export const getGoogleAuthUrl = async () => {
-  const res = await fetch(`${BACKEND_BASE}/api/auth/google/url`);
+  const res = await fetch(`${BACKEND_BASE}/api/auth/google/url`, {
+    credentials: 'include',
+  });
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.message || data.error || 'Failed to generate Google OAuth URL');
@@ -73,17 +121,30 @@ export const getGoogleAuthUrl = async () => {
 
 export const disconnectGoogleAuth = async () => {
   try {
-    await fetch(`${BACKEND_BASE}/api/integrations/disconnect`, { method: 'POST' });
+    await fetch(`${BACKEND_BASE}/api/integrations/disconnect`, {
+      method: 'POST',
+      credentials: 'include',
+    });
   } catch (e) {
     console.warn('Disconnect error:', e.message);
   }
+  deleteCookie('seo_auth_tokens');
+  deleteCookie('seo_logged_in');
   saveApiConfig({ apiToken: '', googleConnected: false });
 };
 
 export const fetchIntegrationsStatus = async () => {
-  const res = await fetch(`${BACKEND_BASE}/api/integrations/status`, { headers: getHeaders() });
+  const res = await fetch(`${BACKEND_BASE}/api/integrations/status`, {
+    headers: getHeaders(),
+    credentials: 'include',
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch integrations status`);
-  return await res.json();
+  const data = await res.json();
+  if (data?.authStatus?.authenticated) {
+    setCookie('seo_logged_in', 'true', 365);
+    saveApiConfig({ googleConnected: true });
+  }
+  return data;
 };
 
 export const testIntegrationConnection = async (providerId, extraParams = {}) => {
@@ -91,6 +152,7 @@ export const testIntegrationConnection = async (providerId, extraParams = {}) =>
   const res = await fetch(`${BACKEND_BASE}/api/integrations/test`, {
     method: 'POST',
     headers: getHeaders(),
+    credentials: 'include',
     body: JSON.stringify({
       providerId,
       propertyId: cfg.ga4PropertyId,
@@ -102,7 +164,10 @@ export const testIntegrationConnection = async (providerId, extraParams = {}) =>
 };
 
 export const fetchGscSites = async () => {
-  const res = await fetch(`${BACKEND_BASE}/api/search-console/sites`, { headers: getHeaders() });
+  const res = await fetch(`${BACKEND_BASE}/api/search-console/sites`, {
+    headers: getHeaders(),
+    credentials: 'include',
+  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || err.error || 'Failed to fetch Search Console sites');
@@ -127,6 +192,7 @@ export const fetchDashboardLiveReport = async ({
   const res = await fetch(`${BACKEND_BASE}/api/dashboard/live-report`, {
     method: 'POST',
     headers: getHeaders(),
+    credentials: 'include',
     body: JSON.stringify({
       startDate,
       endDate,

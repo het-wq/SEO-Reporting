@@ -165,10 +165,12 @@ export default function SettingsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-lg bg-slate-50 border border-slate-200">
             <div>
               <p className="text-xs font-semibold text-slate-800">
-                Authentication Mode: <span className="font-mono text-blue-700 font-bold uppercase">{authStatus?.authType || 'OAuth 2.0'}</span>
+                {isGoogleConnected ? 'Google Cloud API Authorization' : 'Google Account Connection'}
               </p>
               <p className="text-[11px] text-slate-500 mt-0.5">
-                OAuth Client ID: {authStatus?.clientId || '554369952704...'}
+                {isGoogleConnected
+                  ? 'Authenticated. Login session saved in cookies for live data syncing.'
+                  : 'Connect your authorized Google account to view live Search Console and GA4 metrics.'}
               </p>
             </div>
 
