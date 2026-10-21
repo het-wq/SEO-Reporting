@@ -26,6 +26,7 @@ export default function AuthPage() {
     signUp,
     signIn,
     resetPassword,
+    resendConfirmationEmail,
     isConfigured,
     config,
     updateSupabaseKeys,
@@ -45,8 +46,26 @@ export default function AuthPage() {
   const [anonKeyInput, setAnonKeyInput] = useState(config.anonKey || '');
 
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      setErrorMsg('Please enter your email address to resend confirmation.');
+      return;
+    }
+    setResending(true);
+    try {
+      await resendConfirmationEmail(email);
+      setSuccessMsg(`Confirmation email resent to ${email}! Check your inbox and spam folder.`);
+      setErrorMsg(null);
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to resend confirmation email.');
+    } finally {
+      setResending(false);
+    }
+  };
 
   // Form submit handler
   const handleSubmit = async (e) => {
@@ -246,9 +265,51 @@ export default function AuthPage() {
 
           {/* Feedback messages */}
           {errorMsg && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-300 leading-relaxed">
-              <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
-              <span>{errorMsg}</span>
+            <div className="space-y-2.5">
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-300 leading-relaxed">
+                <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold text-red-200">
+                    {errorMsg.toLowerCase().includes('email not confirmed')
+                      ? 'Email Confirmation Required by Supabase'
+                      : 'Authentication Notice'}
+                  </p>
+                  <span>{errorMsg}</span>
+                </div>
+              </div>
+
+              {errorMsg.toLowerCase().includes('email not confirmed') && (
+                <div className="p-3.5 rounded-xl bg-slate-950/90 border border-violet-500/30 text-xs space-y-2.5 shadow-md">
+                  <div className="flex items-center gap-1.5 text-violet-300 font-semibold text-[11px] uppercase tracking-wider">
+                    <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+                    How to activate your login:
+                  </div>
+
+                  <div className="space-y-1.5 text-[11px] text-slate-300 leading-relaxed">
+                    <p>
+                      <strong>Option 1 (Fastest via Supabase Dashboard):</strong>
+                      <br />
+                      Go to your Supabase project tab $\rightarrow$ <strong>Authentication</strong> $\rightarrow$ <strong>Users</strong>. Click the three dots (<code>...</code>) next to <code>{email || 'your email'}</code> and select <strong>"Confirm user"</strong>.
+                    </p>
+                    <p>
+                      <strong>Option 2 (Check Inbox):</strong>
+                      <br />
+                      Check your email inbox or spam folder for the confirmation link sent by Supabase.
+                    </p>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResendConfirmation}
+                    disabled={resending}
+                    className="w-full h-8 text-xs bg-slate-900 border-slate-700 text-violet-300 hover:text-white hover:bg-slate-800 cursor-pointer"
+                  >
+                    {resending ? 'Sending confirmation...' : `Resend Confirmation Email to ${email}`}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

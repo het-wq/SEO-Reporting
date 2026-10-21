@@ -164,6 +164,19 @@ export function AuthProvider({ children }) {
     return data;
   }, []);
 
+  // Resend signup confirmation email
+  const resendConfirmationEmail = useCallback(async (email) => {
+    if (!supabase) {
+      throw new Error('Supabase is not configured.');
+    }
+    const { data, error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+    });
+    if (error) throw error;
+    return data;
+  }, []);
+
   // Update Supabase credentials from UI
   const updateSupabaseKeys = useCallback((url, key) => {
     saveSupabaseConfig(url, key);
@@ -203,6 +216,7 @@ export function AuthProvider({ children }) {
     signIn,
     signOut,
     resetPassword,
+    resendConfirmationEmail,
     updateSupabaseKeys,
     loginAsGuest,
   };
