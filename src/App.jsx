@@ -91,9 +91,9 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950 text-white gap-3 font-sans">
-        <div className="h-9 w-9 border-3 border-sky-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs text-slate-400">Loading Boulder Decision Dashboard...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white text-black gap-3 font-sans">
+        <div className="h-9 w-9 border-3 border-black border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs text-slate-500">Loading Boulder Decision Dashboard...</p>
       </div>
     );
   }
