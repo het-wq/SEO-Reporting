@@ -90,18 +90,18 @@ export default function AppHeader({ pageTitle, onOpenMobileSidebar, onExportCsv 
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-full bg-violet-100/80 text-violet-800 hover:bg-violet-200/80 border border-violet-200 cursor-pointer shadow-xs"
+                className="h-9 w-9 rounded-full bg-sky-100/90 text-sky-900 hover:bg-sky-200/80 border border-sky-200 cursor-pointer shadow-xs"
                 title="Account menu"
               >
                 <span className="text-xs font-bold uppercase">
-                  {(user?.user_metadata?.full_name || user?.email || 'AD').slice(0, 2)}
+                  {(user?.name || user?.user_metadata?.full_name || user?.email || 'AD').slice(0, 2)}
                 </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-xl">
               <div className="px-2 py-1.5 space-y-0.5">
                 <p className="text-xs font-bold text-slate-900 truncate">
-                  {user?.user_metadata?.full_name || 'Agency Admin'}
+                  {user?.name || user?.user_metadata?.full_name || 'Agency Admin'}
                 </p>
                 <p className="text-[11px] text-slate-500 truncate">
                   {user?.email || 'admin@boulderdecisions.com'}
@@ -109,13 +109,9 @@ export default function AppHeader({ pageTitle, onOpenMobileSidebar, onExportCsv 
                 <div className="pt-1">
                   <Badge
                     variant="outline"
-                    className={`text-[9px] font-semibold px-1.5 py-0.2 ${
-                      user?.isGuest
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    }`}
+                    className="text-[9px] font-semibold px-1.5 py-0.2 bg-sky-50 text-sky-700 border-sky-200"
                   >
-                    {user?.isGuest ? 'Demo Admin' : 'Supabase Authenticated'}
+                    Administrator
                   </Badge>
                 </div>
               </div>

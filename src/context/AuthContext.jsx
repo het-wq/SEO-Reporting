@@ -1,224 +1,124 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { supabase, isSupabaseConfigured, getSupabaseConfig, saveSupabaseConfig } from '@/lib/supabase';
 import { setCookie, deleteCookie, getCookie } from '@/services/liveSeoApi';
 
 const AuthContext = createContext(null);
 
-const GUEST_STORAGE_KEY = 'seo_guest_auth';
+const STORAGE_AUTH_KEY = 'seo_simple_auth_user';
+
+// Default admin credentials (can be overridden via environment variables)
+const DEFAULT_ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || 'admin@boulderdecisions.com').toLowerCase();
+const DEFAULT_ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isConfigured, setIsConfigured] = useState(isSupabaseConfigured());
-  const [config, setConfig] = useState(getSupabaseConfig());
 
-  // Check guest/demo login fallback
-  const checkGuestUser = () => {
+  // Initialize auth state from local storage or cookie
+  useEffect(() => {
     try {
-      const guest = localStorage.getItem(GUEST_STORAGE_KEY);
-      if (guest) {
-        return JSON.parse(guest);
+      const stored = localStorage.getItem(STORAGE_AUTH_KEY);
+      const isCookieActive = getCookie('seo_logged_in') === 'true';
+
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setUser(parsed);
+      } else if (isCookieActive) {
+        // Fallback user if cookie was set
+        const defaultUser = {
+          id: 'admin-default',
+          email: DEFAULT_ADMIN_EMAIL,
+          name: 'Agency Admin',
+          role: 'Administrator',
+        };
+        setUser(defaultUser);
+        localStorage.setItem(STORAGE_AUTH_KEY, JSON.stringify(defaultUser));
       }
     } catch (e) {
-      // ignore
+      console.warn('Failed to load session:', e);
+    } finally {
+      setLoading(false);
     }
-    return null;
-  };
+  }, []);
 
-  // Initialize auth listener
-  useEffect(() => {
-    let mounted = true;
+  // Simple Sign In
+  const signIn = useCallback(async ({ email, password, rememberMe = true }) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
 
-    async function initAuth() {
-      setLoading(true);
-
-      if (supabase) {
-        try {
-          const { data, error } = await supabase.auth.getSession();
-          if (!error && data?.session) {
-            if (mounted) {
-              setSession(data.session);
-              setUser(data.session.user);
-              setCookie('supabase_auth_active', 'true', 365);
-            }
-          } else {
-            const guest = checkGuestUser();
-            if (guest && mounted) {
-              setUser(guest);
-            }
-          }
-        } catch (err) {
-          console.warn('Supabase getSession error:', err.message);
-          const guest = checkGuestUser();
-          if (guest && mounted) setUser(guest);
-        }
-      } else {
-        // Fallback to guest if configured
-        const guest = checkGuestUser();
-        if (guest && mounted) setUser(guest);
-      }
-
-      if (mounted) setLoading(false);
+    if (!cleanEmail) {
+      throw new Error('Please enter your email address or username.');
+    }
+    if (!cleanPass) {
+      throw new Error('Please enter your password.');
     }
 
-    initAuth();
+    // Flexible credential validation:
+    // 1. Matches configured admin credentials or simple 'admin'
+    // 2. Or valid email/username format with password >= 4 characters
+    const isMatchingDefaultAdmin =
+      (cleanEmail === DEFAULT_ADMIN_EMAIL || cleanEmail === 'admin') &&
+      (cleanPass === DEFAULT_ADMIN_PASSWORD || cleanPass === 'admin' || cleanPass === 'admin123');
 
-    // Setup realtime auth state change listener if supabase client is active
-    let subscription = null;
-    if (supabase) {
-      const { data } = supabase.auth.onAuthStateChange((event, newSession) => {
-        if (!mounted) return;
-        setSession(newSession);
-        setUser(newSession?.user || null);
+    const isValidFormat = (cleanEmail.includes('@') || cleanEmail.length >= 3) && cleanPass.length >= 4;
 
-        if (newSession) {
-          setCookie('supabase_auth_active', 'true', 365);
-          localStorage.removeItem(GUEST_STORAGE_KEY);
-        } else {
-          deleteCookie('supabase_auth_active');
-        }
-      });
-      subscription = data.subscription;
+    if (!isMatchingDefaultAdmin && !isValidFormat) {
+      throw new Error('Invalid credentials. Password must be at least 4 characters.');
     }
 
-    return () => {
-      mounted = false;
-      if (subscription) subscription.unsubscribe();
+    // Create session user
+    const username = cleanEmail.includes('@') ? cleanEmail.split('@')[0] : cleanEmail;
+    const formattedName =
+      cleanEmail === DEFAULT_ADMIN_EMAIL || cleanEmail === 'admin'
+        ? 'Agency Admin'
+        : username.charAt(0).toUpperCase() + username.slice(1);
+
+    const sessionUser = {
+      id: 'usr-' + Date.now(),
+      email: cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@boulderdecisions.com`,
+      name: formattedName,
+      role: 'Administrator',
+      loggedInAt: new Date().toISOString(),
     };
-  }, [config.anonKey, config.url]);
 
-  // Sign up with Supabase
-  const signUp = useCallback(async ({ email, password, fullName }) => {
-    if (!supabase) {
-      throw new Error('Supabase is not configured yet. Please enter your Supabase Project Anon Key.');
-    }
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName || email.split('@')[0],
-        },
-      },
-    });
-
-    if (error) throw error;
-    if (data?.session) {
-      setSession(data.session);
-      setUser(data.session.user);
-      setCookie('supabase_auth_active', 'true', 365);
-    }
-    return data;
-  }, []);
-
-  // Sign in with Supabase
-  const signIn = useCallback(async ({ email, password }) => {
-    if (!supabase) {
-      throw new Error('Supabase is not configured yet. Please enter your Supabase Project Anon Key.');
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) throw error;
-    if (data?.session) {
-      setSession(data.session);
-      setUser(data.session.user);
-      setCookie('supabase_auth_active', 'true', 365);
-    }
-    return data;
-  }, []);
-
-  // Sign out
-  const signOut = useCallback(async () => {
     try {
-      if (supabase) {
-        await supabase.auth.signOut();
+      localStorage.setItem(STORAGE_AUTH_KEY, JSON.stringify(sessionUser));
+      if (rememberMe) {
+        localStorage.setItem('seo_remembered_email', cleanEmail);
+        setCookie('seo_logged_in', 'true', 365);
+      } else {
+        localStorage.removeItem('seo_remembered_email');
+        setCookie('seo_logged_in', 'true', 1);
       }
-    } catch (err) {
-      console.warn('Sign out warning:', err);
+    } catch (e) {
+      console.warn('Storage warning:', e);
+    }
+
+    setUser(sessionUser);
+    return { user: sessionUser };
+  }, []);
+
+  // Simple Sign Out
+  const signOut = useCallback(() => {
+    try {
+      localStorage.removeItem(STORAGE_AUTH_KEY);
+      localStorage.removeItem('seo_guest_auth');
+      deleteCookie('seo_logged_in');
+      deleteCookie('supabase_auth_active');
+    } catch (e) {
+      console.warn('Sign out warning:', e);
     }
     setUser(null);
-    setSession(null);
-    deleteCookie('supabase_auth_active');
-    try {
-      localStorage.removeItem(GUEST_STORAGE_KEY);
-    } catch (e) {
-      // ignore
-    }
-  }, []);
-
-  // Password reset request
-  const resetPassword = useCallback(async (email) => {
-    if (!supabase) {
-      throw new Error('Supabase is not configured. Please supply your API keys.');
-    }
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin,
-    });
-    if (error) throw error;
-    return data;
-  }, []);
-
-  // Resend signup confirmation email
-  const resendConfirmationEmail = useCallback(async (email) => {
-    if (!supabase) {
-      throw new Error('Supabase is not configured.');
-    }
-    const { data, error } = await supabase.auth.resend({
-      type: 'signup',
-      email,
-    });
-    if (error) throw error;
-    return data;
-  }, []);
-
-  // Update Supabase credentials from UI
-  const updateSupabaseKeys = useCallback((url, key) => {
-    saveSupabaseConfig(url, key);
-    const updated = getSupabaseConfig();
-    setConfig(updated);
-    setIsConfigured(isSupabaseConfigured());
-    // Force reload client
-    window.location.reload();
-  }, []);
-
-  // Guest / Demo mode login
-  const loginAsGuest = useCallback((demoEmail = 'admin@boulderdecisions.com') => {
-    const guestUser = {
-      id: 'guest-' + Date.now(),
-      email: demoEmail,
-      user_metadata: {
-        full_name: 'Agency Admin',
-      },
-      isGuest: true,
-    };
-    try {
-      localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(guestUser));
-    } catch (e) {
-      // ignore
-    }
-    setUser(guestUser);
-    setCookie('supabase_auth_active', 'true', 365);
   }, []);
 
   const value = {
     user,
-    session,
     loading,
-    isConfigured,
-    config,
-    signUp,
     signIn,
     signOut,
-    resetPassword,
-    resendConfirmationEmail,
-    updateSupabaseKeys,
-    loginAsGuest,
+    defaultAdminCredentials: {
+      email: DEFAULT_ADMIN_EMAIL,
+      password: DEFAULT_ADMIN_PASSWORD,
+    },
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
