@@ -192,33 +192,6 @@ export default function SettingsPage() {
               )}
             </div>
           </div>
-
-          <div className="p-3 rounded-lg border border-amber-200 bg-amber-50/60 text-xs text-amber-900 space-y-1.5">
-            <p className="font-semibold flex items-center gap-1.5">
-              <ExternalLink className="h-3.5 w-3.5 text-amber-700" /> Required Google Cloud APIs (Project 554369952704):
-            </p>
-            <p className="text-amber-800">
-              Ensure both APIs are enabled in your Google Cloud Console for live data queries:
-            </p>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <a
-                href="https://console.developers.google.com/apis/api/analyticsdata.googleapis.com/overview?project=554369952704"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-white px-2.5 py-1 rounded border border-amber-300 hover:bg-amber-100"
-              >
-                1. Google Analytics Data API (analyticsdata.googleapis.com) <ExternalLink className="h-3 w-3" />
-              </a>
-              <a
-                href="https://console.developers.google.com/apis/api/searchconsole.googleapis.com/overview?project=554369952704"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-white px-2.5 py-1 rounded border border-amber-300 hover:bg-amber-100"
-              >
-                2. Google Search Console API (searchconsole.googleapis.com) <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
