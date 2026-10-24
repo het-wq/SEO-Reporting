@@ -18,6 +18,8 @@ import {
   CheckSquare,
   Square,
   X,
+  FileSpreadsheet,
+  Upload,
 } from 'lucide-react';
 import SectionCard from '@/components/dashboard/SectionCard';
 import NoReportData from '@/components/dashboard/NoReportData';
@@ -34,6 +36,7 @@ import { exportToCsv } from '@/lib/csvExport';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
+import BulkImportActivities from '@/components/seo/BulkImportActivities';
 
 const STORAGE_KEY = 'boulder_custom_seo_activities';
 
@@ -119,8 +122,11 @@ export default function SeoActivitiesPage() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
 
-  // Form state to write new activity
-  const [showAddForm, setShowAddForm] = useState(false);
+  // Form and bulk entry state (2 options: 'manual' or 'import')
+  const [isEntryOpen, setIsEntryOpen] = useState(false);
+  const [entryMode, setEntryMode] = useState('manual'); // 'manual' | 'import'
+  const [notification, setNotification] = useState(null);
+
   const [formData, setFormData] = useState({
     title: '',
     category: 'On-Page SEO',
@@ -151,6 +157,36 @@ export default function SeoActivitiesPage() {
     }
   }, [activities]);
 
+  const handleToggleEntry = (mode) => {
+    if (isEntryOpen && entryMode === mode) {
+      setIsEntryOpen(false);
+    } else {
+      setEntryMode(mode);
+      setIsEntryOpen(true);
+    }
+  };
+
+  const handleBulkImport = (newActivities, mode) => {
+    if (mode === 'replace') {
+      setActivities(newActivities);
+      setNotification({
+        type: 'success',
+        message: `Successfully replaced activities with ${newActivities.length} items from CSV.`,
+      });
+    } else {
+      setActivities((prev) => [...newActivities, ...prev]);
+      setNotification({
+        type: 'success',
+        message: `Successfully imported ${newActivities.length} SEO activities from CSV!`,
+      });
+    }
+    setIsEntryOpen(false);
+    // Clear filters so user sees imported items immediately
+    setActivitiesSearch('');
+    setStatusFilter('All');
+    setCategoryFilter('All');
+  };
+
   const handleAddActivity = (e) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
@@ -167,6 +203,10 @@ export default function SeoActivitiesPage() {
     };
 
     setActivities((prev) => [newActivity, ...prev]);
+    setNotification({
+      type: 'success',
+      message: 'New SEO activity added successfully.',
+    });
     setFormData({
       title: '',
       category: 'On-Page SEO',
@@ -176,7 +216,7 @@ export default function SeoActivitiesPage() {
       targetUrl: 'https://boulderdecisions.com/',
       notes: '',
     });
-    setShowAddForm(false);
+    setIsEntryOpen(false);
   };
 
   const handleDeleteActivity = (id) => {
@@ -300,148 +340,242 @@ export default function SeoActivitiesPage() {
         title="SEO Activities & Execution Log"
         subtitle="Record, track, and report on-page, technical, content, and local SEO initiatives"
         actions={
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              onClick={() => setShowAddForm((prev) => !prev)}
-              className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-            >
-              {showAddForm ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-              <span>{showAddForm ? 'Close Form' : 'Write Activity'}</span>
-            </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* 2 Clear Options: Manual and Importing */}
+            <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100/80 p-0.5 shadow-2xs">
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => handleToggleEntry('manual')}
+                className={`h-7 px-3 text-xs font-semibold gap-1.5 transition-all cursor-pointer ${
+                  isEntryOpen && entryMode === 'manual'
+                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-2xs'
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-white'
+                }`}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Manual Entry</span>
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => handleToggleEntry('import')}
+                className={`h-7 px-3 text-xs font-semibold gap-1.5 transition-all cursor-pointer ${
+                  isEntryOpen && entryMode === 'import'
+                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-2xs'
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-white'
+                }`}
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Bulk Import (CSV)</span>
+              </Button>
+            </div>
+
             <Button
               variant="outline"
               size="sm"
               onClick={handleExportActivitiesCsv}
-              className="gap-1.5 text-xs bg-white"
+              className="h-8 gap-1.5 text-xs bg-white text-slate-700 border-slate-200 shadow-2xs"
             >
-              <Download className="h-3.5 w-3.5" />
+              <Download className="h-3.5 w-3.5 text-slate-500" />
               <span className="hidden sm:inline">Export CSV</span>
             </Button>
           </div>
         }
       >
-        {/* Inline Activity Writing Form */}
-        {showAddForm && (
-          <form
-            onSubmit={handleAddActivity}
-            className="mb-6 p-4 sm:p-5 rounded-xl border border-blue-200 bg-blue-50/30 space-y-4"
-          >
-            <div className="flex items-center justify-between border-b border-blue-100 pb-2.5">
+        {/* Notification Toast */}
+        {notification && (
+          <div className="mb-4 flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs shadow-2xs animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+              <span className="font-medium">{notification.message}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setNotification(null)}
+              className="text-emerald-700 hover:text-emerald-950 p-1 cursor-pointer"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* 2-Option Entry Drawer / Panel: Manual vs Importing */}
+        {isEntryOpen && (
+          <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50/20 p-4 sm:p-5 space-y-4 shadow-xs">
+            {/* Tab switch header */}
+            <div className="flex items-center justify-between border-b border-blue-100 pb-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-blue-600" />
-                <h4 className="text-sm font-bold text-slate-900">Write Down New SEO Activity</h4>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mr-1 hidden sm:inline">
+                  Select Mode:
+                </span>
+                <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setEntryMode('manual')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                      entryMode === 'manual'
+                        ? 'bg-blue-600 text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Option 1: Manual Entry</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEntryMode('import')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                      entryMode === 'import'
+                        ? 'bg-blue-600 text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" />
+                    <span>Option 2: Bulk Import (CSV)</span>
+                  </button>
+                </div>
               </div>
-              <span className="text-[11px] text-slate-500">Saved to permanent browser log</span>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700">
-                Activity Title / Summary <span className="text-red-500">*</span>
-              </label>
-              <Input
-                placeholder="e.g. Updated metadata and schema for https://boulderdecisions.com/"
-                value={formData.title}
-                onChange={(e) => setFormData((f) => ({ ...f, title: e.target.value }))}
-                required
-                className="bg-white text-sm"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Category</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData((f) => ({ ...f, category: e.target.value }))}
-                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-800 shadow-xs focus:ring-1 focus:ring-blue-500 outline-none"
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData((f) => ({ ...f, status: e.target.value }))}
-                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-800 shadow-xs focus:ring-1 focus:ring-blue-500 outline-none"
-                >
-                  <option value="Completed">Completed</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Planned">Planned</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Priority / Impact</label>
-                <select
-                  value={formData.priority}
-                  onChange={(e) => setFormData((f) => ({ ...f, priority: e.target.value }))}
-                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-800 shadow-xs focus:ring-1 focus:ring-blue-500 outline-none"
-                >
-                  <option value="High">High Impact</option>
-                  <option value="Medium">Medium Impact</option>
-                  <option value="Low">Low / Standard</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Date</label>
-                <Input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData((f) => ({ ...f, date: e.target.value }))}
-                  className="bg-white text-xs h-9"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Target URL / Asset (Optional)</label>
-                <Input
-                  type="url"
-                  placeholder="e.g. https://boulderdecisions.com/services"
-                  value={formData.targetUrl}
-                  onChange={(e) => setFormData((f) => ({ ...f, targetUrl: e.target.value }))}
-                  className="bg-white text-xs font-mono"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Details & Deliverables (Optional)</label>
-                <Input
-                  placeholder="e.g. Added target keywords to H1 and meta tags; improved mobile score"
-                  value={formData.notes}
-                  onChange={(e) => setFormData((f) => ({ ...f, notes: e.target.value }))}
-                  className="bg-white text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-blue-100">
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAddForm(false)}
-                className="text-xs bg-white"
+                onClick={() => setIsEntryOpen(false)}
+                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Close"
               >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Save Activity</span>
-              </Button>
+                <X className="h-4 w-4" />
+              </button>
             </div>
-          </form>
+
+            {/* Option 1: Manual Entry Form */}
+            {entryMode === 'manual' && (
+              <form onSubmit={handleAddActivity} className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-blue-600" />
+                    <h4 className="text-sm font-bold text-slate-900">Write Down Single SEO Activity</h4>
+                  </div>
+                  <span className="text-[11px] text-slate-500">Saved to permanent browser log</span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">
+                    Activity Title / Summary <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    placeholder="e.g. Updated metadata and schema for https://boulderdecisions.com/"
+                    value={formData.title}
+                    onChange={(e) => setFormData((f) => ({ ...f, title: e.target.value }))}
+                    required
+                    className="bg-white text-sm"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">Category</label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData((f) => ({ ...f, category: e.target.value }))}
+                      className="w-full h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-800 shadow-xs focus:ring-1 focus:ring-blue-500 outline-none"
+                    >
+                      {CATEGORIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">Status</label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData((f) => ({ ...f, status: e.target.value }))}
+                      className="w-full h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-800 shadow-xs focus:ring-1 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="Completed">Completed</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Planned">Planned</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">Priority / Impact</label>
+                    <select
+                      value={formData.priority}
+                      onChange={(e) => setFormData((f) => ({ ...f, priority: e.target.value }))}
+                      className="w-full h-9 rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-800 shadow-xs focus:ring-1 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="High">High Impact</option>
+                      <option value="Medium">Medium Impact</option>
+                      <option value="Low">Low / Standard</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">Date</label>
+                    <Input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData((f) => ({ ...f, date: e.target.value }))}
+                      className="bg-white text-xs h-9"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">Target URL / Asset (Optional)</label>
+                    <Input
+                      type="url"
+                      placeholder="e.g. https://boulderdecisions.com/services"
+                      value={formData.targetUrl}
+                      onChange={(e) => setFormData((f) => ({ ...f, targetUrl: e.target.value }))}
+                      className="bg-white text-xs font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">Details & Deliverables (Optional)</label>
+                    <Input
+                      placeholder="e.g. Added target keywords to H1 and meta tags; improved mobile score"
+                      value={formData.notes}
+                      onChange={(e) => setFormData((f) => ({ ...f, notes: e.target.value }))}
+                      className="bg-white text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-blue-100">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEntryOpen(false)}
+                    className="text-xs bg-white"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Save Activity</span>
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            {/* Option 2: Bulk CSV Import */}
+            {entryMode === 'import' && (
+              <BulkImportActivities
+                onImport={handleBulkImport}
+                onCancel={() => setIsEntryOpen(false)}
+              />
+            )}
+          </div>
         )}
 
         {/* Filter and Search Controls */}
@@ -581,7 +715,46 @@ export default function SeoActivitiesPage() {
                 );
               })}
 
-              {filteredActivities.length === 0 && (
+              {filteredActivities.length === 0 && activities.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-12 text-slate-500">
+                    <div className="max-w-sm mx-auto space-y-3">
+                      <div className="h-10 w-10 mx-auto rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <FileSpreadsheet className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">No SEO activities recorded yet</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Get started by writing an activity manually or importing your entire team's spreadsheet via CSV.
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 pt-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleToggleEntry('manual')}
+                          className="gap-1.5 text-xs bg-white text-slate-700"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          <span>Manual Entry</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => handleToggleEntry('import')}
+                          className="gap-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold cursor-pointer"
+                        >
+                          <FileSpreadsheet className="h-3.5 w-3.5" />
+                          <span>Bulk Import CSV</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+
+              {filteredActivities.length === 0 && activities.length > 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-10 text-slate-500">
                     <p className="text-sm">No SEO activities match your search or filter.</p>
@@ -593,7 +766,7 @@ export default function SeoActivitiesPage() {
                         setStatusFilter('All');
                         setCategoryFilter('All');
                       }}
-                      className="text-xs text-blue-600 mt-1"
+                      className="text-xs text-blue-600 mt-1 cursor-pointer"
                     >
                       Clear filters
                     </Button>
