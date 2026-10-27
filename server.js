@@ -104,6 +104,24 @@ app.get('/api/auth/google/url', (req, res) => {
   res.json({ url });
 });
 
+app.get('/api/auth/google/login', (req, res) => {
+  const clientId = process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    return res.status(400).send('Google OAuth Client ID or Client Secret not configured in environment');
+  }
+
+  const oauthClient = getOAuthClient(req);
+  const url = oauthClient.generateAuthUrl({
+    access_type: 'offline',
+    scope: REQUIRED_SCOPES,
+    prompt: 'consent',
+  });
+
+  res.redirect(url);
+});
+
 app.get('/api/auth/google/callback', async (req, res) => {
   const { code } = req.query;
   if (!code) {

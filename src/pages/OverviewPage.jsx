@@ -10,6 +10,7 @@ import NoReportData from '@/components/dashboard/NoReportData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useReport } from '@/context/ReportContext';
+import { getGoogleAuthUrl } from '@/services/liveSeoApi';
 
 export default function OverviewPage() {
   const { report, loading, selectedPeriod, previousPeriod, comparisonLabel } = useReport();
@@ -107,13 +108,21 @@ export default function OverviewPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <a
-              href="http://localhost:5001/api/auth/google/login"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-amber-600 text-white hover:bg-amber-700 shadow-sm transition-colors"
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const data = await getGoogleAuthUrl();
+                  if (data.url) window.location.href = data.url;
+                } catch (e) {
+                  alert(e.message || 'Failed to start Google OAuth');
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-amber-600 text-white hover:bg-amber-700 shadow-sm transition-colors cursor-pointer"
             >
               <KeyRound className="h-3.5 w-3.5" />
               Switch / Reconnect Account
-            </a>
+            </button>
           </div>
         </div>
       )}

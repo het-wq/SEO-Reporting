@@ -11,10 +11,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { getApiConfig, saveApiConfig, checkBackendHealth, getGoogleAuthUrl, fetchGscSites } from '@/services/seoApi';
+import { BACKEND_BASE } from '@/lib/backendBase';
 
 export default function ApiConfigModal({ isOpen, onClose, onConfigSaved, activeError }) {
   const [config, setConfig] = useState({
-    endpointUrl: 'http://localhost:5001',
+    endpointUrl: BACKEND_BASE || '',
     ga4PropertyId: '516707960',
     gscSiteUrl: '',
     apiToken: '',
