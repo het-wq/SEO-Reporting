@@ -6,13 +6,10 @@ import {
   Upload,
   Plus,
   ArrowUpDown,
-  Info,
   BookmarkCheck,
   Globe,
   Trash2,
   ExternalLink,
-  Columns2,
-  Maximize2,
   Check,
   CheckCircle2,
   RotateCcw,
@@ -61,7 +58,7 @@ const DEFAULT_CLIENT_KEYWORDS = [
 
 export default function KeywordRankingsPage() {
   const { report, loading, selectedPeriod } = useReport();
-  const [layoutMode, setLayoutMode] = useState('split'); // 'split' | 'seo-only' | 'client-only'
+  const [activeTab, setActiveTab] = useState('seo'); // 'seo' | 'client'
 
   // SEO table states
   const [seoSearch, setSeoSearch] = useState('');
@@ -199,6 +196,23 @@ export default function KeywordRankingsPage() {
     return rows;
   }, [enrichedClientKeywords, clientSearch, clientRange, clientSortField, clientSortAsc]);
 
+  // KPI summaries for active tabs
+  const seoSummary = useMemo(() => {
+    const total = gscKeywords.length;
+    const top3 = gscKeywords.filter((k) => k.position !== null && k.position <= 3).length;
+    const top10 = gscKeywords.filter((k) => k.position !== null && k.position <= 10).length;
+    const totalClicks = gscKeywords.reduce((sum, k) => sum + (Number(k.clicks) || 0), 0);
+    return { total, top3, top10, totalClicks };
+  }, [gscKeywords]);
+
+  const clientSummary = useMemo(() => {
+    const total = enrichedClientKeywords.length;
+    const synced = enrichedClientKeywords.filter((k) => k.isLiveSynced).length;
+    const top10 = enrichedClientKeywords.filter((k) => k.position !== null && k.position <= 10).length;
+    const totalClicks = enrichedClientKeywords.reduce((sum, k) => sum + (Number(k.clicks) || 0), 0);
+    return { total, synced, top10, totalClicks };
+  }, [enrichedClientKeywords]);
+
   // Sort togglers
   const toggleSeoSort = (field) => {
     if (seoSortField === field) setSeoSortAsc((p) => !p);
@@ -301,80 +315,101 @@ export default function KeywordRankingsPage() {
         </div>
       )}
 
-      {/* Top Bar with Layout Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
         <div>
           <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
             <KeyRound className="h-5 w-5 text-blue-600" />
-            Keyword Rankings &amp; Client Comparison
+            Keyword Rankings
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            {curLabel} &bull; Side-by-side view of live Google SEO Rankings and Client Target Keywords.
+            {curLabel} &bull; Switch between live Google Search Console query rankings and Client Target Keywords.
           </p>
-        </div>
-
-        {/* View Layout Toggle: Side-by-Side vs Single Table */}
-        <div className="flex items-center gap-1.5 self-start sm:self-auto">
-          <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs">
-            <button
-              type="button"
-              onClick={() => setLayoutMode('split')}
-              className={`px-3 py-1.5 font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                layoutMode === 'split'
-                  ? 'bg-white text-blue-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Columns2 className="h-3.5 w-3.5" />
-              <span>Side by Side</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setLayoutMode('seo-only')}
-              className={`px-3 py-1.5 font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                layoutMode === 'seo-only'
-                  ? 'bg-white text-blue-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Globe className="h-3.5 w-3.5" />
-              <span>SEO Rankings Only</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setLayoutMode('client-only')}
-              className={`px-3 py-1.5 font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                layoutMode === 'client-only'
-                  ? 'bg-white text-blue-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <BookmarkCheck className="h-3.5 w-3.5" />
-              <span>Client Keywords Only</span>
-            </button>
-          </div>
         </div>
       </div>
 
-      {/* Main Grid: Left Side (SEO Rankings) & Right Side (Client Keywords) */}
-      <div className={`grid gap-6 ${
-        layoutMode === 'split' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'
-      }`}>
+      {/* Modern Tabs Navigation */}
+      <div className="flex items-center gap-2 border-b border-slate-200">
+        <button
+          type="button"
+          onClick={() => setActiveTab('seo')}
+          className={`flex items-center gap-2.5 px-5 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${
+            activeTab === 'seo'
+              ? 'border-blue-600 text-blue-600 bg-blue-50/50 rounded-t-lg'
+              : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-t-lg'
+          }`}
+        >
+          <Globe className={`h-4 w-4 ${activeTab === 'seo' ? 'text-blue-600' : 'text-slate-400'}`} />
+          <span>SEO Keyword Rankings</span>
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+              activeTab === 'seo' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+            }`}
+          >
+            {gscKeywords.length}
+          </span>
+        </button>
 
-        {/* =================================================================== */}
-        {/* LEFT SIDE: SEO Keyword Rankings (with Export CSV)                    */}
-        {/* =================================================================== */}
-        {(layoutMode === 'split' || layoutMode === 'seo-only') && (
+        <button
+          type="button"
+          onClick={() => setActiveTab('client')}
+          className={`flex items-center gap-2.5 px-5 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${
+            activeTab === 'client'
+              ? 'border-blue-600 text-blue-600 bg-blue-50/50 rounded-t-lg'
+              : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-t-lg'
+          }`}
+        >
+          <BookmarkCheck className={`h-4 w-4 ${activeTab === 'client' ? 'text-blue-600' : 'text-slate-400'}`} />
+          <span>Client Keywords</span>
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+              activeTab === 'client' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+            }`}
+          >
+            {clientKeywords.length}
+          </span>
+        </button>
+      </div>
+
+      {/* =================================================================== */}
+      {/* TAB 1: SEO Keyword Rankings View                                    */}
+      {/* =================================================================== */}
+      {activeTab === 'seo' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          {/* KPI Summary Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
+              <span className="text-[11px] font-medium text-slate-500 block">Total Search Queries</span>
+              <span className="text-xl font-bold text-slate-900 mt-1 block">{seoSummary.total.toLocaleString()}</span>
+              <span className="text-[10px] text-slate-400">Live from Search Console</span>
+            </div>
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
+              <span className="text-[11px] font-medium text-slate-500 block">Top 3 Rankings</span>
+              <span className="text-xl font-bold text-emerald-600 mt-1 block">{seoSummary.top3}</span>
+              <span className="text-[10px] text-slate-400">Prime visibility (Pos 1-3)</span>
+            </div>
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
+              <span className="text-[11px] font-medium text-slate-500 block">Top 10 Rankings</span>
+              <span className="text-xl font-bold text-blue-600 mt-1 block">{seoSummary.top10}</span>
+              <span className="text-[10px] text-slate-400">Page 1 results (Pos 1-10)</span>
+            </div>
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
+              <span className="text-[11px] font-medium text-slate-500 block">Total Search Clicks</span>
+              <span className="text-xl font-bold text-slate-900 mt-1 block">{seoSummary.totalClicks.toLocaleString()}</span>
+              <span className="text-[10px] text-slate-400">Organic clicks in period</span>
+            </div>
+          </div>
+
+          {/* Full Width Table Card */}
           <SectionCard
             icon={Globe}
             title="SEO Keyword Rankings"
-            subtitle={`Live Google Search Console queries (${gscKeywords.length})`}
+            subtitle={`Live Google Search Console queries (${filteredSeo.length} of ${gscKeywords.length})`}
             actions={
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-[11px] text-blue-700 bg-blue-50/50 border-blue-200 hidden sm:inline-flex">
                   Search Console
                 </Badge>
-                {/* Left side Export CSV as requested */}
                 <Button
                   variant="outline"
                   size="sm"
@@ -386,7 +421,7 @@ export default function KeywordRankingsPage() {
               </div>
             }
           >
-            {/* Search and Position Filter (Left Table) */}
+            {/* Search and Position Filters */}
             <div className="flex flex-col sm:flex-row gap-2 mb-3">
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
@@ -397,21 +432,21 @@ export default function KeywordRankingsPage() {
                   className="pl-8 text-xs h-9"
                 />
               </div>
-              <Select value={seoRange} onChange={(e) => setSeoRange(e.target.value)} className="sm:w-44 text-xs h-9">
+              <Select value={seoRange} onChange={(e) => setSeoRange(e.target.value)} className="sm:w-48 text-xs h-9">
                 {RANGE_OPTIONS.filter((o) => o.value !== 'unranked').map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </Select>
             </div>
 
-            {/* Table of SEO Keyword Rankings */}
+            {/* Table */}
             <div className="rounded-lg border border-slate-200 overflow-x-auto bg-white">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/70 text-xs">
-                    <TableHead className="w-10 text-center text-xs">#</TableHead>
+                    <TableHead className="w-12 text-center text-xs">#</TableHead>
                     <TableHead className="text-xs">Search Query / Keyword</TableHead>
-                    <TableHead className="w-24 text-right text-xs">
+                    <TableHead className="w-28 text-right text-xs">
                       <button
                         type="button"
                         onClick={() => toggleSeoSort('position')}
@@ -420,7 +455,7 @@ export default function KeywordRankingsPage() {
                         Avg Position <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </TableHead>
-                    <TableHead className="w-20 text-right text-xs">
+                    <TableHead className="w-24 text-right text-xs">
                       <button
                         type="button"
                         onClick={() => toggleSeoSort('clicks')}
@@ -429,7 +464,7 @@ export default function KeywordRankingsPage() {
                         Clicks <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </TableHead>
-                    <TableHead className="w-24 text-right text-xs">
+                    <TableHead className="w-28 text-right text-xs">
                       <button
                         type="button"
                         onClick={() => toggleSeoSort('impressions')}
@@ -438,9 +473,9 @@ export default function KeywordRankingsPage() {
                         Impressions <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </TableHead>
-                    <TableHead className="w-20 text-right text-xs">CTR</TableHead>
-                    <TableHead className="w-20 text-center text-xs">Tier</TableHead>
-                    <TableHead className="w-16 text-center text-xs">Track</TableHead>
+                    <TableHead className="w-24 text-right text-xs">CTR</TableHead>
+                    <TableHead className="w-24 text-center text-xs">Tier</TableHead>
+                    <TableHead className="w-20 text-center text-xs">Track</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -452,7 +487,7 @@ export default function KeywordRankingsPage() {
                     return (
                       <TableRow key={k.keyword} className="hover:bg-slate-50/70 transition-colors text-xs">
                         <TableCell className="text-center text-slate-400 font-mono text-[11px]">{i + 1}</TableCell>
-                        <TableCell className="font-semibold text-slate-900 max-w-[180px] truncate" title={k.keyword}>
+                        <TableCell className="font-semibold text-slate-900" title={k.keyword}>
                           {k.keyword}
                         </TableCell>
                         <TableCell className="text-right font-bold text-slate-900">{k.position}</TableCell>
@@ -462,7 +497,7 @@ export default function KeywordRankingsPage() {
                         <TableCell className="text-center">
                           <Badge
                             variant={k.position <= 3 ? 'success' : k.position <= 10 ? 'default' : 'secondary'}
-                            className="font-normal text-[10px] px-1.5 py-0.5"
+                            className="font-normal text-[10px] px-2 py-0.5"
                           >
                             {k.status}
                           </Badge>
@@ -480,8 +515,8 @@ export default function KeywordRankingsPage() {
                                 keyword: k.keyword,
                                 source: 'gsc_promote',
                               })}
-                              className="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
-                              title="Add to Client Keywords on right"
+                              className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                              title="Add to Client Keywords list"
                             >
                               + Track
                             </button>
@@ -500,49 +535,76 @@ export default function KeywordRankingsPage() {
                 </TableBody>
               </Table>
             </div>
+            <div className="pt-2 text-[11px] text-slate-400">
+              Showing {filteredSeo.length} of {gscKeywords.length} live SEO queries
+            </div>
           </SectionCard>
-        )}
+        </div>
+      )}
 
-        {/* =================================================================== */}
-        {/* RIGHT SIDE: Client Keywords (with Import CSV, Export CSV, Add)     */}
-        {/* =================================================================== */}
-        {(layoutMode === 'split' || layoutMode === 'client-only') && (
+      {/* =================================================================== */}
+      {/* TAB 2: Client Keywords View                                         */}
+      {/* =================================================================== */}
+      {activeTab === 'client' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          {/* KPI Summary Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
+              <span className="text-[11px] font-medium text-slate-500 block">Target Client Keywords</span>
+              <span className="text-xl font-bold text-slate-900 mt-1 block">{clientSummary.total}</span>
+              <span className="text-[10px] text-slate-400">Tracked in client portfolio</span>
+            </div>
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
+              <span className="text-[11px] font-medium text-slate-500 block">Live GSC Synced</span>
+              <span className="text-xl font-bold text-emerald-600 mt-1 block">{clientSummary.synced} / {clientSummary.total}</span>
+              <span className="text-[10px] text-slate-400">Ranking in Search Console</span>
+            </div>
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
+              <span className="text-[11px] font-medium text-slate-500 block">Client in Top 10</span>
+              <span className="text-xl font-bold text-blue-600 mt-1 block">{clientSummary.top10}</span>
+              <span className="text-[10px] text-slate-400">Page 1 target keywords</span>
+            </div>
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
+              <span className="text-[11px] font-medium text-slate-500 block">Target Organic Clicks</span>
+              <span className="text-xl font-bold text-slate-900 mt-1 block">{clientSummary.totalClicks.toLocaleString()}</span>
+              <span className="text-[10px] text-slate-400">Clicks generated on target list</span>
+            </div>
+          </div>
+
+          {/* Full Width Table Card */}
           <SectionCard
             icon={BookmarkCheck}
             title="Client Keywords"
-            subtitle={`Client target list (${clientKeywords.length}) &bull; Synced with live GSC rankings`}
+            subtitle={`Client target list (${filteredClient.length} of ${clientKeywords.length}) \u2022 Synced with live GSC rankings`}
             actions={
               <div className="flex flex-wrap items-center gap-1.5">
-                {/* Right side Import CSV as requested */}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setIsImportModalOpen(true)}
-                  className="gap-1 text-xs font-semibold bg-white border-blue-200 text-blue-700 hover:bg-blue-50 cursor-pointer shadow-sm"
+                  className="gap-1.5 text-xs font-semibold bg-white border-blue-200 text-blue-700 hover:bg-blue-50 cursor-pointer shadow-sm"
                 >
-                  <Upload className="h-3 w-3" /> Import CSV
+                  <Upload className="h-3.5 w-3.5" /> Import CSV
                 </Button>
-                {/* Right side Export CSV */}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleExportClient}
-                  className="gap-1 text-xs font-semibold bg-white text-slate-700 hover:bg-slate-50 cursor-pointer shadow-sm"
+                  className="gap-1.5 text-xs font-semibold bg-white text-slate-700 hover:bg-slate-50 cursor-pointer shadow-sm"
                 >
-                  <Download className="h-3 w-3 text-emerald-600" /> Export CSV
+                  <Download className="h-3.5 w-3.5 text-emerald-600" /> Export CSV
                 </Button>
-                {/* Add Keyword Button */}
                 <Button
                   size="sm"
                   onClick={() => setIsAddModalOpen(true)}
-                  className="gap-1 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer shadow-sm px-2.5"
+                  className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer shadow-sm"
                 >
-                  <Plus className="h-3 w-3" /> Add
+                  <Plus className="h-3.5 w-3.5" /> Add Keyword
                 </Button>
               </div>
             }
           >
-            {/* Search and Position Filter (Right Table) */}
+            {/* Search and Position Filters */}
             <div className="flex flex-col sm:flex-row gap-2 mb-3">
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
@@ -553,21 +615,21 @@ export default function KeywordRankingsPage() {
                   className="pl-8 text-xs h-9"
                 />
               </div>
-              <Select value={clientRange} onChange={(e) => setClientRange(e.target.value)} className="sm:w-44 text-xs h-9">
+              <Select value={clientRange} onChange={(e) => setClientRange(e.target.value)} className="sm:w-48 text-xs h-9">
                 {RANGE_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </Select>
             </div>
 
-            {/* Table of Client Keywords (Same header names and structure) */}
+            {/* Table */}
             <div className="rounded-lg border border-slate-200 overflow-x-auto bg-white">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/70 text-xs">
-                    <TableHead className="w-10 text-center text-xs">#</TableHead>
+                    <TableHead className="w-12 text-center text-xs">#</TableHead>
                     <TableHead className="text-xs">Search Query / Keyword</TableHead>
-                    <TableHead className="w-24 text-right text-xs">
+                    <TableHead className="w-28 text-right text-xs">
                       <button
                         type="button"
                         onClick={() => toggleClientSort('position')}
@@ -576,7 +638,7 @@ export default function KeywordRankingsPage() {
                         Avg Position <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </TableHead>
-                    <TableHead className="w-20 text-right text-xs">
+                    <TableHead className="w-24 text-right text-xs">
                       <button
                         type="button"
                         onClick={() => toggleClientSort('clicks')}
@@ -585,7 +647,7 @@ export default function KeywordRankingsPage() {
                         Clicks <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </TableHead>
-                    <TableHead className="w-24 text-right text-xs">
+                    <TableHead className="w-28 text-right text-xs">
                       <button
                         type="button"
                         onClick={() => toggleClientSort('impressions')}
@@ -594,22 +656,26 @@ export default function KeywordRankingsPage() {
                         Impressions <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </TableHead>
-                    <TableHead className="w-20 text-right text-xs">CTR</TableHead>
-                    <TableHead className="w-20 text-center text-xs">Tier</TableHead>
-                    <TableHead className="w-12 text-center text-xs">Action</TableHead>
+                    <TableHead className="w-24 text-right text-xs">CTR</TableHead>
+                    <TableHead className="w-24 text-center text-xs">Tier</TableHead>
+                    <TableHead className="w-16 text-center text-xs">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredClient.map((k, i) => (
                     <TableRow key={k.id || k.keyword} className="hover:bg-slate-50/70 transition-colors text-xs">
                       <TableCell className="text-center text-slate-400 font-mono text-[11px]">{i + 1}</TableCell>
-                      <TableCell className="max-w-[180px]">
+                      <TableCell>
                         <div className="flex flex-col">
-                          <div className="flex items-center gap-1.5 truncate">
-                            <span className="font-semibold text-slate-900 truncate" title={k.keyword}>{k.keyword}</span>
-                            {k.isLiveSynced && (
-                              <span className="px-1 py-0.2 rounded text-[8px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
-                                GSC
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-slate-900" title={k.keyword}>{k.keyword}</span>
+                            {k.isLiveSynced ? (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                                GSC Synced
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-slate-100 text-slate-500 border border-slate-200 shrink-0">
+                                Target Only
                               </span>
                             )}
                           </div>
@@ -618,17 +684,17 @@ export default function KeywordRankingsPage() {
                               href={k.targetUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[10px] text-slate-400 hover:text-blue-600 truncate inline-flex items-center gap-0.5 mt-0.5"
+                              className="text-[11px] text-slate-400 hover:text-blue-600 inline-flex items-center gap-1 mt-0.5"
                               title={k.targetUrl}
                             >
-                              <ExternalLink className="h-2 w-2 shrink-0" />
-                              <span className="truncate">{k.targetUrl.replace(/^https?:\/\//, '')}</span>
+                              <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                              <span>{k.targetUrl.replace(/^https?:\/\//, '')}</span>
                             </a>
                           )}
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-bold text-slate-900">
-                        {k.position !== null && k.position !== undefined ? k.position : '—'}
+                        {k.position !== null && k.position !== undefined ? k.position : '\u2014'}
                       </TableCell>
                       <TableCell className="text-right text-slate-700 font-semibold">
                         {(k.clicks ?? 0).toLocaleString()}
@@ -650,7 +716,7 @@ export default function KeywordRankingsPage() {
                               ? 'secondary'
                               : 'outline'
                           }
-                          className="font-normal text-[10px] px-1.5 py-0.5"
+                          className="font-normal text-[10px] px-2 py-0.5"
                         >
                           {k.status}
                         </Badge>
@@ -662,7 +728,7 @@ export default function KeywordRankingsPage() {
                           className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                           title="Remove keyword"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </TableCell>
                     </TableRow>
@@ -674,23 +740,23 @@ export default function KeywordRankingsPage() {
                         <div className="space-y-1.5">
                           <p className="font-semibold text-slate-700">No client keywords found.</p>
                           <p className="text-[11px] text-slate-400">
-                            Click &quot;Import CSV&quot; to upload your client list or &quot;Add&quot; to add one.
+                            Click &quot;Import CSV&quot; to upload your client list or &quot;Add Keyword&quot; to add one.
                           </p>
                           <div className="pt-2 flex justify-center gap-2">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => setIsImportModalOpen(true)}
-                              className="gap-1 text-xs bg-white text-blue-700 border-blue-200"
+                              className="gap-1.5 text-xs bg-white text-blue-700 border-blue-200"
                             >
-                              <Upload className="h-3 w-3" /> Import CSV
+                              <Upload className="h-3.5 w-3.5" /> Import CSV
                             </Button>
                             <Button
                               size="sm"
                               onClick={() => setIsAddModalOpen(true)}
-                              className="gap-1 text-xs bg-blue-600 text-white"
+                              className="gap-1.5 text-xs bg-blue-600 text-white"
                             >
-                              <Plus className="h-3 w-3" /> Add
+                              <Plus className="h-3.5 w-3.5" /> Add Keyword
                             </Button>
                           </div>
                         </div>
@@ -701,20 +767,21 @@ export default function KeywordRankingsPage() {
               </Table>
             </div>
 
-            {/* Quick reset button */}
-            <div className="pt-2 flex items-center justify-end">
+            {/* Quick reset & count footer */}
+            <div className="pt-2 flex items-center justify-between text-[11px] text-slate-400">
+              <span>Showing {filteredClient.length} of {clientKeywords.length} client target keywords</span>
               <button
                 type="button"
                 onClick={handleResetDefaults}
-                className="text-[11px] text-slate-400 hover:text-slate-700 inline-flex items-center gap-1 cursor-pointer"
+                className="hover:text-slate-700 inline-flex items-center gap-1 cursor-pointer"
                 title="Reset to default initial keywords"
               >
                 <RotateCcw className="h-3 w-3" /> Reset Defaults
               </button>
             </div>
           </SectionCard>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* CSV Import Modal */}
       <ImportClientKeywordsModal
