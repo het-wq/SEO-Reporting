@@ -63,6 +63,7 @@ export default function OverviewPage() {
         current: searchConsole?.avgPosition?.currentText || (searchConsole?.avgPosition?.current || 0).toFixed(1),
         previous: searchConsole?.avgPosition?.previousText || (searchConsole?.avgPosition?.previous || 0).toFixed(1),
         diffPct: searchConsole?.avgPosition?.diffPct ?? 0,
+        improvement: searchConsole?.avgPosition?.improvement,
       },
       invertColor: true,
     },
@@ -154,8 +155,9 @@ export default function OverviewPage() {
               value={typeof k.m.current === 'number' ? k.m.current.toLocaleString() : k.m.current}
               previousValue={typeof k.m.previous === 'number' ? k.m.previous.toLocaleString() : k.m.previous}
               diff={k.m.diffPct}
+              improvement={k.m.improvement}
               invertColor={k.invertColor}
-              subtitle={k.key === 'position' ? 'Lower is better - ranking position improved' : undefined}
+              subtitle={k.key === 'position' ? (k.m.improvement ? 'Ranking position improved' : 'Ranking position dropped') : undefined}
             />
           ))}
         </div>

@@ -12,6 +12,7 @@ export default function MetricBox({
   diffText,
   subtitle,
   invertColor = false,
+  improvement,
   className,
 }) {
   // Validate diff to prevent NaN or Infinity
@@ -20,12 +21,25 @@ export default function MetricBox({
       ? Math.round(diff * 100) / 100
       : null;
 
-  // When invertColor is true (e.g. Average Position), a lower number is better
-  const isPositive = invertColor
-    ? safeDiff !== null && safeDiff < 0
-    : safeDiff !== null && safeDiff > 0;
-
   const isNeutral = safeDiff === 0 || safeDiff === null;
+
+  // Determine if the metric change represents an improvement (green) or decline (red)
+  let isPositive = false;
+  if (improvement !== undefined && improvement !== null) {
+    // If improvement boolean is explicitly provided by the data source, use it as authority
+    isPositive = Boolean(improvement);
+  } else if (invertColor) {
+    // For inverted metrics like average rank position (where lower number is better, e.g. 1 is top rank):
+    const curNum = parseFloat(value);
+    const prevNum = parseFloat(previousValue);
+    if (!isNaN(curNum) && !isNaN(prevNum) && prevNum > 0) {
+      isPositive = curNum < prevNum; // Rank improved if position number decreased (e.g. 50 -> 20)
+    } else {
+      isPositive = safeDiff !== null && safeDiff > 0;
+    }
+  } else {
+    isPositive = safeDiff !== null && safeDiff > 0;
+  }
 
   // Format percentage change cleanly
   let displayDiff = null;
@@ -52,17 +66,9 @@ export default function MetricBox({
               {isNeutral ? (
                 <Minus className="h-3 w-3" />
               ) : isPositive ? (
-                invertColor ? (
-                  <ArrowDownRight className="h-3 w-3" />
-                ) : (
-                  <ArrowUpRight className="h-3 w-3" />
-                )
+                <ArrowUpRight className="h-3 w-3" />
               ) : (
-                invertColor ? (
-                  <ArrowUpRight className="h-3 w-3" />
-                ) : (
-                  <ArrowDownRight className="h-3 w-3" />
-                )
+                <ArrowDownRight className="h-3 w-3" />
               )}
               <span>{displayDiff}</span>
             </Badge>

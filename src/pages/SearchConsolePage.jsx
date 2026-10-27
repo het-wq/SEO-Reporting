@@ -86,6 +86,7 @@ export default function SearchConsolePage() {
               value={item.fmt(item.m.current)}
               previousValue={item.prevFmt ? item.prevFmt() : item.fmt(item.m.previous)}
               diff={item.m.diffPct}
+              improvement={item.m.improvement}
               invertColor={item.invert}
             />
           ))}

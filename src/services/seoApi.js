@@ -29,10 +29,10 @@ export const fetchLiveSeoData = async (dateRangeInfo) => {
       data: {
         ...report,
         gscOverview: report.searchConsole ? [
-          { key: 'clicks', label: 'Clicks', current: report.searchConsole.clicks?.current ?? 0, previous: report.searchConsole.clicks?.previous ?? 0, diff: report.searchConsole.clicks?.diffPct ?? 0, unit: '', invertColor: false },
-          { key: 'impressions', label: 'Impressions', current: report.searchConsole.impressions?.current ?? 0, previous: report.searchConsole.impressions?.previous ?? 0, diff: report.searchConsole.impressions?.diffPct ?? 0, unit: '', invertColor: false },
-          { key: 'ctr', label: 'Avg CTR', current: report.searchConsole.avgCtr?.currentText || '0.00%', previous: report.searchConsole.avgCtr?.previousText || '0.00%', diff: report.searchConsole.avgCtr?.diffPct ?? 0, unit: '', invertColor: false },
-          { key: 'position', label: 'Avg Position', current: parseFloat(report.searchConsole.avgPosition?.currentText || 0), previous: parseFloat(report.searchConsole.avgPosition?.previousText || 0), diff: report.searchConsole.avgPosition?.diffPct ?? 0, unit: '', invertColor: true },
+          { key: 'clicks', label: 'Clicks', current: report.searchConsole.clicks?.current ?? 0, previous: report.searchConsole.clicks?.previous ?? 0, diff: report.searchConsole.clicks?.diffPct ?? 0, improvement: report.searchConsole.clicks?.improvement, unit: '', invertColor: false },
+          { key: 'impressions', label: 'Impressions', current: report.searchConsole.impressions?.current ?? 0, previous: report.searchConsole.impressions?.previous ?? 0, diff: report.searchConsole.impressions?.diffPct ?? 0, improvement: report.searchConsole.impressions?.improvement, unit: '', invertColor: false },
+          { key: 'ctr', label: 'Avg CTR', current: report.searchConsole.avgCtr?.currentText || '0.00%', previous: report.searchConsole.avgCtr?.previousText || '0.00%', diff: report.searchConsole.avgCtr?.diffPct ?? 0, improvement: report.searchConsole.avgCtr?.improvement, unit: '', invertColor: false },
+          { key: 'position', label: 'Avg Position', current: parseFloat(report.searchConsole.avgPosition?.currentText || 0), previous: parseFloat(report.searchConsole.avgPosition?.previousText || 0), diff: report.searchConsole.avgPosition?.diffPct ?? 0, improvement: report.searchConsole.avgPosition?.improvement, unit: '', invertColor: true },
         ] : null,
         topKeywords: (report.keywordRankings || []).map((k) => ({
           keyword: k.keyword,

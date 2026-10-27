@@ -33,6 +33,7 @@ export default function SearchConsoleSection({ gscOverview, deviceTraffic, perio
               value={item.current?.toLocaleString ? item.current.toLocaleString() : item.current}
               previousValue={item.previous?.toLocaleString ? item.previous.toLocaleString() : item.previous}
               diff={item.diff}
+              improvement={item.improvement}
               invertColor={item.invertColor}
               subtitle={
                 item.key === 'position'
