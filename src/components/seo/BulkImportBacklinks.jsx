@@ -25,40 +25,19 @@ import {
 } from '@/components/ui/table';
 import { parseCsvText } from '@/lib/csvParser';
 
-export const BACKLINK_CATEGORIES = [
-  'Reddit Submission',
-  'Quora Submission',
-  'Forum Submission',
-  'PDF Submission',
-  'Infographics Submission',
-  'Image Submission',
-  'Video Submission',
-  'Pinterest Submission',
-  'YouTube Submission',
-  'Instagram Submission',
-  'Off-page Blogs Posting',
-  'Profile Creation',
-  'Business Listing',
-  'Blog Promotion',
-  'Social Bookmarking',
-  'Article Submission',
-  'Classified Submission',
-  'GMB Link Promotion',
-  'PR Submission',
-  'Micro Blogging',
-  'Guest Posting',
-  // Old categories (preserved)
-  'Guest Post',
-  'Directory & Citation',
-  'Editorial Link',
-  'Press Release',
-  'Profile & Social',
-  'Resource Link',
-  'Forum & Community',
-  'General Backlink',
-];
+import {
+  BACKLINK_CATEGORIES,
+  BACKLINK_STATUSES,
+  SUBMISSION_CATEGORIES,
+  OLD_BACKLINK_CATEGORIES,
+} from '@/lib/backlinksData';
 
-export const BACKLINK_STATUSES = ['Live / Indexed', 'In Progress', 'Planned'];
+export {
+  BACKLINK_CATEGORIES,
+  BACKLINK_STATUSES,
+  SUBMISSION_CATEGORIES,
+  OLD_BACKLINK_CATEGORIES,
+};
 
 const HEADER_ALIASES = {
   sourceUrl: ['sourceurl', 'source url', 'backlinkurl', 'linkurl', 'referringpage', 'referringurl', 'url', 'site', 'website'],

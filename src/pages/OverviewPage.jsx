@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Globe, Search, Smartphone, Tag, TrendingUp, TrendingDown,
   Lightbulb, Target, Clock, CalendarClock, AlertTriangle, KeyRound,
+  Link2, CheckCircle2, Calendar, Layers, ExternalLink, ArrowRight, ListChecks,
 } from 'lucide-react';
 import SectionCard from '@/components/dashboard/SectionCard';
 import MetricBox from '@/components/MetricBox';
@@ -9,10 +10,24 @@ import ComparisonBarChart from '@/components/charts/ComparisonBarChart';
 import NoReportData from '@/components/dashboard/NoReportData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
+} from '@/components/ui/table';
 import { useReport } from '@/context/ReportContext';
 import { getGoogleAuthUrl } from '@/services/liveSeoApi';
+import {
+  getStoredBacklinks,
+  calculateBacklinkStats,
+  BACKLINK_CATEGORIES,
+} from '@/lib/backlinksData';
+import {
+  getStoredActivities,
+  calculateActivityStats,
+  ACTIVITY_CATEGORIES,
+} from '@/lib/activitiesData';
 
-export default function OverviewPage() {
+export default function OverviewPage({ onNavigate }) {
   const { report, loading, selectedPeriod, previousPeriod, comparisonLabel } = useReport();
 
   if (loading && !report) {
@@ -90,6 +105,88 @@ export default function OverviewPage() {
     { name: 'Brand Clicks', previous: brandQueries?.all?.brandClicks?.previous || 0, current: brandQueries?.all?.brandClicks?.current || 0 },
     { name: 'Non-Brand Clicks', previous: brandQueries?.all?.nonBrandClicks?.previous || 0, current: brandQueries?.all?.nonBrandClicks?.current || 0 },
   ];
+
+  // Backlinks & SEO Activities State for Overview Section
+  const [backlinks, setBacklinks] = useState(() => getStoredBacklinks());
+  const [activities, setActivities] = useState(() => getStoredActivities());
+  const [overviewTab, setOverviewTab] = useState('backlinks'); // 'backlinks' | 'activities'
+  const [overviewCategoryView, setOverviewCategoryView] = useState('all'); // 'all' | 'active'
+
+  useEffect(() => {
+    const handleBacklinksUpdate = (e) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setBacklinks(e.detail);
+      } else {
+        setBacklinks(getStoredBacklinks());
+      }
+    };
+    const handleActivitiesUpdate = (e) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setActivities(e.detail);
+      } else {
+        setActivities(getStoredActivities());
+      }
+    };
+    window.addEventListener('backlinks-updated', handleBacklinksUpdate);
+    window.addEventListener('activities-updated', handleActivitiesUpdate);
+    window.addEventListener('storage', handleBacklinksUpdate);
+    window.addEventListener('storage', handleActivitiesUpdate);
+    return () => {
+      window.removeEventListener('backlinks-updated', handleBacklinksUpdate);
+      window.removeEventListener('activities-updated', handleActivitiesUpdate);
+      window.removeEventListener('storage', handleBacklinksUpdate);
+      window.removeEventListener('storage', handleActivitiesUpdate);
+    };
+  }, []);
+
+  const {
+    total: totalBacklinks,
+    live: liveBacklinks,
+    inProgress: inProgressBacklinks,
+    planned: plannedBacklinks,
+    avgDa: backlinkAvgDa,
+    categoryCards: backlinkCategoryCards,
+  } = useMemo(() => calculateBacklinkStats(backlinks), [backlinks]);
+
+  const {
+    total: totalActivities,
+    completed: completedActivities,
+    inProgress: inProgressActivities,
+    planned: plannedActivities,
+    categoryCards: activityCategoryCards,
+  } = useMemo(() => calculateActivityStats(activities), [activities]);
+
+  const currentCategoryCards = overviewTab === 'backlinks' ? backlinkCategoryCards : activityCategoryCards;
+
+  const activeCategoriesCount = useMemo(
+    () => currentCategoryCards.filter((c) => c.count > 0).length,
+    [currentCategoryCards]
+  );
+
+  const displayedCategoryCards = useMemo(() => {
+    if (overviewCategoryView === 'active') {
+      return currentCategoryCards.filter((c) => c.count > 0);
+    }
+    return currentCategoryCards;
+  }, [currentCategoryCards, overviewCategoryView]);
+
+  const topBacklinks = useMemo(() => {
+    return [...backlinks]
+      .sort((a, b) => (Number(b.da) || 0) - (Number(a.da) || 0))
+      .slice(0, 5);
+  }, [backlinks]);
+
+  const recentActivities = useMemo(() => {
+    return [...activities].slice(0, 5);
+  }, [activities]);
+
+  const handleNavigateToActivities = () => {
+    if (onNavigate) {
+      onNavigate('seo-activities');
+    } else {
+      window.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'seo-activities' }));
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -242,6 +339,369 @@ export default function OverviewPage() {
           />
         </SectionCard>
       </div>
+
+      {/* ========================================================================= */}
+      {/* SECTION: BACKLINKS & SEO ACTIVITIES (User requested showcase on Overview)  */}
+      {/* ========================================================================= */}
+      <SectionCard
+        icon={overviewTab === 'backlinks' ? Link2 : ListChecks}
+        iconClassName={overviewTab === 'backlinks' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}
+        title="SEO Activities & Backlinks Submissions"
+        subtitle={`${totalBacklinks} Total Backlinks • ${totalActivities} Recorded SEO Campaigns & Tasks`}
+        actions={
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleNavigateToActivities}
+            className="h-8 text-xs gap-1.5 font-semibold text-slate-800 hover:text-slate-950 bg-white hover:bg-slate-50 border-slate-200 shadow-2xs cursor-pointer"
+          >
+            <span>Manage in SEO Activities</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
+        }
+      >
+        {/* Primary Tab Switcher & View Filter */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-200/80">
+          <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100/90 p-0.5 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setOverviewTab('backlinks')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                overviewTab === 'backlinks'
+                  ? 'bg-emerald-600 text-white shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Link2 className="h-3.5 w-3.5" />
+              <span>Backlink Submissions ({totalBacklinks})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setOverviewTab('activities')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                overviewTab === 'activities'
+                  ? 'bg-blue-600 text-white shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <ListChecks className="h-3.5 w-3.5" />
+              <span>SEO Activities ({totalActivities})</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+              {activeCategoriesCount} Active of {currentCategoryCards.length} Categories
+            </span>
+            <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100/80 p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setOverviewCategoryView('all')}
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  overviewCategoryView === 'all'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                All ({currentCategoryCards.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setOverviewCategoryView('active')}
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  overviewCategoryView === 'active'
+                    ? overviewTab === 'backlinks'
+                      ? 'bg-white text-emerald-800 shadow-2xs'
+                      : 'bg-white text-blue-800 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Active Only ({activeCategoriesCount})
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Dynamic KPI Strip */}
+        {overviewTab === 'backlinks' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-center sm:text-left">
+              <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider block">Total Backlinks</span>
+              <span className="text-xl font-bold text-slate-900 mt-1 block">{totalBacklinks}</span>
+            </div>
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-center sm:text-left">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium text-emerald-800 uppercase tracking-wider block">Live / Indexed</span>
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 hidden sm:inline" />
+              </div>
+              <span className="text-xl font-bold text-emerald-900 mt-1 block">{liveBacklinks}</span>
+            </div>
+            <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-3 text-center sm:text-left">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium text-blue-800 uppercase tracking-wider block">In Progress</span>
+                <Clock className="h-3.5 w-3.5 text-blue-600 hidden sm:inline" />
+              </div>
+              <span className="text-xl font-bold text-blue-900 mt-1 block">{inProgressBacklinks}</span>
+            </div>
+            <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 text-center sm:text-left">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium text-amber-800 uppercase tracking-wider block">Planned</span>
+                <Calendar className="h-3.5 w-3.5 text-amber-600 hidden sm:inline" />
+              </div>
+              <span className="text-xl font-bold text-amber-900 mt-1 block">{plannedBacklinks}</span>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-center sm:text-left col-span-2 sm:col-span-1">
+              <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider block">Average DA</span>
+              <span className="text-xl font-bold text-slate-900 mt-1 block">
+                {backlinkAvgDa !== '—' ? `DA ${backlinkAvgDa}` : '—'}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-center sm:text-left">
+              <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider block">Total Activities</span>
+              <span className="text-xl font-bold text-slate-900 mt-1 block">{totalActivities}</span>
+            </div>
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-center sm:text-left">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium text-emerald-800 uppercase tracking-wider block">Completed</span>
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 hidden sm:inline" />
+              </div>
+              <span className="text-xl font-bold text-emerald-900 mt-1 block">{completedActivities}</span>
+            </div>
+            <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-3 text-center sm:text-left">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium text-blue-800 uppercase tracking-wider block">In Progress</span>
+                <Clock className="h-3.5 w-3.5 text-blue-600 hidden sm:inline" />
+              </div>
+              <span className="text-xl font-bold text-blue-900 mt-1 block">{inProgressActivities}</span>
+            </div>
+            <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 text-center sm:text-left">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium text-amber-800 uppercase tracking-wider block">Planned</span>
+                <Calendar className="h-3.5 w-3.5 text-amber-600 hidden sm:inline" />
+              </div>
+              <span className="text-xl font-bold text-amber-900 mt-1 block">{plannedActivities}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Category Breakdown Boxes (No graph, box view with number and name) */}
+        <div className="pt-2">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+              <Layers className={`h-4 w-4 ${overviewTab === 'backlinks' ? 'text-emerald-600' : 'text-blue-600'}`} />
+              {overviewTab === 'backlinks' ? 'Backlink Categories Breakdown' : 'SEO Activity Categories Breakdown'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+            {displayedCategoryCards.map((cat) => (
+              <div
+                key={cat.name}
+                onClick={handleNavigateToActivities}
+                className={`p-3 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-between select-none relative group ${
+                  cat.count > 0
+                    ? overviewTab === 'backlinks'
+                      ? 'border-emerald-200/90 bg-white hover:border-emerald-400 hover:shadow-xs'
+                      : 'border-blue-200/90 bg-white hover:border-blue-400 hover:shadow-xs'
+                    : 'border-slate-200/70 bg-slate-50/50 hover:bg-white hover:border-slate-300'
+                }`}
+                title={`Click to view ${cat.name} in SEO Activities`}
+              >
+                {cat.count > 0 && (
+                  <span
+                    className={`absolute top-2 right-2 h-2 w-2 rounded-full ${
+                      overviewTab === 'backlinks' ? 'bg-emerald-500' : 'bg-blue-500'
+                    }`}
+                  />
+                )}
+                <p
+                  className={`text-2xl font-black tracking-tight ${
+                    cat.count > 0
+                      ? overviewTab === 'backlinks'
+                        ? 'text-emerald-600'
+                        : 'text-blue-600'
+                      : 'text-slate-400'
+                  }`}
+                >
+                  {cat.count}
+                </p>
+                <p
+                  className={`text-[11px] font-semibold mt-1.5 leading-tight line-clamp-2 ${
+                    cat.count > 0
+                      ? 'text-slate-800 group-hover:text-slate-950 font-bold'
+                      : 'text-slate-500'
+                  }`}
+                >
+                  {cat.name}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {displayedCategoryCards.length === 0 && (
+            <div className="text-center py-6 text-slate-500 text-xs">
+              No categories have active entries in this view. Switch to &quot;All&quot; to view all available categories.
+            </div>
+          )}
+        </div>
+
+        {/* Dynamic Table Preview */}
+        {overviewTab === 'backlinks' && topBacklinks.length > 0 && (
+          <div className="mt-5 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Top Authority Backlink Placements
+              </span>
+              <button
+                type="button"
+                onClick={handleNavigateToActivities}
+                className="text-xs text-emerald-700 hover:text-emerald-800 font-semibold cursor-pointer inline-flex items-center gap-1"
+              >
+                <span>View all backlinks ({totalBacklinks})</span>
+                <ArrowRight className="h-3 w-3" />
+              </button>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 overflow-x-auto bg-white">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50/80 text-xs">
+                    <TableHead className="w-14">Status</TableHead>
+                    <TableHead>Referring Source &amp; Anchor</TableHead>
+                    <TableHead className="w-40">Category</TableHead>
+                    <TableHead className="w-20 text-center">DA</TableHead>
+                    <TableHead className="w-24 text-right">Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {topBacklinks.map((b) => (
+                    <TableRow key={b.id} className="hover:bg-slate-50/70 transition-colors">
+                      <TableCell>
+                        {b.status === 'Live / Indexed' ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        ) : b.status === 'In Progress' ? (
+                          <Clock className="h-4 w-4 text-blue-600" />
+                        ) : (
+                          <Calendar className="h-4 w-4 text-amber-500" />
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-0.5">
+                          <a
+                            href={b.sourceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-semibold text-blue-600 hover:underline text-xs inline-flex items-center gap-1 break-all"
+                          >
+                            <span>{b.sourceUrl}</span>
+                            <ExternalLink className="h-3 w-3 shrink-0" />
+                          </a>
+                          {b.anchorText && (
+                            <p className="text-[11px] text-slate-500">
+                              Anchor: <span className="font-medium text-slate-700">&ldquo;{b.anchorText}&rdquo;</span>
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-[11px] font-medium text-slate-700 border-slate-200">
+                          {b.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {b.da !== null && b.da !== undefined ? (
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold ${
+                            b.da >= 80
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : b.da >= 50
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              : 'bg-slate-100 text-slate-700'
+                          }`}>
+                            DA {b.da}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-xs">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs text-slate-500 font-mono text-right">{b.date}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        )}
+
+        {overviewTab === 'activities' && recentActivities.length > 0 && (
+          <div className="mt-5 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Recent SEO Activities &amp; Tasks
+              </span>
+              <button
+                type="button"
+                onClick={handleNavigateToActivities}
+                className="text-xs text-blue-700 hover:text-blue-800 font-semibold cursor-pointer inline-flex items-center gap-1"
+              >
+                <span>View all activities ({totalActivities})</span>
+                <ArrowRight className="h-3 w-3" />
+              </button>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 overflow-x-auto bg-white">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50/80 text-xs">
+                    <TableHead className="w-14">Status</TableHead>
+                    <TableHead>Activity &amp; Notes</TableHead>
+                    <TableHead className="w-40">Category</TableHead>
+                    <TableHead className="w-20 text-center">Priority</TableHead>
+                    <TableHead className="w-24 text-right">Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentActivities.map((a) => (
+                    <TableRow key={a.id} className="hover:bg-slate-50/70 transition-colors">
+                      <TableCell>
+                        {a.status === 'Completed' ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        ) : a.status === 'In Progress' ? (
+                          <Clock className="h-4 w-4 text-blue-600" />
+                        ) : (
+                          <Calendar className="h-4 w-4 text-amber-500" />
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-0.5">
+                          <p className="font-semibold text-slate-900 text-xs">{a.title}</p>
+                          {a.notes && <p className="text-[11px] text-slate-500">{a.notes}</p>}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-[11px] font-medium text-slate-700 border-slate-200">
+                          {a.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge
+                          variant={a.priority === 'High' ? 'danger' : a.priority === 'Medium' ? 'warning' : 'secondary'}
+                          className="text-[11px] font-medium"
+                        >
+                          {a.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-slate-500 font-mono text-right">{a.date}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        )}
+      </SectionCard>
 
       {executiveInsights && (
         <SectionCard icon={Lightbulb} iconClassName="bg-amber-50 text-amber-600" title="Performance Insights">

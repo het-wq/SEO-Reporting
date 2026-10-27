@@ -62,6 +62,19 @@ function DashboardShell() {
     }
   }, [refresh]);
 
+  // Support cross-page navigation via custom event
+  useEffect(() => {
+    const handleNav = (e) => {
+      const target = e?.detail;
+      if (target && PAGES[target]) {
+        setActivePage(target);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+    window.addEventListener('navigate-to-page', handleNav);
+    return () => window.removeEventListener('navigate-to-page', handleNav);
+  }, []);
+
   const ActivePageComponent = PAGES[activePage] || OverviewPage;
   const pageTitle = NAV_ITEMS.find((n) => n.key === activePage)?.label || 'Overview';
 
@@ -79,7 +92,7 @@ function DashboardShell() {
       <div className="flex-1 min-w-0 flex flex-col">
         <AppHeader pageTitle={pageTitle} onOpenMobileSidebar={() => setMobileOpen(true)} />
         <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 py-6">
-          <ActivePageComponent />
+          <ActivePageComponent onNavigate={setActivePage} />
         </main>
       </div>
     </div>

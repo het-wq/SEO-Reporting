@@ -42,176 +42,29 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 import BulkImportActivities from '@/components/seo/BulkImportActivities';
-import BulkImportBacklinks, { BACKLINK_CATEGORIES, BACKLINK_STATUSES } from '@/components/seo/BulkImportBacklinks';
+import BulkImportBacklinks from '@/components/seo/BulkImportBacklinks';
+import {
+  BACKLINK_CATEGORIES,
+  BACKLINK_STATUSES,
+  BACKLINKS_STORAGE_KEY,
+  DEFAULT_BACKLINKS,
+  getStoredBacklinks,
+  saveStoredBacklinks,
+  calculateBacklinkStats,
+} from '@/lib/backlinksData';
 
-const STORAGE_KEY = 'boulder_custom_seo_activities';
-const BACKLINKS_STORAGE_KEY = 'boulder_custom_backlinks';
+import {
+  ACTIVITY_CATEGORIES,
+  INITIAL_ACTIVITIES,
+  ACTIVITIES_STORAGE_KEY,
+  getStoredActivities,
+  saveStoredActivities,
+  calculateActivityStats,
+} from '@/lib/activitiesData';
 
-const CATEGORIES = [
-  'On-Page SEO',
-  'Technical SEO',
-  'Content & Blog',
-  'Local SEO',
-  'Link Building',
-  'Conversion & UX',
-  'Keyword Strategy',
-  'General SEO',
-];
+const STORAGE_KEY = ACTIVITIES_STORAGE_KEY;
 
-const INITIAL_ACTIVITIES = [
-  {
-    id: 'act-1',
-    title: 'Migrated Search Console property to https://boulderdecisions.com/ and audited indexing',
-    category: 'Technical SEO',
-    status: 'Completed',
-    priority: 'High',
-    date: '2026-10-21',
-    targetUrl: 'https://boulderdecisions.com/',
-    notes: 'Configured verified domain property, validated sitemaps, and verified clean crawl indexation.',
-  },
-  {
-    id: 'act-2',
-    title: 'Updated title tags and meta descriptions for core analytics & decision consulting pages',
-    category: 'On-Page SEO',
-    status: 'Completed',
-    priority: 'High',
-    date: '2026-10-18',
-    targetUrl: 'https://boulderdecisions.com/',
-    notes: 'Integrated target terms into H1 and meta title tags based on verified Search Console queries.',
-  },
-  {
-    id: 'act-3',
-    title: 'Implemented dynamic Brand vs Non-Brand keyword classification engine',
-    category: 'On-Page SEO',
-    status: 'Completed',
-    priority: 'Medium',
-    date: '2026-10-15',
-    targetUrl: 'https://boulderdecisions.com/',
-    notes: 'Segmented search queries to isolate brand query performance from organic discovery traffic.',
-  },
-  {
-    id: 'act-4',
-    title: 'Core Web Vitals mobile performance optimization (LCP & CLS review)',
-    category: 'Technical SEO',
-    status: 'In Progress',
-    priority: 'High',
-    date: '2026-10-22',
-    targetUrl: 'https://boulderdecisions.com/',
-    notes: 'Auditing third-party scripts, lazy loading assets, and optimizing delivery formats across mobile layouts.',
-  },
-  {
-    id: 'act-5',
-    title: 'Local SEO citation sync and Google Business Profile update',
-    category: 'Local SEO',
-    status: 'Planned',
-    priority: 'Medium',
-    date: '2026-10-25',
-    targetUrl: 'https://boulderdecisions.com/',
-    notes: 'Synchronizing NAP (Name, Address, Phone) consistency across local business directories.',
-  },
-];
-
-const DEFAULT_BACKLINKS = [
-  {
-    id: 'bl-1',
-    sourceUrl: 'https://clutch.co/profile/boulder-decision',
-    targetUrl: 'https://boulderdecisions.com/',
-    anchorText: 'Boulder Decision Analytics',
-    category: 'Business Listing',
-    da: 88,
-    status: 'Live / Indexed',
-    date: '2026-10-18',
-    notes: 'Verified corporate B2B directory listing with dofollow backlink',
-  },
-  {
-    id: 'bl-2',
-    sourceUrl: 'https://medium.com/@analytics/decision-models',
-    targetUrl: 'https://boulderdecisions.com/blog',
-    anchorText: 'executive decision framework',
-    category: 'Guest Posting',
-    da: 92,
-    status: 'Live / Indexed',
-    date: '2026-10-14',
-    notes: 'Editorial link in 2,200-word enterprise analytics guide',
-  },
-  {
-    id: 'bl-3',
-    sourceUrl: 'https://reddit.com/r/analytics/comments/decision_frameworks',
-    targetUrl: 'https://boulderdecisions.com/blog',
-    anchorText: 'decision analytics guide',
-    category: 'Reddit Submission',
-    da: 91,
-    status: 'Live / Indexed',
-    date: '2026-10-12',
-    notes: 'Helpful answer in community discussion thread',
-  },
-  {
-    id: 'bl-4',
-    sourceUrl: 'https://quora.com/What-is-the-best-decision-intelligence-playbook',
-    targetUrl: 'https://boulderdecisions.com/services',
-    anchorText: 'Boulder Decision framework',
-    category: 'Quora Submission',
-    da: 93,
-    status: 'Live / Indexed',
-    date: '2026-10-11',
-    notes: 'Top-voted expert answer with verified brand attribution',
-  },
-  {
-    id: 'bl-5',
-    sourceUrl: 'https://businesswire.com/news/boulder-expansion',
-    targetUrl: 'https://boulderdecisions.com/',
-    anchorText: 'Boulder Decision',
-    category: 'PR Submission',
-    da: 90,
-    status: 'Live / Indexed',
-    date: '2026-10-10',
-    notes: 'Q4 regional decision consulting services announcement',
-  },
-  {
-    id: 'bl-6',
-    sourceUrl: 'https://crunchbase.com/organization/boulder-decision',
-    targetUrl: 'https://boulderdecisions.com/',
-    anchorText: 'boulderdecisions.com',
-    category: 'Profile Creation',
-    da: 91,
-    status: 'Live / Indexed',
-    date: '2026-10-08',
-    notes: 'Verified organization company profile citation',
-  },
-  {
-    id: 'bl-7',
-    sourceUrl: 'https://techbullion.com/data-analytics-leaders/',
-    targetUrl: 'https://boulderdecisions.com/services',
-    anchorText: 'decision intelligence consulting',
-    category: 'Editorial Link',
-    da: 64,
-    status: 'In Progress',
-    date: '2026-10-24',
-    notes: 'Editorial placement in data intelligence industry roundup',
-  },
-  {
-    id: 'bl-8',
-    sourceUrl: 'https://slideshare.net/boulder-decision-q3-playbook',
-    targetUrl: 'https://boulderdecisions.com/blog',
-    anchorText: 'Q3 Enterprise Decision Deck',
-    category: 'PDF Submission',
-    da: 86,
-    status: 'Live / Indexed',
-    date: '2026-10-05',
-    notes: 'Presentation and whitepaper document upload',
-  },
-  {
-    id: 'bl-9',
-    sourceUrl: 'https://pinterest.com/pin/boulder-infographic',
-    targetUrl: 'https://boulderdecisions.com/blog',
-    anchorText: 'analytics model diagram',
-    category: 'Pinterest Submission',
-    da: 84,
-    status: 'Live / Indexed',
-    date: '2026-10-02',
-    notes: 'Decision tree infographic visual pin placement',
-  },
-];
+export const CATEGORIES = ACTIVITY_CATEGORIES;
 
 const CHART_COLORS = ['#2563eb', '#16a34a', '#7c3aed', '#0ea5e9', '#d97706', '#dc2626', '#0891b2', '#db2777', '#4f46e5', '#65a30d'];
 
@@ -246,25 +99,23 @@ export default function SeoActivitiesPage() {
     notes: '',
   });
 
-  // Load activities from localStorage
-  const [activities, setActivities] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.warn('Failed to load saved activities:', e);
-    }
-    return INITIAL_ACTIVITIES;
-  });
+  // Load activities from localStorage with helper
+  const [activities, setActivities] = useState(() => getStoredActivities());
 
   // Save activities to localStorage
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
-    } catch (e) {
-      console.warn('Failed to persist activities:', e);
-    }
+    saveStoredActivities(activities);
   }, [activities]);
+
+  useEffect(() => {
+    const handleActivitiesUpdate = (e) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setActivities(e.detail);
+      }
+    };
+    window.addEventListener('activities-updated', handleActivitiesUpdate);
+    return () => window.removeEventListener('activities-updated', handleActivitiesUpdate);
+  }, []);
 
   const handleToggleEntry = (mode) => {
     if (isEntryOpen && entryMode === mode) {
@@ -362,11 +213,26 @@ export default function SeoActivitiesPage() {
     });
   }, [activities, activitiesSearch, statusFilter, categoryFilter]);
 
-  // Statistics
-  const totalCount = activities.length;
-  const completedCount = activities.filter((a) => a.status === 'Completed').length;
-  const inProgressCount = activities.filter((a) => a.status === 'In Progress').length;
-  const plannedCount = activities.filter((a) => a.status === 'Planned').length;
+  // Activity Statistics & Dynamic Category Boxes
+  const {
+    total: totalCount,
+    completed: completedCount,
+    inProgress: inProgressCount,
+    planned: plannedCount,
+    categoryCards: allActivityCategoryCards,
+  } = useMemo(() => calculateActivityStats(activities), [activities]);
+
+  const [activityBoxView, setActivityBoxView] = useState('all'); // 'all' | 'active'
+  const activeActivityCategoriesCount = useMemo(
+    () => allActivityCategoryCards.filter((c) => c.count > 0).length,
+    [allActivityCategoryCards]
+  );
+  const displayedActivityCategoryCards = useMemo(() => {
+    if (activityBoxView === 'active') {
+      return allActivityCategoryCards.filter((c) => c.count > 0);
+    }
+    return allActivityCategoryCards;
+  }, [allActivityCategoryCards, activityBoxView]);
 
   const curLabel = selectedPeriod?.label || report?.period || 'Selected Month';
 
@@ -389,23 +255,21 @@ export default function SeoActivitiesPage() {
   // =========================================================================
   // BACKLINKS & OFF-PAGE SUBMISSIONS STATE
   // =========================================================================
-  const [backlinks, setBacklinks] = useState(() => {
-    try {
-      const saved = localStorage.getItem(BACKLINKS_STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.warn('Failed to load saved backlinks:', e);
-    }
-    return DEFAULT_BACKLINKS;
-  });
+  const [backlinks, setBacklinks] = useState(() => getStoredBacklinks());
 
   useEffect(() => {
-    try {
-      localStorage.setItem(BACKLINKS_STORAGE_KEY, JSON.stringify(backlinks));
-    } catch (e) {
-      console.warn('Failed to persist backlinks:', e);
-    }
+    saveStoredBacklinks(backlinks);
   }, [backlinks]);
+
+  useEffect(() => {
+    const handleBacklinksUpdate = (e) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setBacklinks(e.detail);
+      }
+    };
+    window.addEventListener('backlinks-updated', handleBacklinksUpdate);
+    return () => window.removeEventListener('backlinks-updated', handleBacklinksUpdate);
+  }, []);
 
   const [backlinksSearch, setBacklinksSearch] = useState('');
   const [backlinkStatusFilter, setBacklinkStatusFilter] = useState('All');
@@ -548,37 +412,27 @@ export default function SeoActivitiesPage() {
     });
   }, [backlinks, backlinksSearch, backlinkStatusFilter, backlinkCategoryFilter]);
 
-  // Backlink Statistics
-  const totalBacklinks = backlinks.length;
-  const liveBacklinks = backlinks.filter((b) => b.status === 'Live / Indexed').length;
-  const inProgressBacklinks = backlinks.filter((b) => b.status === 'In Progress').length;
-  const plannedBacklinks = backlinks.filter((b) => b.status === 'Planned').length;
+  // Backlink Statistics & Dynamic Category Boxes
+  const {
+    total: totalBacklinks,
+    live: liveBacklinks,
+    inProgress: inProgressBacklinks,
+    planned: plannedBacklinks,
+    avgDa,
+    categoryCards: allCategoryCards,
+  } = useMemo(() => calculateBacklinkStats(backlinks), [backlinks]);
 
-  const rankedDaBacklinks = backlinks.filter((b) => b.da !== null && !isNaN(b.da));
-  const avgDa = rankedDaBacklinks.length
-    ? (rankedDaBacklinks.reduce((acc, b) => acc + b.da, 0) / rankedDaBacklinks.length).toFixed(1)
-    : '—';
-
-  // Dynamic Backlink Category Boxes (numbers with names)
-  const allCategoryCards = useMemo(() => {
-    const counts = {};
-    backlinks.forEach((b) => {
-      const cat = b.category || 'General Backlink';
-      counts[cat] = (counts[cat] || 0) + 1;
-    });
-
-    const list = BACKLINK_CATEGORIES.map((cat) => ({
-      name: cat,
-      count: counts[cat] || 0,
-    }));
-
-    // Categories with active backlinks (count > 0) are shown first in descending order,
-    // followed by the remaining available categories in alphabetical order
-    return list.sort((a, b) => {
-      if (b.count !== a.count) return b.count - a.count;
-      return a.name.localeCompare(b.name);
-    });
-  }, [backlinks]);
+  const [backlinkBoxView, setBacklinkBoxView] = useState('all'); // 'all' | 'active'
+  const activeCategoriesCount = useMemo(
+    () => allCategoryCards.filter((c) => c.count > 0).length,
+    [allCategoryCards]
+  );
+  const displayedCategoryCards = useMemo(() => {
+    if (backlinkBoxView === 'active') {
+      return allCategoryCards.filter((c) => c.count > 0);
+    }
+    return allCategoryCards;
+  }, [allCategoryCards, backlinkBoxView]);
 
   // Content Published Table State
   const [contentSearch, setContentSearch] = useState('');
@@ -974,6 +828,115 @@ export default function SeoActivitiesPage() {
               )}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Category Breakdown Boxes (No graph, box view with number and name) */}
+        <div className="pt-4 border-t border-slate-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="h-4 w-4 text-blue-600" />
+                Category Breakdown ({totalCount} Total Activities)
+              </span>
+              <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                {activeActivityCategoriesCount} Active of {allActivityCategoryCards.length} Categories
+              </span>
+              {categoryFilter !== 'All' && (
+                <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                  Filtered: {categoryFilter}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100/80 p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setActivityBoxView('all')}
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                    activityBoxView === 'all'
+                      ? 'bg-white text-slate-900 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  All ({allActivityCategoryCards.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActivityBoxView('active')}
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                    activityBoxView === 'active'
+                      ? 'bg-white text-blue-800 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Active Only ({activeActivityCategoriesCount})
+                </button>
+              </div>
+
+              {categoryFilter !== 'All' && (
+                <button
+                  type="button"
+                  onClick={() => setCategoryFilter('All')}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline ml-1"
+                >
+                  Clear Filter
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+            {displayedActivityCategoryCards.map((cat) => {
+              const isSelected = categoryFilter === cat.name;
+              return (
+                <div
+                  key={cat.name}
+                  onClick={() => setCategoryFilter(isSelected ? 'All' : cat.name)}
+                  className={`p-3 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-between select-none relative group ${
+                    isSelected
+                      ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-500/30 shadow-xs'
+                      : cat.count > 0
+                      ? 'border-blue-200/90 bg-white hover:border-blue-400 hover:shadow-xs'
+                      : 'border-slate-200/70 bg-slate-50/50 hover:bg-white hover:border-slate-300'
+                  }`}
+                  title={`Click to filter activities by ${cat.name}`}
+                >
+                  {cat.count > 0 && (
+                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-blue-500" />
+                  )}
+                  <p
+                    className={`text-2xl font-black tracking-tight ${
+                      isSelected
+                        ? 'text-blue-700'
+                        : cat.count > 0
+                        ? 'text-blue-600'
+                        : 'text-slate-400'
+                    }`}
+                  >
+                    {cat.count}
+                  </p>
+                  <p
+                    className={`text-[11px] font-semibold mt-1.5 leading-tight line-clamp-2 ${
+                      isSelected
+                        ? 'text-blue-950 font-bold'
+                        : cat.count > 0
+                        ? 'text-slate-800'
+                        : 'text-slate-500'
+                    }`}
+                  >
+                    {cat.name}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          {displayedActivityCategoryCards.length === 0 && (
+            <div className="text-center py-6 text-slate-500 text-xs">
+              No activities found in this view. Switch to &quot;All&quot; to view all categories.
+            </div>
+          )}
         </div>
       </SectionCard>
 
@@ -1465,11 +1428,14 @@ export default function SeoActivitiesPage() {
 
         {/* Category Breakdown Boxes (No graph, box view with number and name) */}
         <div className="pt-4 border-t border-slate-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                 <Layers className="h-4 w-4 text-emerald-600" />
                 Category Breakdown ({totalBacklinks} Total Submissions)
+              </span>
+              <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                {activeCategoriesCount} Active of {allCategoryCards.length} Categories
               </span>
               {backlinkCategoryFilter !== 'All' && (
                 <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
@@ -1477,25 +1443,53 @@ export default function SeoActivitiesPage() {
                 </span>
               )}
             </div>
-            {backlinkCategoryFilter !== 'All' && (
-              <button
-                type="button"
-                onClick={() => setBacklinkCategoryFilter('All')}
-                className="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer"
-              >
-                Clear Category Filter
-              </button>
-            )}
+
+            <div className="flex items-center gap-2">
+              <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100/80 p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setBacklinkBoxView('all')}
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                    backlinkBoxView === 'all'
+                      ? 'bg-white text-slate-900 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  All ({allCategoryCards.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBacklinkBoxView('active')}
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                    backlinkBoxView === 'active'
+                      ? 'bg-white text-emerald-800 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Active Only ({activeCategoriesCount})
+                </button>
+              </div>
+
+              {backlinkCategoryFilter !== 'All' && (
+                <button
+                  type="button"
+                  onClick={() => setBacklinkCategoryFilter('All')}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline ml-1"
+                >
+                  Clear Filter
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
-            {allCategoryCards.map((cat) => {
+            {displayedCategoryCards.map((cat) => {
               const isSelected = backlinkCategoryFilter === cat.name;
               return (
                 <div
                   key={cat.name}
                   onClick={() => setBacklinkCategoryFilter(isSelected ? 'All' : cat.name)}
-                  className={`p-3 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-between select-none ${
+                  className={`p-3 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-between select-none relative group ${
                     isSelected
                       ? 'border-emerald-600 bg-emerald-50 ring-2 ring-emerald-500/30 shadow-xs'
                       : cat.count > 0
@@ -1504,8 +1498,11 @@ export default function SeoActivitiesPage() {
                   }`}
                   title={`Click to filter backlinks by ${cat.name}`}
                 >
+                  {cat.count > 0 && (
+                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-emerald-500" />
+                  )}
                   <p
-                    className={`text-2xl font-black ${
+                    className={`text-2xl font-black tracking-tight ${
                       isSelected
                         ? 'text-emerald-700'
                         : cat.count > 0
@@ -1516,7 +1513,7 @@ export default function SeoActivitiesPage() {
                     {cat.count}
                   </p>
                   <p
-                    className={`text-[11px] font-semibold mt-1 leading-tight line-clamp-2 ${
+                    className={`text-[11px] font-semibold mt-1.5 leading-tight line-clamp-2 ${
                       isSelected
                         ? 'text-emerald-950 font-bold'
                         : cat.count > 0
@@ -1530,6 +1527,12 @@ export default function SeoActivitiesPage() {
               );
             })}
           </div>
+
+          {displayedCategoryCards.length === 0 && (
+            <div className="text-center py-6 text-slate-500 text-xs">
+              No categories have active submissions yet. Switch to &quot;All&quot; to view all available submission categories.
+            </div>
+          )}
         </div>
       </SectionCard>
     </div>

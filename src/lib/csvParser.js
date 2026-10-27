@@ -3,6 +3,28 @@
  */
 
 export const CANONICAL_CATEGORIES = [
+  'Reddit Submission',
+  'Quora Submission',
+  'Forum Submission',
+  'PDF Submission',
+  'Infographics Submission',
+  'Image Submission',
+  'Video Submission',
+  'Pinterest Submission',
+  'YouTube Submission',
+  'Instagram Submission',
+  'Off-page Blogs Posting',
+  'Profile Creation',
+  'Business Listing',
+  'Blog Promotion',
+  'Social Bookmarking',
+  'Article Submission',
+  'Classified Submission',
+  'GMB Link Promotion',
+  'PR Submission',
+  'Micro Blogging',
+  'Guest Posting',
+  // Old categories (preserved)
   'On-Page SEO',
   'Technical SEO',
   'Content & Blog',
@@ -95,25 +117,49 @@ export function parseCsvText(text) {
  */
 export function normalizeCategory(val) {
   if (!val) return 'General SEO';
-  const clean = val.toLowerCase().trim();
+  const clean = String(val).toLowerCase().trim();
 
   // Direct match
   const direct = CANONICAL_CATEGORIES.find((c) => c.toLowerCase() === clean);
   if (direct) return direct;
 
+  // Specific submission categories
+  if (clean.includes('reddit')) return 'Reddit Submission';
+  if (clean.includes('quora')) return 'Quora Submission';
+  if (clean.includes('pinterest') || clean.includes('pin')) return 'Pinterest Submission';
+  if (clean.includes('youtube') || clean.includes('yt')) return 'YouTube Submission';
+  if (clean.includes('instagram') || clean.includes('insta')) return 'Instagram Submission';
+  if (clean.includes('video') || clean.includes('vimeo')) return 'Video Submission';
+  if (clean.includes('infographic')) return 'Infographics Submission';
+  if (clean.includes('image') || clean.includes('photo') || clean.includes('graphic')) return 'Image Submission';
+  if (clean.includes('pdf') || clean.includes('doc') || clean.includes('slideshare')) return 'PDF Submission';
+  if (clean.includes('classified') || clean.includes('ad')) return 'Classified Submission';
+  if (clean.includes('bookmark')) return 'Social Bookmarking';
+  if (clean.includes('gmb') || clean.includes('google my business') || clean.includes('google map')) return 'GMB Link Promotion';
+  if (clean.includes('micro') || clean.includes('threads')) return 'Micro Blogging';
+  if (clean.includes('business list') || clean.includes('directory') || clean.includes('citation')) return 'Business Listing';
+  if (clean.includes('profile')) return 'Profile Creation';
+  if (clean.includes('off-page blog') || clean.includes('offpage blog') || clean.includes('web 2.0') || clean.includes('web2.0')) return 'Off-page Blogs Posting';
+  if (clean.includes('blog promo') || clean.includes('promotion')) return 'Blog Promotion';
+  if (clean.includes('article')) return 'Article Submission';
+  if (clean.includes('pr') || clean.includes('press release') || clean.includes('wire')) return 'PR Submission';
+  if (clean.includes('forum')) return 'Forum Submission';
+  if (clean.includes('guest post') || clean.includes('guest')) return 'Guest Posting';
+
+  // Core SEO categories
   if (clean.includes('on-page') || clean.includes('onpage') || clean.includes('metadata') || clean.includes('meta')) {
     return 'On-Page SEO';
   }
   if (clean.includes('tech') || clean.includes('crawl') || clean.includes('speed') || clean.includes('index') || clean.includes('vitals') || clean.includes('schema')) {
     return 'Technical SEO';
   }
-  if (clean.includes('content') || clean.includes('blog') || clean.includes('article') || clean.includes('copy') || clean.includes('post')) {
+  if (clean.includes('content') || clean.includes('blog') || clean.includes('copy') || clean.includes('post')) {
     return 'Content & Blog';
   }
-  if (clean.includes('local') || clean.includes('gbp') || clean.includes('citation') || clean.includes('nap') || clean.includes('map')) {
+  if (clean.includes('local') || clean.includes('nap') || clean.includes('map')) {
     return 'Local SEO';
   }
-  if (clean.includes('link') || clean.includes('backlink') || clean.includes('outreach') || clean.includes('guest')) {
+  if (clean.includes('link') || clean.includes('backlink') || clean.includes('outreach')) {
     return 'Link Building';
   }
   if (clean.includes('conversion') || clean.includes('cro') || clean.includes('ux') || clean.includes('ui')) {
