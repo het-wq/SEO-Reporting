@@ -26,6 +26,28 @@ import {
 import { parseCsvText } from '@/lib/csvParser';
 
 export const BACKLINK_CATEGORIES = [
+  'Reddit Submission',
+  'Quora Submission',
+  'Forum Submission',
+  'PDF Submission',
+  'Infographics Submission',
+  'Image Submission',
+  'Video Submission',
+  'Pinterest Submission',
+  'YouTube Submission',
+  'Instagram Submission',
+  'Off-page Blogs Posting',
+  'Profile Creation',
+  'Business Listing',
+  'Blog Promotion',
+  'Social Bookmarking',
+  'Article Submission',
+  'Classified Submission',
+  'GMB Link Promotion',
+  'PR Submission',
+  'Micro Blogging',
+  'Guest Posting',
+  // Old categories (preserved)
   'Guest Post',
   'Directory & Citation',
   'Editorial Link',
@@ -52,13 +74,39 @@ const HEADER_ALIASES = {
 export function normalizeBacklinkCategory(val) {
   if (!val) return 'General Backlink';
   const clean = String(val).toLowerCase().trim();
-  if (clean.includes('guest') || clean.includes('blog') || clean.includes('article')) return 'Guest Post';
-  if (clean.includes('direct') || clean.includes('cit') || clean.includes('nap') || clean.includes('local') || clean.includes('listing')) return 'Directory & Citation';
+
+  // 1. Exact case-insensitive match against all known categories
+  const exact = BACKLINK_CATEGORIES.find((c) => c.toLowerCase() === clean);
+  if (exact) return exact;
+
+  // 2. Smart alias & keyword mapping
+  if (clean.includes('reddit')) return 'Reddit Submission';
+  if (clean.includes('quora')) return 'Quora Submission';
+  if (clean.includes('pinterest') || clean.includes('pin')) return 'Pinterest Submission';
+  if (clean.includes('youtube') || clean.includes('yt')) return 'YouTube Submission';
+  if (clean.includes('instagram') || clean.includes('insta')) return 'Instagram Submission';
+  if (clean.includes('video') || clean.includes('vimeo')) return 'Video Submission';
+  if (clean.includes('infographic')) return 'Infographics Submission';
+  if (clean.includes('image') || clean.includes('photo') || clean.includes('graphic')) return 'Image Submission';
+  if (clean.includes('pdf') || clean.includes('doc') || clean.includes('slideshare')) return 'PDF Submission';
+  if (clean.includes('classified') || clean.includes('ad')) return 'Classified Submission';
+  if (clean.includes('bookmark')) return 'Social Bookmarking';
+  if (clean.includes('gmb') || clean.includes('google my business') || clean.includes('google map')) return 'GMB Link Promotion';
+  if (clean.includes('micro') || clean.includes('threads')) return 'Micro Blogging';
+  if (clean.includes('business list') || clean.includes('citation') || clean.includes('nap')) return 'Business Listing';
+  if (clean.includes('profile')) return 'Profile Creation';
+  if (clean.includes('off-page blog') || clean.includes('offpage blog') || clean.includes('web 2.0') || clean.includes('web2.0')) return 'Off-page Blogs Posting';
+  if (clean.includes('blog promo') || clean.includes('promotion')) return 'Blog Promotion';
+  if (clean.includes('article')) return 'Article Submission';
+  if (clean.includes('pr') || clean.includes('press release') || clean.includes('wire')) return 'PR Submission';
+  if (clean.includes('forum')) return 'Forum Submission';
+  if (clean.includes('guest post') || clean.includes('guest')) return 'Guest Posting';
+  if (clean.includes('direct') || clean.includes('cit') || clean.includes('local')) return 'Directory & Citation';
   if (clean.includes('edit') || clean.includes('mention') || clean.includes('brand')) return 'Editorial Link';
-  if (clean.includes('press') || clean.includes('pr') || clean.includes('release') || clean.includes('wire')) return 'Press Release';
-  if (clean.includes('profile') || clean.includes('social') || clean.includes('linkedin') || clean.includes('twitter')) return 'Profile & Social';
   if (clean.includes('resource') || clean.includes('partner') || clean.includes('roundup')) return 'Resource Link';
-  if (clean.includes('forum') || clean.includes('reddit') || clean.includes('quora') || clean.includes('community')) return 'Forum & Community';
+  if (clean.includes('social') || clean.includes('linkedin') || clean.includes('twitter')) return 'Profile & Social';
+  if (clean.includes('community')) return 'Forum & Community';
+
   return 'General Backlink';
 }
 

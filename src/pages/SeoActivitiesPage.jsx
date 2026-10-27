@@ -117,7 +117,7 @@ const DEFAULT_BACKLINKS = [
     sourceUrl: 'https://clutch.co/profile/boulder-decision',
     targetUrl: 'https://boulderdecisions.com/',
     anchorText: 'Boulder Decision Analytics',
-    category: 'Directory & Citation',
+    category: 'Business Listing',
     da: 88,
     status: 'Live / Indexed',
     date: '2026-10-18',
@@ -128,7 +128,7 @@ const DEFAULT_BACKLINKS = [
     sourceUrl: 'https://medium.com/@analytics/decision-models',
     targetUrl: 'https://boulderdecisions.com/blog',
     anchorText: 'executive decision framework',
-    category: 'Guest Post',
+    category: 'Guest Posting',
     da: 92,
     status: 'Live / Indexed',
     date: '2026-10-14',
@@ -136,28 +136,50 @@ const DEFAULT_BACKLINKS = [
   },
   {
     id: 'bl-3',
+    sourceUrl: 'https://reddit.com/r/analytics/comments/decision_frameworks',
+    targetUrl: 'https://boulderdecisions.com/blog',
+    anchorText: 'decision analytics guide',
+    category: 'Reddit Submission',
+    da: 91,
+    status: 'Live / Indexed',
+    date: '2026-10-12',
+    notes: 'Helpful answer in community discussion thread',
+  },
+  {
+    id: 'bl-4',
+    sourceUrl: 'https://quora.com/What-is-the-best-decision-intelligence-playbook',
+    targetUrl: 'https://boulderdecisions.com/services',
+    anchorText: 'Boulder Decision framework',
+    category: 'Quora Submission',
+    da: 93,
+    status: 'Live / Indexed',
+    date: '2026-10-11',
+    notes: 'Top-voted expert answer with verified brand attribution',
+  },
+  {
+    id: 'bl-5',
     sourceUrl: 'https://businesswire.com/news/boulder-expansion',
     targetUrl: 'https://boulderdecisions.com/',
     anchorText: 'Boulder Decision',
-    category: 'Press Release',
+    category: 'PR Submission',
     da: 90,
     status: 'Live / Indexed',
     date: '2026-10-10',
     notes: 'Q4 regional decision consulting services announcement',
   },
   {
-    id: 'bl-4',
+    id: 'bl-6',
     sourceUrl: 'https://crunchbase.com/organization/boulder-decision',
     targetUrl: 'https://boulderdecisions.com/',
     anchorText: 'boulderdecisions.com',
-    category: 'Profile & Social',
+    category: 'Profile Creation',
     da: 91,
     status: 'Live / Indexed',
     date: '2026-10-08',
     notes: 'Verified organization company profile citation',
   },
   {
-    id: 'bl-5',
+    id: 'bl-7',
     sourceUrl: 'https://techbullion.com/data-analytics-leaders/',
     targetUrl: 'https://boulderdecisions.com/services',
     anchorText: 'decision intelligence consulting',
@@ -166,6 +188,28 @@ const DEFAULT_BACKLINKS = [
     status: 'In Progress',
     date: '2026-10-24',
     notes: 'Editorial placement in data intelligence industry roundup',
+  },
+  {
+    id: 'bl-8',
+    sourceUrl: 'https://slideshare.net/boulder-decision-q3-playbook',
+    targetUrl: 'https://boulderdecisions.com/blog',
+    anchorText: 'Q3 Enterprise Decision Deck',
+    category: 'PDF Submission',
+    da: 86,
+    status: 'Live / Indexed',
+    date: '2026-10-05',
+    notes: 'Presentation and whitepaper document upload',
+  },
+  {
+    id: 'bl-9',
+    sourceUrl: 'https://pinterest.com/pin/boulder-infographic',
+    targetUrl: 'https://boulderdecisions.com/blog',
+    anchorText: 'analytics model diagram',
+    category: 'Pinterest Submission',
+    da: 84,
+    status: 'Live / Indexed',
+    date: '2026-10-02',
+    notes: 'Decision tree infographic visual pin placement',
   },
 ];
 
@@ -515,13 +559,25 @@ export default function SeoActivitiesPage() {
     ? (rankedDaBacklinks.reduce((acc, b) => acc + b.da, 0) / rankedDaBacklinks.length).toFixed(1)
     : '—';
 
-  // Dynamic Backlink Category Breakdown for Chart
-  const backlinkCategoryBreakdown = useMemo(() => {
+  // Dynamic Backlink Category Boxes (numbers with names)
+  const allCategoryCards = useMemo(() => {
     const counts = {};
     backlinks.forEach((b) => {
-      counts[b.category] = (counts[b.category] || 0) + 1;
+      const cat = b.category || 'General Backlink';
+      counts[cat] = (counts[cat] || 0) + 1;
     });
-    return Object.entries(counts).map(([type, count]) => ({ type, count }));
+
+    const list = BACKLINK_CATEGORIES.map((cat) => ({
+      name: cat,
+      count: counts[cat] || 0,
+    }));
+
+    // Categories with active backlinks (count > 0) are shown first in descending order,
+    // followed by the remaining available categories in alphabetical order
+    return list.sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      return a.name.localeCompare(b.name);
+    });
   }, [backlinks]);
 
   // Content Published Table State
@@ -1407,51 +1463,74 @@ export default function SeoActivitiesPage() {
           </Table>
         </div>
 
-        {/* Dynamic Category Breakdown Chart */}
-        {backlinkCategoryBreakdown.length > 0 && (
-          <div className="pt-2 border-t border-slate-100">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <BarChart3 className="h-4 w-4 text-emerald-600" />
-                Category Distribution ({totalBacklinks} Total Links)
+        {/* Category Breakdown Boxes (No graph, box view with number and name) */}
+        <div className="pt-4 border-t border-slate-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="h-4 w-4 text-emerald-600" />
+                Category Breakdown ({totalBacklinks} Total Submissions)
               </span>
+              {backlinkCategoryFilter !== 'All' && (
+                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Filtered: {backlinkCategoryFilter}
+                </span>
+              )}
             </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-              {backlinkCategoryBreakdown.map((a) => (
-                <div key={a.type} className="rounded-lg border border-slate-200 bg-slate-50/60 p-3 text-center">
-                  <p className="text-2xl font-bold text-slate-900">{a.count}</p>
-                  <p className="text-[11px] font-medium text-slate-500 mt-0.5 truncate" title={a.type}>{a.type}</p>
-                </div>
-              ))}
-            </div>
-
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={backlinkCategoryBreakdown} margin={{ top: 8, right: 8, left: 0, bottom: 40 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis
-                  dataKey="type"
-                  tick={{ fontSize: 11, fill: '#64748b' }}
-                  angle={-30}
-                  textAnchor="end"
-                  interval={0}
-                  axisLine={{ stroke: '#e2e8f0' }}
-                  tickLine={false}
-                />
-                <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} width={32} />
-                <Tooltip
-                  cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ borderRadius: 8, borderColor: '#e2e8f0', fontSize: 12 }}
-                />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={44}>
-                  {backlinkCategoryBreakdown.map((_, i) => (
-                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {backlinkCategoryFilter !== 'All' && (
+              <button
+                type="button"
+                onClick={() => setBacklinkCategoryFilter('All')}
+                className="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer"
+              >
+                Clear Category Filter
+              </button>
+            )}
           </div>
-        )}
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+            {allCategoryCards.map((cat) => {
+              const isSelected = backlinkCategoryFilter === cat.name;
+              return (
+                <div
+                  key={cat.name}
+                  onClick={() => setBacklinkCategoryFilter(isSelected ? 'All' : cat.name)}
+                  className={`p-3 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-between select-none ${
+                    isSelected
+                      ? 'border-emerald-600 bg-emerald-50 ring-2 ring-emerald-500/30 shadow-xs'
+                      : cat.count > 0
+                      ? 'border-emerald-200/90 bg-white hover:border-emerald-400 hover:shadow-xs'
+                      : 'border-slate-200/70 bg-slate-50/50 hover:bg-white hover:border-slate-300'
+                  }`}
+                  title={`Click to filter backlinks by ${cat.name}`}
+                >
+                  <p
+                    className={`text-2xl font-black ${
+                      isSelected
+                        ? 'text-emerald-700'
+                        : cat.count > 0
+                        ? 'text-emerald-600'
+                        : 'text-slate-400'
+                    }`}
+                  >
+                    {cat.count}
+                  </p>
+                  <p
+                    className={`text-[11px] font-semibold mt-1 leading-tight line-clamp-2 ${
+                      isSelected
+                        ? 'text-emerald-950 font-bold'
+                        : cat.count > 0
+                        ? 'text-slate-800'
+                        : 'text-slate-500'
+                    }`}
+                  >
+                    {cat.name}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </SectionCard>
     </div>
   );
