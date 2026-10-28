@@ -79,7 +79,7 @@ function DashboardShell() {
   const pageTitle = NAV_ITEMS.find((n) => n.key === activePage)?.label || 'Overview';
 
   return (
-    <div className="min-h-screen flex bg-slate-50/50 font-sans">
+    <div className="min-h-screen flex bg-[#F3F4F1] font-sans">
       <Sidebar
         activePage={activePage}
         onNavigate={setActivePage}
@@ -89,9 +89,9 @@ function DashboardShell() {
         onCloseMobile={() => setMobileOpen(false)}
       />
 
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col bg-[#F3F4F1]">
         <AppHeader pageTitle={pageTitle} onOpenMobileSidebar={() => setMobileOpen(true)} />
-        <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 py-6">
+        <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <ActivePageComponent onNavigate={setActivePage} />
         </main>
       </div>

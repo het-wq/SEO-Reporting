@@ -29,7 +29,7 @@ export default function ComparisonBarChart({
   currentKey,
   height = 300,
   previousColor = '#94a3b8',
-  currentColor = '#2563eb',
+  currentColor = '#14532D',
 }) {
   if (!data || !data.length) return null;
 
@@ -56,46 +56,71 @@ export default function ComparisonBarChart({
   const resolvedPrevLabel = previousLabel || (resolvedPrevKey === 'Aug' ? 'Aug 2026' : 'Previous Period');
   const resolvedCurrLabel = currentLabel || (resolvedCurrKey === 'Sep' ? 'Sep 2026' : 'Selected Period');
 
+  // If currentColor was the legacy blue '#2563eb', modernize to Donezo primary green '#14532D'
+  const effectiveCurrentColor = currentColor === '#2563eb' ? '#14532D' : currentColor;
+
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+      <BarChart data={data} margin={{ top: 12, right: 8, left: 0, bottom: 4 }}>
+        <defs>
+          <pattern
+            id="diagonalHatch"
+            width="6"
+            height="6"
+            patternTransform="rotate(45 0 0)"
+            patternUnits="userSpaceOnUse"
+          >
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#94A3B8" strokeWidth="2" />
+          </pattern>
+        </defs>
+
+        <CartesianGrid strokeDasharray="3 3" stroke="#EEF0EC" vertical={false} />
         <XAxis
           dataKey="name"
-          tick={{ fontSize: 11, fill: '#64748b' }}
-          axisLine={{ stroke: '#e2e8f0' }}
+          tick={{ fontSize: 11, fill: '#6B7280', fontWeight: 500 }}
+          axisLine={false}
           tickLine={false}
           interval={0}
           angle={data.length > 4 ? -20 : 0}
           textAnchor={data.length > 4 ? 'end' : 'middle'}
-          height={data.length > 4 ? 50 : 24}
+          height={data.length > 4 ? 50 : 28}
         />
         <YAxis
-          tick={{ fontSize: 11, fill: '#64748b' }}
+          tick={{ fontSize: 11, fill: '#6B7280' }}
           axisLine={false}
           tickLine={false}
           tickFormatter={formatTick}
           width={44}
         />
         <Tooltip
-          cursor={{ fill: '#f8fafc' }}
-          contentStyle={{ borderRadius: 8, borderColor: '#e2e8f0', fontSize: 12 }}
+          cursor={{ fill: '#F3F4F1', opacity: 0.6 }}
+          contentStyle={{
+            borderRadius: 14,
+            borderColor: '#EEF0EC',
+            backgroundColor: '#FFFFFF',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+            fontSize: 12,
+            fontWeight: 500,
+            color: '#111827',
+          }}
           formatter={(value) => (typeof value === 'number' ? value.toLocaleString() : value)}
         />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Legend wrapperStyle={{ fontSize: 12, color: '#6B7280', paddingTop: 8 }} />
         <Bar
           dataKey={resolvedPrevKey}
           name={resolvedPrevLabel}
-          fill={previousColor}
-          radius={[4, 4, 0, 0]}
-          maxBarSize={40}
+          fill="url(#diagonalHatch)"
+          stroke="#94A3B8"
+          strokeWidth={1}
+          radius={[12, 12, 12, 12]}
+          maxBarSize={38}
         />
         <Bar
           dataKey={resolvedCurrKey}
           name={resolvedCurrLabel}
-          fill={currentColor}
-          radius={[4, 4, 0, 0]}
-          maxBarSize={40}
+          fill={effectiveCurrentColor}
+          radius={[12, 12, 12, 12]}
+          maxBarSize={38}
         />
       </BarChart>
     </ResponsiveContainer>

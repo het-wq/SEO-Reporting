@@ -1,77 +1,75 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
+:root {
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  
+  /* Donezo Primary Green Palette */
+  --green-900: #0E3B27;
+  --green-800: #14532D;
+  --green-700: #1B6B45;
+  --green-500: #2E9B62;
+  --green-300: #6CC59A;
+  --green-100: #E3F4EA;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+  /* Donezo Colorful Accents */
+  --accent-amber: #F5A524;
+  --accent-coral: #F0605D;
+  --accent-violet: #7C5CFC;
+  --accent-sky: #3BA7F5;
+  --accent-teal: #14B8A6;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+  /* Page & Surfaces */
+  --page-bg: #F3F4F1;
+  --card-bg: #FFFFFF;
+  --border-subtle: #EEF0EC;
+  
+  /* Text */
+  --text-heading: #111827;
+  --text-muted: #6B7280;
 
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-  }
+  /* Shadcn HSL equivalents */
+  --background: 60 7% 95%; /* #F3F4F1 */
+  --foreground: 221 39% 11%; /* #111827 */
+  --card: 0 0% 100%;
+  --card-foreground: 221 39% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 221 39% 11%;
+  --primary: 153 60% 20%; /* #14532D */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 138 46% 93%; /* #E3F4EA */
+  --secondary-foreground: 152 60% 26%; /* #1B6B45 */
+  --muted: 60 6% 93%;
+  --muted-foreground: 218 11% 46%; /* #6B7280 */
+  --accent: 138 46% 93%;
+  --accent-foreground: 152 60% 26%;
+  --destructive: 0 71% 53%; /* #D93636 */
+  --destructive-foreground: 0 0% 100%;
+  --border: 90 6% 93%; /* #EEF0EC */
+  --input: 90 6% 93%;
+  --ring: 153 60% 20%;
+  --radius: 1.25rem; /* 20px */
 }
 
 * {
-  border-color: hsl(var(--border));
+  border-color: var(--border-subtle);
 }
 
 body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-feature-settings: "rlig" 1, "calt" 1;
+  background-color: var(--page-bg);
+  color: var(--text-heading);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+}
+
+/* Custom soft shadow matching Donezo */
+.shadow-donezo {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.shadow-donezo-md {
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
 }
 
 @media print {

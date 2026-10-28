@@ -18,27 +18,32 @@ export default function AppHeader({ pageTitle, onOpenMobileSidebar, onExportCsv 
   const { user, signOut } = useAuth();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md print:hidden">
-      <div className="px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+    <header className="sticky top-0 z-30 border-b border-[#EEF0EC] bg-white/90 backdrop-blur-md print:hidden">
+      <div className="px-4 sm:px-7 py-3.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
             onClick={onOpenMobileSidebar}
-            className="md:hidden p-1.5 text-slate-600 hover:bg-slate-100 rounded-md cursor-pointer"
+            className="md:hidden p-2 text-[#6B7280] hover:bg-[#F3F4F1] rounded-full cursor-pointer transition-colors"
           >
             <Menu className="h-5 w-5" />
           </button>
 
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              <span>Boulder Decision</span>
-              <ChevronRight className="h-3 w-3" />
-              <span className="font-medium text-slate-700">{pageTitle}</span>
+            <div className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+              <span className="font-medium">Boulder Decision</span>
+              <ChevronRight className="h-3 w-3 text-[#9CA3AF]" />
+              <span className="font-semibold text-[#111827]">{pageTitle}</span>
             </div>
             <div className="flex items-center gap-2.5 flex-wrap mt-0.5">
-              <h1 className="text-lg font-bold text-slate-900 leading-tight truncate">{pageTitle}</h1>
+              <h1 className="text-xl font-bold text-[#111827] tracking-tight truncate leading-tight">
+                {pageTitle}
+              </h1>
               {comparisonLabel && (
-                <Badge variant="outline" className="hidden lg:inline-flex bg-slate-50 text-slate-700 border-slate-200 font-medium text-xs">
+                <Badge
+                  variant="outline"
+                  className="hidden lg:inline-flex bg-[#E3F4EA] text-[#1B6B45] border-transparent font-semibold text-xs px-3 py-0.5 rounded-full"
+                >
                   {comparisonLabel}
                 </Badge>
               )}
@@ -46,7 +51,7 @@ export default function AppHeader({ pageTitle, onOpenMobileSidebar, onExportCsv 
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <MonthSelector />
 
           <Button
@@ -55,31 +60,35 @@ export default function AppHeader({ pageTitle, onOpenMobileSidebar, onExportCsv 
             onClick={refresh}
             disabled={loading}
             title="Refresh report data"
-            className="h-9 w-9 bg-white"
+            className="h-9 w-9 rounded-full border border-[#EEF0EC] bg-white text-[#111827] hover:bg-[#F3F4F1] shadow-donezo"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-[#14532D]' : 'text-[#6B7280]'}`} />
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5 bg-white">
-                <Download className="h-4 w-4" />
+              <Button
+                variant="default"
+                size="sm"
+                className="gap-2 rounded-full bg-[#14532D] hover:bg-[#0E3B27] text-white px-4 h-9 shadow-donezo font-semibold text-xs cursor-pointer"
+              >
+                <Download className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Export</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent align="end" className="rounded-2xl border-[#EEF0EC] shadow-donezo-md p-1.5">
               {onExportCsv && (
-                <DropdownMenuItem onSelect={onExportCsv}>
-                  <Download className="h-3.5 w-3.5" /> Export CSV
+                <DropdownMenuItem onSelect={onExportCsv} className="rounded-xl text-xs font-semibold cursor-pointer">
+                  <Download className="h-3.5 w-3.5 mr-2 text-[#14532D]" /> Export CSV
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onSelect={() => window.print()}>
-                <Printer className="h-3.5 w-3.5" /> Print / Save as PDF
+              <DropdownMenuItem onSelect={() => window.print()} className="rounded-xl text-xs font-semibold cursor-pointer">
+                <Printer className="h-3.5 w-3.5 mr-2 text-[#14532D]" /> Print / Save as PDF
               </DropdownMenuItem>
               {!onExportCsv && (
                 <>
-                  <DropdownMenuSeparator />
-                  <p className="px-2 py-1 text-[11px] text-slate-400">CSV export is available on table pages</p>
+                  <DropdownMenuSeparator className="bg-[#F3F4F1]" />
+                  <p className="px-2.5 py-1 text-[11px] text-[#9CA3AF]">CSV export is available on table pages</p>
                 </>
               )}
             </DropdownMenuContent>
@@ -90,35 +99,35 @@ export default function AppHeader({ pageTitle, onOpenMobileSidebar, onExportCsv 
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-full bg-sky-100/90 text-sky-900 hover:bg-sky-200/80 border border-sky-200 cursor-pointer shadow-xs"
+                className="h-9 w-9 rounded-full bg-gradient-to-br from-[#E3F4EA] to-[#D1EBDC] text-[#14532D] hover:opacity-90 border border-[#6CC59A]/30 cursor-pointer shadow-donezo"
                 title="Account menu"
               >
-                <span className="text-xs font-bold uppercase">
-                  {(user?.name || user?.user_metadata?.full_name || user?.email || 'AD').slice(0, 2)}
+                <span className="text-xs font-bold uppercase tracking-tight">
+                  {(user?.name || user?.user_metadata?.full_name || user?.email || 'BD').slice(0, 2)}
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-xl">
-              <div className="px-2 py-1.5 space-y-0.5">
-                <p className="text-xs font-bold text-slate-900 truncate">
+            <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl border-[#EEF0EC] shadow-donezo-md">
+              <div className="px-2.5 py-2 space-y-1">
+                <p className="text-xs font-bold text-[#111827] truncate">
                   {user?.name || user?.user_metadata?.full_name || 'Agency Admin'}
                 </p>
-                <p className="text-[11px] text-slate-500 truncate">
+                <p className="text-[11px] text-[#6B7280] truncate font-medium">
                   {user?.email || 'admin@boulderdecisions.com'}
                 </p>
                 <div className="pt-1">
                   <Badge
                     variant="outline"
-                    className="text-[9px] font-semibold px-1.5 py-0.2 bg-sky-50 text-sky-700 border-sky-200"
+                    className="text-[10px] font-semibold px-2 py-0.5 bg-[#E3F4EA] text-[#1B6B45] border-transparent rounded-full"
                   >
                     Administrator
                   </Badge>
                 </div>
               </div>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-[#F3F4F1]" />
               <DropdownMenuItem
                 onSelect={() => signOut()}
-                className="text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer text-xs font-semibold"
+                className="text-[#D93636] focus:text-[#B91C1C] focus:bg-[#FDECEC] cursor-pointer text-xs font-semibold rounded-xl"
               >
                 <LogOut className="h-3.5 w-3.5 mr-2" />
                 Sign Out
