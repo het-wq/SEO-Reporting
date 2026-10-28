@@ -87,14 +87,14 @@ function BrandTabPanel({ data, prevLabel, curLabel }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <ComparisonBarChart
           data={clicksChartData}
-          currentColor="#7c3aed"
+          currentColor="#14532D"
           height={260}
           previousLabel={prevLabel}
           currentLabel={curLabel}
         />
         <ComparisonBarChart
           data={impressionsChartData}
-          currentColor="#7c3aed"
+          currentColor="#14532D"
           height={260}
           previousLabel={prevLabel}
           currentLabel={curLabel}

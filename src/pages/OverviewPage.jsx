@@ -320,7 +320,7 @@ export default function OverviewPage({ onNavigate }) {
         >
           <ComparisonBarChart
             data={deviceChartData}
-            currentColor="#0ea5e9"
+            currentColor="#14532D"
             previousLabel={prevLabel}
             currentLabel={curLabel}
           />
@@ -333,7 +333,7 @@ export default function OverviewPage({ onNavigate }) {
         >
           <ComparisonBarChart
             data={brandChartData}
-            currentColor="#7c3aed"
+            currentColor="#14532D"
             previousLabel={prevLabel}
             currentLabel={curLabel}
           />

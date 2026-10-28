@@ -66,7 +66,7 @@ const STORAGE_KEY = ACTIVITIES_STORAGE_KEY;
 
 export const CATEGORIES = ACTIVITY_CATEGORIES;
 
-const CHART_COLORS = ['#2563eb', '#16a34a', '#7c3aed', '#0ea5e9', '#d97706', '#dc2626', '#0891b2', '#db2777', '#4f46e5', '#65a30d'];
+const CHART_COLORS = ['#14532D', '#16a34a', '#1B6B45', '#2E9B62', '#d97706', '#dc2626', '#0891b2', '#db2777', '#22c55e', '#65a30d'];
 
 function hostnameOf(url) {
   try {

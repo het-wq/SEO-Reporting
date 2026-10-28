@@ -80,7 +80,7 @@ export default function DeviceInsightsPage() {
         <ComparisonBarChart
           data={chartData}
           height={300}
-          currentColor="#0ea5e9"
+          currentColor="#14532D"
           previousLabel={prevLabel}
           currentLabel={curLabel}
         />
@@ -94,7 +94,7 @@ export default function DeviceInsightsPage() {
               <span className="w-16 text-sm font-medium text-slate-700">{label}</span>
               <div className="flex-1 h-2.5 rounded-full bg-slate-100 overflow-hidden">
                 <div
-                  className={label === 'Mobile' ? 'h-full bg-red-400 rounded-full' : 'h-full bg-blue-500 rounded-full'}
+                  className={label === 'Mobile' ? 'h-full bg-red-400 rounded-full' : 'h-full bg-[#14532D] rounded-full'}
                   style={{ width: `${Math.min(100, ((m.current || 0) / maxCurrent) * 100)}%` }}
                 />
               </div>

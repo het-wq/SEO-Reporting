@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReport } from '@/context/ReportContext';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 
 export default function TrafficPage() {
@@ -114,17 +114,66 @@ export default function TrafficPage() {
       {/* Daily Traffic Trends Chart */}
       {dailyTrends.length > 0 && (
         <SectionCard icon={BarChart3} title="Daily Traffic Trend" subtitle="Daily sessions and active users over the reporting period">
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={dailyTrends} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={{ stroke: '#e2e8f0' }} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} width={40} />
-              <Tooltip contentStyle={{ borderRadius: 8, borderColor: '#e2e8f0', fontSize: 12 }} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Line type="monotone" dataKey="sessions" stroke="#2563eb" strokeWidth={2} name="Sessions" dot={false} />
-              <Line type="monotone" dataKey="activeUsers" stroke="#10b981" strokeWidth={2} name="Active Users" dot={false} />
-              <Line type="monotone" dataKey="newUsers" stroke="#8b5cf6" strokeWidth={1.5} name="New Users" strokeDasharray="3 3" dot={false} />
-            </LineChart>
+          <ResponsiveContainer width="100%" height={290}>
+            <AreaChart data={dailyTrends} margin={{ top: 16, right: 14, left: -10, bottom: 4 }}>
+              <defs>
+                <linearGradient id="trafficSessionsGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#14532D" stopOpacity={0.24} />
+                  <stop offset="60%" stopColor="#2E9B62" stopOpacity={0.06} />
+                  <stop offset="100%" stopColor="#14532D" stopOpacity={0.00} />
+                </linearGradient>
+                <linearGradient id="trafficActiveUsersGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#2E9B62" stopOpacity={0.16} />
+                  <stop offset="100%" stopColor="#2E9B62" stopOpacity={0.00} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#EEF0EC" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#64748B', fontWeight: 500 }} axisLine={{ stroke: '#EEF0EC' }} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} width={44} />
+              <Tooltip
+                cursor={{ stroke: '#CBD5E1', strokeWidth: 1, strokeDasharray: '3 3' }}
+                contentStyle={{
+                  borderRadius: 12,
+                  borderColor: '#EEF0EC',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04)',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: '#111827',
+                  padding: '8px 12px',
+                }}
+              />
+              <Legend wrapperStyle={{ fontSize: 12, color: '#64748B', paddingTop: 8 }} iconType="circle" />
+              <Area
+                type="monotone"
+                dataKey="sessions"
+                stroke="#14532D"
+                strokeWidth={3}
+                fill="url(#trafficSessionsGrad)"
+                name="Sessions"
+                dot={{ r: 3.5, fill: '#14532D', stroke: '#FFFFFF', strokeWidth: 1.5 }}
+                activeDot={{ r: 6, fill: '#14532D', stroke: '#FFFFFF', strokeWidth: 2 }}
+              />
+              <Area
+                type="monotone"
+                dataKey="activeUsers"
+                stroke="#2E9B62"
+                strokeWidth={2}
+                fill="url(#trafficActiveUsersGrad)"
+                name="Active Users"
+                dot={{ r: 3, fill: '#2E9B62', stroke: '#FFFFFF', strokeWidth: 1.5 }}
+                activeDot={{ r: 5.5, fill: '#2E9B62', stroke: '#FFFFFF', strokeWidth: 2 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="newUsers"
+                stroke="#86EFAC"
+                strokeWidth={1.5}
+                name="New Users"
+                strokeDasharray="3 3"
+                dot={false}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </SectionCard>
       )}
