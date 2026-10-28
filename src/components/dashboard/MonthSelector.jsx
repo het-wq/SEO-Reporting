@@ -189,11 +189,11 @@ export default function MonthSelector({ className }) {
         className={cn(
           'flex items-center gap-2 h-9 px-3 rounded-md border text-sm font-medium transition-colors shadow-xs cursor-pointer',
           'bg-white hover:bg-slate-50 border-slate-200 text-slate-800',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
-          isOpen && 'border-blue-500 ring-2 ring-blue-100'
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14532D]',
+          isOpen && 'border-[#14532D] ring-2 ring-emerald-100'
         )}
       >
-        <CalendarDays className="h-4 w-4 text-blue-600 shrink-0" />
+        <CalendarDays className="h-4 w-4 text-[#14532D] shrink-0" />
         <span className="font-semibold text-slate-900 whitespace-nowrap">
           {currentLabel}
         </span>
@@ -225,7 +225,7 @@ export default function MonthSelector({ className }) {
               className={cn(
                 'flex-1 py-1 px-2 text-xs font-semibold rounded-md transition-colors text-center cursor-pointer',
                 activeTab === 'presets'
-                  ? 'bg-blue-50 text-blue-700'
+                  ? 'bg-emerald-50 text-[#14532D]'
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
               )}
             >
@@ -237,7 +237,7 @@ export default function MonthSelector({ className }) {
               className={cn(
                 'flex-1 py-1 px-2 text-xs font-semibold rounded-md transition-colors text-center cursor-pointer',
                 activeTab === 'month'
-                  ? 'bg-blue-50 text-blue-700'
+                  ? 'bg-emerald-50 text-[#14532D]'
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
               )}
             >
@@ -249,7 +249,7 @@ export default function MonthSelector({ className }) {
               className={cn(
                 'flex-1 py-1 px-2 text-xs font-semibold rounded-md transition-colors text-center cursor-pointer',
                 activeTab === 'custom'
-                  ? 'bg-blue-50 text-blue-700'
+                  ? 'bg-emerald-50 text-[#14532D]'
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
               )}
             >
@@ -270,7 +270,7 @@ export default function MonthSelector({ className }) {
                     className={cn(
                       'w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors cursor-pointer',
                       isActive
-                        ? 'bg-blue-50/80 border border-blue-200'
+                        ? 'bg-emerald-50/80 border border-emerald-200'
                         : 'hover:bg-slate-50 text-slate-700 border border-transparent'
                     )}
                   >
@@ -278,14 +278,14 @@ export default function MonthSelector({ className }) {
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm font-semibold text-slate-900">{p.label}</span>
                         {p.id === 'last_28_days' && (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.2 rounded bg-blue-100 text-blue-700">
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.2 rounded bg-emerald-100 text-[#14532D]">
                             <Sparkles className="h-2.5 w-2.5" /> Best for SEO
                           </span>
                         )}
                       </div>
                       <p className="text-[11px] text-slate-400 mt-0.5">{p.subtitle}</p>
                     </div>
-                    {isActive && <Check className="h-4 w-4 text-blue-600 shrink-0" />}
+                    {isActive && <Check className="h-4 w-4 text-[#14532D] shrink-0" />}
                   </button>
                 );
               })}
@@ -327,7 +327,7 @@ export default function MonthSelector({ className }) {
                       className={cn(
                         'py-2 px-2 text-xs font-medium rounded-md text-center transition-colors cursor-pointer',
                         isSelected
-                          ? 'bg-blue-600 text-white font-bold shadow-xs'
+                          ? 'bg-[#14532D] text-white font-bold shadow-xs'
                           : 'bg-slate-50 hover:bg-slate-100 text-slate-700'
                       )}
                     >
@@ -375,16 +375,16 @@ export default function MonthSelector({ className }) {
                   type="checkbox"
                   checked={comparisonEnabled}
                   onChange={(e) => setComparisonEnabled(e.target.checked)}
-                  className="h-3.5 w-3.5 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
+                  className="h-3.5 w-3.5 rounded text-[#14532D] focus:ring-[#14532D] border-slate-300 cursor-pointer"
                 />
                 <span className="flex items-center gap-1.5">
-                  <GitCompare className="h-3.5 w-3.5 text-blue-600" />
+                  <GitCompare className="h-3.5 w-3.5 text-[#14532D]" />
                   Comparison Options
                 </span>
               </label>
 
               {comparisonEnabled && (
-                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#14532D] bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
                   {comparisonMode === 'previous_year' ? 'YoY' : comparisonMode === 'custom' ? 'Custom' : 'Prior Period'}
                 </span>
               )}
@@ -400,7 +400,7 @@ export default function MonthSelector({ className }) {
                     className={cn(
                       'py-1 px-1.5 rounded-md text-[11px] font-medium transition-colors cursor-pointer',
                       comparisonMode === 'previous_period'
-                        ? 'bg-white text-blue-700 font-bold shadow-xs'
+                        ? 'bg-white text-[#14532D] font-bold shadow-xs'
                         : 'text-slate-600 hover:text-slate-900'
                     )}
                   >
@@ -412,7 +412,7 @@ export default function MonthSelector({ className }) {
                     className={cn(
                       'py-1 px-1.5 rounded-md text-[11px] font-medium transition-colors cursor-pointer',
                       comparisonMode === 'previous_year'
-                        ? 'bg-white text-blue-700 font-bold shadow-xs'
+                        ? 'bg-white text-[#14532D] font-bold shadow-xs'
                         : 'text-slate-600 hover:text-slate-900'
                     )}
                   >
@@ -424,7 +424,7 @@ export default function MonthSelector({ className }) {
                     className={cn(
                       'py-1 px-1.5 rounded-md text-[11px] font-medium transition-colors cursor-pointer',
                       comparisonMode === 'custom'
-                        ? 'bg-white text-blue-700 font-bold shadow-xs'
+                        ? 'bg-white text-[#14532D] font-bold shadow-xs'
                         : 'text-slate-600 hover:text-slate-900'
                     )}
                   >
@@ -461,7 +461,7 @@ export default function MonthSelector({ className }) {
                   <span className="truncate">
                     Prior: <strong className="text-slate-800">{comparisonPreview?.prevStartDate || '...'} → {comparisonPreview?.prevEndDate || '...'}</strong>
                   </span>
-                  <span className="text-blue-600 font-semibold shrink-0 ml-1 text-[10px] uppercase">
+                  <span className="text-[#14532D] font-semibold shrink-0 ml-1 text-[10px] uppercase">
                     {comparisonMode === 'previous_year' ? 'YoY' : comparisonMode === 'custom' ? 'Custom' : 'Prior'}
                   </span>
                 </div>
@@ -477,7 +477,7 @@ export default function MonthSelector({ className }) {
               type="button"
               onClick={handleApplyAll}
               size="sm"
-              className="w-full text-xs font-semibold cursor-pointer bg-blue-600 hover:bg-blue-700 text-white mt-1 shadow-xs"
+              className="w-full text-xs font-semibold cursor-pointer bg-[#14532D] hover:bg-[#1B6B45] text-white mt-1 shadow-xs"
             >
               Apply Range &amp; Comparison
             </Button>

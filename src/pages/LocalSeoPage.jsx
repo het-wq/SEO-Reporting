@@ -48,7 +48,7 @@ export default function LocalSeoPage() {
         ) : (
           <Card className="border-dashed border-2 border-slate-200 bg-slate-50/50 shadow-none my-2">
             <CardContent className="py-10 px-6 max-w-2xl mx-auto text-center space-y-4">
-              <div className="h-14 w-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto ring-8 ring-blue-50/60">
+              <div className="h-14 w-14 rounded-full bg-emerald-50 text-[#14532D] flex items-center justify-center mx-auto ring-8 ring-emerald-50/60">
                 <MapPin className="h-7 w-7" />
               </div>
 
@@ -65,15 +65,15 @@ export default function LocalSeoPage() {
                 <p className="font-semibold text-slate-800">Supported Integration Options:</p>
                 <ul className="space-y-1.5 text-slate-600">
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#14532D] shrink-0" />
                     <span><strong>BrightLocal API v4:</strong> Automates local 3x3 geo-grid ranking scans across targeted service areas.</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#14532D] shrink-0" />
                     <span><strong>Google Business Profile API:</strong> Direct telemetry on Google Maps profile views, phone calls, and direction clicks.</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#14532D] shrink-0" />
                     <span><strong>Google Search Console:</strong> Verified organic search rankings for local business queries are available right now.</span>
                   </li>
                 </ul>

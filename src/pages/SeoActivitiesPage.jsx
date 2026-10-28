@@ -470,13 +470,13 @@ export default function SeoActivitiesPage() {
           <p className="text-2xl font-bold text-emerald-900 mt-1">{completedCount}</p>
           <p className="text-[11px] text-emerald-700/80 mt-0.5">Shipped & deployed</p>
         </div>
-        <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/40 shadow-xs">
+        <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/40 shadow-xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-blue-800 uppercase tracking-wider">In Progress</p>
-            <Clock className="h-4 w-4 text-blue-600" />
+            <p className="text-xs font-medium text-emerald-800 uppercase tracking-wider">In Progress</p>
+            <Clock className="h-4 w-4 text-emerald-600" />
           </div>
-          <p className="text-2xl font-bold text-blue-900 mt-1">{inProgressCount}</p>
-          <p className="text-[11px] text-blue-700/80 mt-0.5">Currently active</p>
+          <p className="text-2xl font-bold text-emerald-900 mt-1">{inProgressCount}</p>
+          <p className="text-[11px] text-emerald-700/80 mt-0.5">Currently active</p>
         </div>
         <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/40 shadow-xs">
           <div className="flex items-center justify-between">
@@ -503,7 +503,7 @@ export default function SeoActivitiesPage() {
                 onClick={() => handleToggleEntry('manual')}
                 className={`h-7 px-3 text-xs font-semibold gap-1.5 transition-all cursor-pointer ${
                   isEntryOpen && entryMode === 'manual'
-                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-2xs'
+                    ? 'bg-[#14532D] text-white hover:bg-[#1B6B45] shadow-2xs'
                     : 'text-slate-700 hover:text-slate-900 hover:bg-white'
                 }`}
               >
@@ -517,7 +517,7 @@ export default function SeoActivitiesPage() {
                 onClick={() => handleToggleEntry('import')}
                 className={`h-7 px-3 text-xs font-semibold gap-1.5 transition-all cursor-pointer ${
                   isEntryOpen && entryMode === 'import'
-                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-2xs'
+                    ? 'bg-[#14532D] text-white hover:bg-[#1B6B45] shadow-2xs'
                     : 'text-slate-700 hover:text-slate-900 hover:bg-white'
                 }`}
               >
@@ -555,8 +555,8 @@ export default function SeoActivitiesPage() {
         )}
 
         {isEntryOpen && (
-          <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50/20 p-4 sm:p-5 space-y-4 shadow-xs">
-            <div className="flex items-center justify-between border-b border-blue-100 pb-3">
+          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50/20 p-4 sm:p-5 space-y-4 shadow-xs">
+            <div className="flex items-center justify-between border-b border-emerald-100 pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mr-1 hidden sm:inline">
                   Select Mode:
@@ -567,7 +567,7 @@ export default function SeoActivitiesPage() {
                     onClick={() => setEntryMode('manual')}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                       entryMode === 'manual'
-                        ? 'bg-blue-600 text-white shadow-2xs'
+                        ? 'bg-[#14532D] text-white shadow-2xs'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -579,7 +579,7 @@ export default function SeoActivitiesPage() {
                     onClick={() => setEntryMode('import')}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                       entryMode === 'import'
-                        ? 'bg-blue-600 text-white shadow-2xs'
+                        ? 'bg-[#14532D] text-white shadow-2xs'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -630,7 +630,7 @@ export default function SeoActivitiesPage() {
                     <select
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full text-xs h-9 rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                      className="w-full text-xs h-9 rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#14532D]"
                     >
                       {CATEGORIES.map((c) => (
                         <option key={c} value={c}>{c}</option>
@@ -642,7 +642,7 @@ export default function SeoActivitiesPage() {
                     <select
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full text-xs h-9 rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                      className="w-full text-xs h-9 rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#14532D]"
                     >
                       <option value="Completed">Completed</option>
                       <option value="In Progress">In Progress</option>
@@ -654,7 +654,7 @@ export default function SeoActivitiesPage() {
                     <select
                       value={formData.priority}
                       onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                      className="w-full text-xs h-9 rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                      className="w-full text-xs h-9 rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#14532D]"
                     >
                       <option value="High">High</option>
                       <option value="Medium">Medium</option>
@@ -679,7 +679,7 @@ export default function SeoActivitiesPage() {
                     placeholder="Details about what was changed, queries targeted, and rationale..."
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full text-xs rounded-md border border-slate-300 bg-white p-2.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    className="w-full text-xs rounded-md border border-slate-300 bg-white p-2.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#14532D]"
                   />
                 </div>
 
@@ -693,7 +693,7 @@ export default function SeoActivitiesPage() {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" size="sm" className="gap-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button type="submit" size="sm" className="gap-1.5 text-xs bg-[#14532D] hover:bg-[#1B6B45] text-white">
                     <Plus className="h-3.5 w-3.5" />
                     <span>Save Activity</span>
                   </Button>
@@ -724,7 +724,7 @@ export default function SeoActivitiesPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="text-xs h-9 rounded-md border border-slate-300 bg-white px-2.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 shrink-0"
+              className="text-xs h-9 rounded-md border border-slate-300 bg-white px-2.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#14532D] shrink-0"
             >
               <option value="All">All Categories</option>
               {CATEGORIES.map((c) => (
@@ -769,7 +769,7 @@ export default function SeoActivitiesPage() {
                       {a.status === 'Completed' ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                       ) : a.status === 'In Progress' ? (
-                        <Clock className="h-4 w-4 text-blue-600" />
+                        <Clock className="h-4 w-4 text-emerald-600" />
                       ) : (
                         <Calendar className="h-4 w-4 text-amber-500" />
                       )}
@@ -784,7 +784,7 @@ export default function SeoActivitiesPage() {
                           href={a.targetUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:underline mt-0.5"
+                          className="inline-flex items-center gap-1 text-[11px] text-[#14532D] hover:underline mt-0.5"
                         >
                           <span>{a.targetUrl}</span>
                           <ExternalLink className="h-2.5 w-2.5" />
@@ -835,14 +835,14 @@ export default function SeoActivitiesPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <Layers className="h-4 w-4 text-blue-600" />
+                <Layers className="h-4 w-4 text-emerald-600" />
                 Category Breakdown ({totalCount} Total Activities)
               </span>
               <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
                 {activeActivityCategoriesCount} Active of {allActivityCategoryCards.length} Categories
               </span>
               {categoryFilter !== 'All' && (
-                <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                <span className="text-[11px] font-semibold text-[#14532D] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                   Filtered: {categoryFilter}
                 </span>
               )}
@@ -866,7 +866,7 @@ export default function SeoActivitiesPage() {
                   onClick={() => setActivityBoxView('active')}
                   className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                     activityBoxView === 'active'
-                      ? 'bg-white text-blue-800 shadow-2xs'
+                      ? 'bg-white text-[#14532D] shadow-2xs'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -878,7 +878,7 @@ export default function SeoActivitiesPage() {
                 <button
                   type="button"
                   onClick={() => setCategoryFilter('All')}
-                  className="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline ml-1"
+                  className="text-xs text-[#14532D] hover:text-[#1B6B45] font-semibold cursor-pointer underline ml-1"
                 >
                   Clear Filter
                 </button>
@@ -895,22 +895,22 @@ export default function SeoActivitiesPage() {
                   onClick={() => setCategoryFilter(isSelected ? 'All' : cat.name)}
                   className={`p-3 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-between select-none relative group ${
                     isSelected
-                      ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-500/30 shadow-xs'
+                      ? 'border-[#14532D] bg-emerald-50 ring-2 ring-emerald-500/30 shadow-xs'
                       : cat.count > 0
-                      ? 'border-blue-200/90 bg-white hover:border-blue-400 hover:shadow-xs'
+                      ? 'border-emerald-200/90 bg-white hover:border-emerald-400 hover:shadow-xs'
                       : 'border-slate-200/70 bg-slate-50/50 hover:bg-white hover:border-slate-300'
                   }`}
                   title={`Click to filter activities by ${cat.name}`}
                 >
                   {cat.count > 0 && (
-                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-blue-500" />
+                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-emerald-500" />
                   )}
                   <p
                     className={`text-2xl font-black tracking-tight ${
                       isSelected
-                        ? 'text-blue-700'
+                        ? 'text-emerald-700'
                         : cat.count > 0
-                        ? 'text-blue-600'
+                        ? 'text-emerald-600'
                         : 'text-slate-400'
                     }`}
                   >
@@ -919,7 +919,7 @@ export default function SeoActivitiesPage() {
                   <p
                     className={`text-[11px] font-semibold mt-1.5 leading-tight line-clamp-2 ${
                       isSelected
-                        ? 'text-blue-950 font-bold'
+                        ? 'text-emerald-950 font-bold'
                         : cat.count > 0
                         ? 'text-slate-800'
                         : 'text-slate-500'
@@ -987,7 +987,7 @@ export default function SeoActivitiesPage() {
                     href={p.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline break-all"
+                    className="inline-flex items-center gap-1.5 text-sm text-[#14532D] hover:underline break-all"
                   >
                     {p.url}
                     <ExternalLink className="h-3 w-3 shrink-0" />
@@ -1094,12 +1094,12 @@ export default function SeoActivitiesPage() {
             </div>
             <span className="text-xl font-bold text-emerald-900 mt-1 block">{liveBacklinks}</span>
           </div>
-          <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-3 text-center sm:text-left">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-center sm:text-left">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-medium text-blue-800 uppercase tracking-wider block">In Progress</span>
-              <Clock className="h-3.5 w-3.5 text-blue-600 hidden sm:inline" />
+              <span className="text-[11px] font-medium text-emerald-800 uppercase tracking-wider block">In Progress</span>
+              <Clock className="h-3.5 w-3.5 text-emerald-600 hidden sm:inline" />
             </div>
-            <span className="text-xl font-bold text-blue-900 mt-1 block">{inProgressBacklinks}</span>
+            <span className="text-xl font-bold text-emerald-900 mt-1 block">{inProgressBacklinks}</span>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 text-center sm:text-left">
             <div className="flex items-center justify-between">
@@ -1345,7 +1345,7 @@ export default function SeoActivitiesPage() {
                       {b.status === 'Live / Indexed' ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                       ) : b.status === 'In Progress' ? (
-                        <Clock className="h-4 w-4 text-blue-600" />
+                        <Clock className="h-4 w-4 text-emerald-600" />
                       ) : (
                         <Calendar className="h-4 w-4 text-amber-500" />
                       )}
@@ -1358,7 +1358,7 @@ export default function SeoActivitiesPage() {
                           href={b.sourceUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="font-semibold text-blue-600 hover:underline text-xs sm:text-sm inline-flex items-center gap-1 break-all"
+                          className="font-semibold text-[#14532D] hover:underline text-xs sm:text-sm inline-flex items-center gap-1 break-all"
                         >
                           <span>{b.sourceUrl}</span>
                           <ExternalLink className="h-3 w-3 shrink-0" />
@@ -1392,7 +1392,7 @@ export default function SeoActivitiesPage() {
                         b.da >= 80
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           : b.da >= 50
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          ? 'bg-emerald-50 text-[#14532D] border border-emerald-200'
                           : 'bg-slate-100 text-slate-700'
                       }`}>
                         DA {b.da}
@@ -1474,7 +1474,7 @@ export default function SeoActivitiesPage() {
                 <button
                   type="button"
                   onClick={() => setBacklinkCategoryFilter('All')}
-                  className="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline ml-1"
+                  className="text-xs text-[#14532D] hover:text-[#1B6B45] font-semibold cursor-pointer underline ml-1"
                 >
                   Clear Filter
                 </button>

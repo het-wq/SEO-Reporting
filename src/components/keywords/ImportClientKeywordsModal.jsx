@@ -235,7 +235,7 @@ export default function ImportClientKeywordsModal({ open, onClose, onImport }) {
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
             <div>
               <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <FileSpreadsheet className="h-5 w-5 text-blue-600" />
+                <FileSpreadsheet className="h-5 w-5 text-[#14532D]" />
                 Import Client Keywords
               </DialogTitle>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -246,7 +246,7 @@ export default function ImportClientKeywordsModal({ open, onClose, onImport }) {
               variant="outline"
               size="sm"
               onClick={downloadSampleKeywordsTemplate}
-              className="gap-1.5 text-xs text-slate-700 hover:text-blue-600 bg-white"
+              className="gap-1.5 text-xs text-slate-700 hover:text-[#14532D] bg-white"
             >
               <Download className="h-3.5 w-3.5" /> Sample Template
             </Button>
@@ -260,7 +260,7 @@ export default function ImportClientKeywordsModal({ open, onClose, onImport }) {
             onClick={() => setTab('upload')}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
               tab === 'upload'
-                ? 'bg-blue-600 text-white shadow-sm'
+                ? 'bg-[#14532D] text-white shadow-sm'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -271,7 +271,7 @@ export default function ImportClientKeywordsModal({ open, onClose, onImport }) {
             onClick={() => setTab('paste')}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
               tab === 'paste'
-                ? 'bg-blue-600 text-white shadow-sm'
+                ? 'bg-[#14532D] text-white shadow-sm'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -289,7 +289,7 @@ export default function ImportClientKeywordsModal({ open, onClose, onImport }) {
               onClick={() => fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
                 isDragging
-                  ? 'border-blue-500 bg-blue-50/50'
+                  ? 'border-[#14532D] bg-emerald-50/50'
                   : 'border-slate-300 hover:border-slate-400 bg-slate-50/50'
               }`}
             >
@@ -319,7 +319,7 @@ export default function ImportClientKeywordsModal({ open, onClose, onImport }) {
               placeholder={`Search Query / Keyword, Avg Position, Clicks, Impressions\nux ui optimization atlanta, 2.1, 2, 33\nai consultants atlanta, 24.6, 1, 19\nboulder decision, 1.0, 12, 150`}
               value={pasteContent}
               onChange={handlePasteChange}
-              className="w-full text-xs font-mono p-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+              className="w-full text-xs font-mono p-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#14532D] focus:border-[#14532D]"
             />
           </div>
         )}
@@ -401,7 +401,7 @@ export default function ImportClientKeywordsModal({ open, onClose, onImport }) {
             size="sm"
             disabled={!parsedKeywords.length}
             onClick={handleSubmit}
-            className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+            className="gap-1.5 text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white"
           >
             Import {parsedKeywords.length > 0 ? `${parsedKeywords.length} Keywords` : ''}
             <ArrowRight className="h-3.5 w-3.5" />

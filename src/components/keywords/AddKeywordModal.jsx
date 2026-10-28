@@ -41,7 +41,7 @@ export default function AddKeywordModal({ open, onClose, onAdd }) {
       <DialogContent onClose={onClose} className="max-w-md p-6">
         <DialogHeader>
           <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <KeyRound className="h-5 w-5 text-blue-600" />
+            <KeyRound className="h-5 w-5 text-[#14532D]" />
             Add Client Target Keyword
           </DialogTitle>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -88,7 +88,7 @@ export default function AddKeywordModal({ open, onClose, onAdd }) {
             <Button
               type="submit"
               size="sm"
-              className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+              className="gap-1.5 text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white"
             >
               <Plus className="h-3.5 w-3.5" /> Add Keyword
             </Button>

@@ -135,7 +135,7 @@ export default function SettingsPage() {
           <Button
             size="sm"
             onClick={handleSaveConfig}
-            className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+            className="gap-1.5 text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white"
           >
             {saveSuccess ? <Check className="h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
             <span>{saveSuccess ? 'Saved!' : 'Save Properties'}</span>
@@ -148,7 +148,7 @@ export default function SettingsPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <div className="h-9 w-9 rounded-lg bg-emerald-50 text-[#14532D] flex items-center justify-center">
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div>
@@ -176,7 +176,7 @@ export default function SettingsPage() {
 
             <div className="flex items-center gap-2">
               {!isGoogleConnected ? (
-                <Button onClick={handleStartGoogleOAuth} className="gap-2 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white">
+                <Button onClick={handleStartGoogleOAuth} className="gap-2 text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white">
                   <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" className="h-4 w-4" />
                   <span>Connect with Google</span>
                 </Button>
@@ -202,7 +202,7 @@ export default function SettingsPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-blue-600" />
+                <Globe className="h-4 w-4 text-[#14532D]" />
                 <CardTitle className="text-sm font-bold text-slate-900">Google Analytics 4 (GA4)</CardTitle>
               </div>
               <Badge variant={isGoogleConnected ? 'success' : 'secondary'} className="text-[10px]">
@@ -267,7 +267,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setConfig((prev) => ({ ...prev, gscSiteUrl: 'https://boulderdecisions.com/' }))}
-                    className="text-[11px] text-blue-600 hover:text-blue-700 underline font-medium"
+                    className="text-[11px] text-[#14532D] hover:text-[#1B6B45] underline font-medium"
                   >
                     Set to https://boulderdecisions.com/
                   </button>
@@ -310,7 +310,7 @@ export default function SettingsPage() {
         <Card className="border-slate-200 shadow-xs md:col-span-2">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
-              <Tag className="h-4 w-4 text-violet-600" />
+              <Tag className="h-4 w-4 text-[#14532D]" />
               <CardTitle className="text-sm font-bold text-slate-900">Brand vs Non-Brand Keyword Classifier</CardTitle>
             </div>
           </CardHeader>
@@ -324,7 +324,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setConfig((prev) => ({ ...prev, brandKeywords: 'Boulder Decision,Boulder Decisions,boulderdecision,boulderdecisions,boulder decisions' }))}
-                    className="text-[11px] text-blue-600 hover:text-blue-700 underline font-medium"
+                    className="text-[11px] text-[#14532D] hover:text-[#1B6B45] underline font-medium"
                   >
                     Reset to Boulder Decisions
                   </button>
@@ -347,7 +347,7 @@ export default function SettingsPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-blue-600" />
+                <MapPin className="h-4 w-4 text-[#14532D]" />
                 <CardTitle className="text-sm font-bold text-slate-900">Local SEO & Geo-Grid Tracker</CardTitle>
               </div>
               <Badge variant="outline" className="text-[10px]">BrightLocal / GBP</Badge>

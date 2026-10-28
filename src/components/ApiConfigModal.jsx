@@ -91,7 +91,7 @@ export default function ApiConfigModal({ isOpen, onClose, onConfigSaved, activeE
       <DialogContent onClose={onClose} className="max-w-lg p-6">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-md bg-blue-50 text-blue-600">
+            <div className="p-1.5 rounded-md bg-emerald-50 text-[#14532D]">
               <Terminal className="h-4 w-4" />
             </div>
             <DialogTitle>Google API Configuration</DialogTitle>
@@ -144,7 +144,7 @@ export default function ApiConfigModal({ isOpen, onClose, onConfigSaved, activeE
                   href="https://console.developers.google.com/apis/api/searchconsole.googleapis.com/overview?project=554369952704"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs font-medium text-blue-700 underline flex items-center gap-1.5"
+                  className="text-xs font-medium text-[#14532D] underline flex items-center gap-1.5"
                 >
                   <ExternalLink className="h-3 w-3" /> Enable Google Search Console API
                 </a>
@@ -152,7 +152,7 @@ export default function ApiConfigModal({ isOpen, onClose, onConfigSaved, activeE
                   href="https://console.developers.google.com/apis/api/analyticsdata.googleapis.com/overview?project=554369952704"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs font-medium text-blue-700 underline flex items-center gap-1.5"
+                  className="text-xs font-medium text-[#14532D] underline flex items-center gap-1.5"
                 >
                   <ExternalLink className="h-3 w-3" /> Enable Google Analytics Data API
                 </a>
@@ -169,7 +169,7 @@ export default function ApiConfigModal({ isOpen, onClose, onConfigSaved, activeE
                   type="button"
                   onClick={() => loadSites(config.apiToken)}
                   disabled={loadingSites}
-                  className="text-[11px] text-blue-600 hover:underline flex items-center gap-1"
+                  className="text-[11px] text-[#14532D] hover:underline flex items-center gap-1"
                 >
                   <RefreshCw className={`h-3 w-3 ${loadingSites ? 'animate-spin' : ''}`} /> Refresh
                 </button>
@@ -178,7 +178,7 @@ export default function ApiConfigModal({ isOpen, onClose, onConfigSaved, activeE
 
             {sites.length > 0 ? (
               <select
-                className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-xs outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-xs outline-none focus:ring-1 focus:ring-[#14532D]"
                 value={config.gscSiteUrl}
                 onChange={(e) => setConfig({ ...config, gscSiteUrl: e.target.value })}
               >

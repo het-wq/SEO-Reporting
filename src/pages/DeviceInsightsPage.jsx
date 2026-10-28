@@ -58,7 +58,7 @@ export default function DeviceInsightsPage() {
         title="Device Insights"
         subtitle={`Search Console clicks by device - ${comparisonLabel || `${curLabel} vs ${prevLabel}`}`}
         actions={
-          <Badge variant="outline" className="text-xs text-blue-700 bg-blue-50/50 border-blue-200">
+          <Badge variant="outline" className="text-xs text-[#14532D] bg-emerald-50/60 border-emerald-200">
             Source: Search Console (Device Dimension)
           </Badge>
         }

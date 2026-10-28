@@ -111,7 +111,7 @@ export default function NoReportData({ customMessage }) {
     return (
       <Card className="border-dashed border-2 border-slate-200 bg-white shadow-none my-8 max-w-lg mx-auto">
         <CardContent className="py-10 px-6 text-center space-y-4">
-          <div className="h-14 w-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto ring-8 ring-blue-50/60">
+          <div className="h-14 w-14 rounded-full bg-emerald-50 text-[#14532D] flex items-center justify-center mx-auto ring-8 ring-emerald-50/60">
             <Link2 className="h-7 w-7" />
           </div>
 
@@ -127,7 +127,7 @@ export default function NoReportData({ customMessage }) {
           <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
             <Button
               onClick={handleStartOAuth}
-              className="bg-blue-600 hover:bg-blue-700 text-white gap-2 text-xs font-semibold"
+              className="bg-[#14532D] hover:bg-[#1B6B45] text-white gap-2 text-xs font-semibold"
             >
               <img
                 src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png"

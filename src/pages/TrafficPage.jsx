@@ -48,7 +48,7 @@ export default function TrafficPage() {
         title="Website Traffic Overview"
         subtitle={`${curLabel} vs ${prevLabel} - Google Analytics 4`}
         actions={
-          <Badge variant="outline" className="text-xs text-blue-700 bg-blue-50/50 border-blue-200">
+          <Badge variant="outline" className="text-xs text-[#14532D] bg-emerald-50/60 border-emerald-200">
             Source: GA4 Property {traffic.propertyId || '516707960'}
           </Badge>
         }
@@ -74,7 +74,7 @@ export default function TrafficPage() {
 
       {/* Engagement Duration & Rate */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <SectionCard icon={Clock} iconClassName="bg-violet-50 text-violet-600" title="Organic Engagement Duration">
+        <SectionCard icon={Clock} iconClassName="bg-emerald-50 text-[#14532D]" title="Organic Engagement Duration">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1 grid grid-cols-2 gap-4">
               <div className="rounded-lg border border-slate-200 p-4 bg-slate-50/50">

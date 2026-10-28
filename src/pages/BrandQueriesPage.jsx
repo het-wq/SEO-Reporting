@@ -331,10 +331,10 @@ export default function BrandQueriesPage() {
   return (
     <div className="space-y-6">
       {/* SECTION 1: KEYWORD CLASSIFIER & MANAGEMENT HUB */}
-      <div className="rounded-xl border border-violet-200/80 bg-linear-to-b from-white to-violet-50/30 p-4 sm:p-5 shadow-sm space-y-4">
+      <div className="rounded-xl border border-emerald-200/80 bg-linear-to-b from-white to-emerald-50/30 p-4 sm:p-5 shadow-sm space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-violet-600 text-white shadow-xs">
+            <div className="p-2 rounded-lg bg-[#14532D] text-white shadow-xs">
               <Filter className="h-4 w-4" />
             </div>
             <div>
@@ -367,7 +367,7 @@ export default function BrandQueriesPage() {
               onClick={() => setIsManagerOpen((prev) => !prev)}
               className="gap-1.5 bg-white text-xs font-semibold text-slate-700 border-slate-300 hover:bg-slate-50 shadow-xs cursor-pointer"
             >
-              <SlidersHorizontal className="h-3.5 w-3.5 text-violet-600" />
+              <SlidersHorizontal className="h-3.5 w-3.5 text-[#14532D]" />
               {isManagerOpen ? 'Hide Keyword Options' : 'Manage Keywords'}
               {isManagerOpen ? (
                 <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
@@ -383,7 +383,7 @@ export default function BrandQueriesPage() {
               disabled={saveStatus === 'saving'}
               className={`gap-1.5 text-xs font-semibold shadow-xs cursor-pointer ${
                 isDirty
-                  ? 'bg-violet-600 hover:bg-violet-700 text-white ring-2 ring-violet-300'
+                  ? 'bg-[#14532D] hover:bg-[#1B6B45] text-white ring-2 ring-emerald-300'
                   : 'bg-slate-900 hover:bg-slate-800 text-white'
               }`}
             >
@@ -406,7 +406,7 @@ export default function BrandQueriesPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs pt-2 border-t border-slate-200/60">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-slate-700">Active Classification:</span>
-            <span className="px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 font-semibold text-[11px] border border-violet-200">
+            <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-[#14532D] font-semibold text-[11px] border border-emerald-200">
               {brandTerms.length} Branded Rules
             </span>
             <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-[11px] border border-emerald-200">
@@ -440,7 +440,7 @@ export default function BrandQueriesPage() {
                   onClick={() => setActiveKeywordTab('brand')}
                   className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
                     activeKeywordTab === 'brand'
-                      ? 'bg-white text-violet-700 shadow-xs'
+                      ? 'bg-white text-[#14532D] shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -467,7 +467,7 @@ export default function BrandQueriesPage() {
                   onClick={() => setIsBulkOpen((prev) => !prev)}
                   className="gap-1.5 text-xs bg-white text-slate-700 border-slate-300 hover:bg-slate-50 cursor-pointer"
                 >
-                  <Layers className="h-3.5 w-3.5 text-blue-600" />
+                  <Layers className="h-3.5 w-3.5 text-[#14532D]" />
                   {isBulkOpen ? 'Hide Bulk Add' : 'Bulk Add Keywords'}
                 </Button>
 
@@ -500,7 +500,7 @@ export default function BrandQueriesPage() {
               <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5 animate-in fade-in-0 duration-150">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
-                    <Layers className="h-4 w-4 text-blue-600" />
+                    <Layers className="h-4 w-4 text-[#14532D]" />
                     <span>
                       Bulk Add {activeKeywordTab === 'brand' ? 'Branded' : 'Non-Branded'} Keywords
                     </span>
@@ -515,7 +515,7 @@ export default function BrandQueriesPage() {
                   value={bulkKeywordsText}
                   onChange={(e) => setBulkKeywordsText(e.target.value)}
                   placeholder="Paste multiple keywords separated by commas or new lines (e.g. boulder decisions, boulder analytics, marketing roi)..."
-                  className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent font-mono"
+                  className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#14532D] focus:border-transparent font-mono"
                 />
 
                 <div className="flex items-center justify-between gap-2">
@@ -540,7 +540,7 @@ export default function BrandQueriesPage() {
                       size="sm"
                       onClick={handleAddBulkKeywords}
                       disabled={detectedBulkKeywords.length === 0}
-                      className="text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white gap-1.5 cursor-pointer"
+                      className="text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white gap-1.5 cursor-pointer"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       Add {detectedBulkKeywords.length} Keywords
@@ -564,7 +564,7 @@ export default function BrandQueriesPage() {
                   type="submit"
                   size="sm"
                   disabled={!singleKeyword.trim()}
-                  className="shrink-0 text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white gap-1 cursor-pointer"
+                  className="shrink-0 text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white gap-1 cursor-pointer"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Add Keyword
@@ -591,7 +591,7 @@ export default function BrandQueriesPage() {
                     key={term}
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors shadow-2xs ${
                       activeKeywordTab === 'brand'
-                        ? 'bg-violet-50 text-violet-800 border-violet-200 hover:bg-violet-100/70'
+                        ? 'bg-emerald-50 text-[#14532D] border-emerald-200 hover:bg-emerald-100/70'
                         : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100/70'
                     }`}
                   >
@@ -638,7 +638,7 @@ export default function BrandQueriesPage() {
         subtitle={comparisonLabel || `${curLabel} vs ${prevLabel}`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="text-xs text-violet-700 bg-violet-50/50 border-violet-200">
+            <Badge variant="outline" className="text-xs text-[#14532D] bg-emerald-50/50 border-emerald-200">
               Live Search Console Analysis
             </Badge>
           </div>
@@ -675,7 +675,7 @@ export default function BrandQueriesPage() {
               onClick={() => setQueryTab('brand')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
                 queryTab === 'brand'
-                  ? 'bg-violet-600 text-white shadow-xs'
+                  ? 'bg-[#14532D] text-white shadow-xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -686,7 +686,7 @@ export default function BrandQueriesPage() {
               onClick={() => setQueryTab('nonBrand')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
                 queryTab === 'nonBrand'
-                  ? 'bg-violet-600 text-white shadow-xs'
+                  ? 'bg-[#14532D] text-white shadow-xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -729,7 +729,7 @@ export default function BrandQueriesPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleQuickAddAsBrand(q.query)}
-                        className="h-7 text-[11px] px-2 text-violet-700 bg-violet-50/70 border-violet-200 hover:bg-violet-100 cursor-pointer"
+                        className="h-7 text-[11px] px-2 text-[#14532D] bg-emerald-50/70 border-emerald-200 hover:bg-emerald-100 cursor-pointer"
                         title="Add this query to Brand keywords"
                       >
                         <Plus className="h-3 w-3 mr-1" />

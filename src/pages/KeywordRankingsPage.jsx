@@ -319,7 +319,7 @@ export default function KeywordRankingsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
         <div>
           <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <KeyRound className="h-5 w-5 text-blue-600" />
+            <KeyRound className="h-5 w-5 text-[#14532D]" />
             Keyword Rankings
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -335,15 +335,15 @@ export default function KeywordRankingsPage() {
           onClick={() => setActiveTab('seo')}
           className={`flex items-center gap-2.5 px-5 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${
             activeTab === 'seo'
-              ? 'border-blue-600 text-blue-600 bg-blue-50/50 rounded-t-lg'
+              ? 'border-[#14532D] text-[#14532D] bg-emerald-50/60 rounded-t-lg'
               : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-t-lg'
           }`}
         >
-          <Globe className={`h-4 w-4 ${activeTab === 'seo' ? 'text-blue-600' : 'text-slate-400'}`} />
+          <Globe className={`h-4 w-4 ${activeTab === 'seo' ? 'text-[#14532D]' : 'text-slate-400'}`} />
           <span>SEO Keyword Rankings</span>
           <span
             className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-              activeTab === 'seo' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+              activeTab === 'seo' ? 'bg-[#14532D] text-white' : 'bg-slate-100 text-slate-600'
             }`}
           >
             {gscKeywords.length}
@@ -355,15 +355,15 @@ export default function KeywordRankingsPage() {
           onClick={() => setActiveTab('client')}
           className={`flex items-center gap-2.5 px-5 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${
             activeTab === 'client'
-              ? 'border-blue-600 text-blue-600 bg-blue-50/50 rounded-t-lg'
+              ? 'border-[#14532D] text-[#14532D] bg-emerald-50/60 rounded-t-lg'
               : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-t-lg'
           }`}
         >
-          <BookmarkCheck className={`h-4 w-4 ${activeTab === 'client' ? 'text-blue-600' : 'text-slate-400'}`} />
+          <BookmarkCheck className={`h-4 w-4 ${activeTab === 'client' ? 'text-[#14532D]' : 'text-slate-400'}`} />
           <span>Client Keywords</span>
           <span
             className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-              activeTab === 'client' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+              activeTab === 'client' ? 'bg-[#14532D] text-white' : 'bg-slate-100 text-slate-600'
             }`}
           >
             {clientKeywords.length}
@@ -390,7 +390,7 @@ export default function KeywordRankingsPage() {
             </div>
             <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
               <span className="text-[11px] font-medium text-slate-500 block">Top 10 Rankings</span>
-              <span className="text-xl font-bold text-blue-600 mt-1 block">{seoSummary.top10}</span>
+              <span className="text-xl font-bold text-[#14532D] mt-1 block">{seoSummary.top10}</span>
               <span className="text-[10px] text-slate-400">Page 1 results (Pos 1-10)</span>
             </div>
             <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
@@ -407,7 +407,7 @@ export default function KeywordRankingsPage() {
             subtitle={`Live Google Search Console queries (${filteredSeo.length} of ${gscKeywords.length})`}
             actions={
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-[11px] text-blue-700 bg-blue-50/50 border-blue-200 hidden sm:inline-flex">
+                <Badge variant="outline" className="text-[11px] text-[#14532D] bg-emerald-50/60 border-emerald-200 hidden sm:inline-flex">
                   Search Console
                 </Badge>
                 <Button
@@ -416,7 +416,7 @@ export default function KeywordRankingsPage() {
                   onClick={handleExportSeo}
                   className="gap-1.5 text-xs font-semibold bg-white text-slate-700 hover:bg-slate-50 cursor-pointer shadow-sm"
                 >
-                  <Download className="h-3.5 w-3.5 text-blue-600" /> Export CSV
+                  <Download className="h-3.5 w-3.5 text-[#14532D]" /> Export CSV
                 </Button>
               </div>
             }
@@ -515,7 +515,7 @@ export default function KeywordRankingsPage() {
                                 keyword: k.keyword,
                                 source: 'gsc_promote',
                               })}
-                              className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                              className="text-[11px] font-bold text-[#14532D] hover:text-[#1B6B45] hover:bg-emerald-50 px-2 py-0.5 rounded cursor-pointer transition-colors"
                               title="Add to Client Keywords list"
                             >
                               + Track
@@ -561,7 +561,7 @@ export default function KeywordRankingsPage() {
             </div>
             <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
               <span className="text-[11px] font-medium text-slate-500 block">Client in Top 10</span>
-              <span className="text-xl font-bold text-blue-600 mt-1 block">{clientSummary.top10}</span>
+              <span className="text-xl font-bold text-[#14532D] mt-1 block">{clientSummary.top10}</span>
               <span className="text-[10px] text-slate-400">Page 1 target keywords</span>
             </div>
             <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
@@ -582,7 +582,7 @@ export default function KeywordRankingsPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsImportModalOpen(true)}
-                  className="gap-1.5 text-xs font-semibold bg-white border-blue-200 text-blue-700 hover:bg-blue-50 cursor-pointer shadow-sm"
+                  className="gap-1.5 text-xs font-semibold bg-white border-emerald-200 text-[#14532D] hover:bg-emerald-50 cursor-pointer shadow-sm"
                 >
                   <Upload className="h-3.5 w-3.5" /> Import CSV
                 </Button>
@@ -597,7 +597,7 @@ export default function KeywordRankingsPage() {
                 <Button
                   size="sm"
                   onClick={() => setIsAddModalOpen(true)}
-                  className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer shadow-sm"
+                  className="gap-1.5 text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white cursor-pointer shadow-sm"
                 >
                   <Plus className="h-3.5 w-3.5" /> Add Keyword
                 </Button>
@@ -684,7 +684,7 @@ export default function KeywordRankingsPage() {
                               href={k.targetUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[11px] text-slate-400 hover:text-blue-600 inline-flex items-center gap-1 mt-0.5"
+                              className="text-[11px] text-slate-400 hover:text-[#14532D] inline-flex items-center gap-1 mt-0.5"
                               title={k.targetUrl}
                             >
                               <ExternalLink className="h-2.5 w-2.5 shrink-0" />
@@ -747,14 +747,14 @@ export default function KeywordRankingsPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => setIsImportModalOpen(true)}
-                              className="gap-1.5 text-xs bg-white text-blue-700 border-blue-200"
+                              className="gap-1.5 text-xs bg-white text-[#14532D] border-emerald-200"
                             >
                               <Upload className="h-3.5 w-3.5" /> Import CSV
                             </Button>
                             <Button
                               size="sm"
                               onClick={() => setIsAddModalOpen(true)}
-                              className="gap-1.5 text-xs bg-blue-600 text-white"
+                              className="gap-1.5 text-xs bg-[#14532D] text-white"
                             >
                               <Plus className="h-3.5 w-3.5" /> Add Keyword
                             </Button>

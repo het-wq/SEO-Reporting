@@ -73,7 +73,7 @@ export default function SearchConsolePage() {
         title="Google Search Console Performance"
         subtitle={comparisonLabel || `${curLabel} vs ${prevLabel}`}
         actions={
-          <Badge variant="outline" className="text-xs text-blue-700 bg-blue-50/50 border-blue-200">
+          <Badge variant="outline" className="text-xs text-[#14532D] bg-emerald-50/60 border-emerald-200">
             Source: Search Console ({searchConsole.siteUrl || 'Configured Site'})
           </Badge>
         }
@@ -149,7 +149,7 @@ export default function SearchConsolePage() {
               {landingPages.map((p) => (
                 <TableRow key={p.page}>
                   <TableCell className="font-mono text-xs text-slate-800 max-w-md truncate">
-                    <a href={p.page} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-1">
+                    <a href={p.page} target="_blank" rel="noreferrer" className="text-[#14532D] hover:underline inline-flex items-center gap-1">
                       <span>{p.page}</span>
                       <ExternalLink className="h-3 w-3 shrink-0 text-slate-400" />
                     </a>

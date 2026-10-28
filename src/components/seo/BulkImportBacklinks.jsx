@@ -327,12 +327,12 @@ export default function BulkImportBacklinks({ onImport, onCancel }) {
   };
 
   return (
-    <div className="rounded-xl border border-blue-200 bg-white p-4 sm:p-6 space-y-4 shadow-sm animate-in fade-in-0 duration-200">
+    <div className="rounded-xl border border-emerald-200 bg-white p-4 sm:p-6 space-y-4 shadow-sm animate-in fade-in-0 duration-200">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
         <div>
           <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+            <FileSpreadsheet className="h-4 w-4 text-[#14532D]" />
             Bulk Import Backlinks &amp; Off-Page Submissions
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -345,7 +345,7 @@ export default function BulkImportBacklinks({ onImport, onCancel }) {
             variant="outline"
             size="sm"
             onClick={downloadSampleBacklinksTemplate}
-            className="gap-1.5 text-xs text-slate-700 hover:text-blue-600 bg-white"
+            className="gap-1.5 text-xs text-slate-700 hover:text-[#14532D] bg-white"
           >
             <Download className="h-3.5 w-3.5" /> Sample Template
           </Button>
@@ -368,7 +368,7 @@ export default function BulkImportBacklinks({ onImport, onCancel }) {
           onClick={() => setTab('upload')}
           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
             tab === 'upload'
-              ? 'bg-blue-600 text-white shadow-2xs'
+              ? 'bg-[#14532D] text-white shadow-2xs'
               : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           }`}
         >
@@ -379,7 +379,7 @@ export default function BulkImportBacklinks({ onImport, onCancel }) {
           onClick={() => setTab('paste')}
           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
             tab === 'paste'
-              ? 'bg-blue-600 text-white shadow-2xs'
+              ? 'bg-[#14532D] text-white shadow-2xs'
               : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           }`}
         >
@@ -396,7 +396,7 @@ export default function BulkImportBacklinks({ onImport, onCancel }) {
           onClick={() => fileInputRef.current?.click()}
           className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
             isDragging
-              ? 'border-blue-500 bg-blue-50/50'
+              ? 'border-[#14532D] bg-emerald-50/50'
               : 'border-slate-300 hover:border-slate-400 bg-slate-50/50'
           }`}
         >
@@ -425,7 +425,7 @@ export default function BulkImportBacklinks({ onImport, onCancel }) {
             placeholder={`Source URL, Target Page URL, Anchor Text, Category, DA, Status, Date\nhttps://clutch.co/profile/boulder-decision, https://boulderdecisions.com/, Boulder Decision, Directory & Citation, 88, Live / Indexed, 2026-10-18\nhttps://medium.com/@analytics/guide, https://boulderdecisions.com/blog, decision framework, Guest Post, 92, Live / Indexed, 2026-10-14`}
             value={pasteContent}
             onChange={handlePasteChange}
-            className="w-full text-xs font-mono p-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+            className="w-full text-xs font-mono p-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#14532D] focus:border-[#14532D]"
           />
         </div>
       )}

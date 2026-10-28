@@ -11,7 +11,7 @@ export default function TrafficSection({ gaOverview, periodName, prevPeriodName 
     <Card className="border border-slate-200/80 bg-white/50 backdrop-blur-xs shadow-xs mb-6">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-md bg-blue-50 text-blue-600">
+          <div className="p-1.5 rounded-md bg-emerald-50 text-[#14532D]">
             <Globe className="h-4 w-4" />
           </div>
           <CardTitle className="text-base font-semibold text-slate-900">

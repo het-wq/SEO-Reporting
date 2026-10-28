@@ -150,12 +150,12 @@ export default function BulkImportActivities({ onImport, onCancel }) {
   return (
     <div className="space-y-4">
       {/* Top Banner: Instructions & Download Template */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-lg bg-blue-50/60 border border-blue-100 text-slate-800">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-lg bg-emerald-50/60 border border-emerald-100 text-slate-800">
         <div className="flex items-start gap-2.5">
-          <FileSpreadsheet className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+          <FileSpreadsheet className="h-5 w-5 text-[#14532D] mt-0.5 shrink-0" />
           <div>
-            <p className="text-xs font-semibold text-blue-950">Bulk CSV Importer for SEO Activities</p>
-            <p className="text-[11px] text-blue-700/80 mt-0.5">
+            <p className="text-xs font-semibold text-emerald-950">Bulk CSV Importer for SEO Activities</p>
+            <p className="text-[11px] text-emerald-800/80 mt-0.5">
               Upload your team's spreadsheet (.csv) or copy-paste directly from Google Sheets / Excel.
             </p>
           </div>
@@ -165,9 +165,9 @@ export default function BulkImportActivities({ onImport, onCancel }) {
           variant="outline"
           size="sm"
           onClick={downloadSampleActivityTemplate}
-          className="gap-1.5 text-xs bg-white text-blue-700 border-blue-200 hover:bg-blue-50/80 hover:text-blue-800 shrink-0 shadow-2xs"
+          className="gap-1.5 text-xs bg-white text-[#14532D] border-emerald-200 hover:bg-emerald-50/80 hover:text-[#1B6B45] shrink-0 shadow-2xs"
         >
-          <Download className="h-3.5 w-3.5 text-blue-600" />
+          <Download className="h-3.5 w-3.5 text-[#14532D]" />
           <span>Download Sample CSV Template</span>
         </Button>
       </div>
@@ -184,7 +184,7 @@ export default function BulkImportActivities({ onImport, onCancel }) {
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Upload className="h-3.5 w-3.5 text-blue-600" />
+            <Upload className="h-3.5 w-3.5 text-[#14532D]" />
             <span>Upload CSV File</span>
           </button>
           <button
@@ -196,7 +196,7 @@ export default function BulkImportActivities({ onImport, onCancel }) {
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <ClipboardPaste className="h-3.5 w-3.5 text-blue-600" />
+            <ClipboardPaste className="h-3.5 w-3.5 text-[#14532D]" />
             <span>Paste Spreadsheet Data</span>
           </button>
         </div>
@@ -223,8 +223,8 @@ export default function BulkImportActivities({ onImport, onCancel }) {
           onDrop={handleDrop}
           className={`border-2 border-dashed rounded-xl p-6 sm:p-8 text-center transition-all ${
             isDragging
-              ? 'border-blue-500 bg-blue-50/50 scale-[0.99]'
-              : 'border-slate-300 bg-white hover:border-blue-400 hover:bg-slate-50/50'
+              ? 'border-[#14532D] bg-emerald-50/50 scale-[0.99]'
+              : 'border-slate-300 bg-white hover:border-emerald-400 hover:bg-slate-50/50'
           }`}
         >
           <input
@@ -236,7 +236,7 @@ export default function BulkImportActivities({ onImport, onCancel }) {
             id="csv-file-input"
           />
           <div className="flex flex-col items-center justify-center space-y-3">
-            <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shadow-xs">
+            <div className="h-12 w-12 rounded-full bg-emerald-50 text-[#14532D] flex items-center justify-center shadow-xs">
               <Upload className="h-6 w-6" />
             </div>
             <div className="space-y-1">
@@ -252,7 +252,7 @@ export default function BulkImportActivities({ onImport, onCancel }) {
               variant="default"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
-              className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 cursor-pointer"
+              className="gap-1.5 bg-[#14532D] hover:bg-[#1B6B45] text-white text-xs font-semibold px-4 cursor-pointer"
             >
               <FileSpreadsheet className="h-3.5 w-3.5" />
               <span>Browse CSV File</span>
@@ -277,7 +277,7 @@ export default function BulkImportActivities({ onImport, onCancel }) {
             placeholder={`Title,Category,Status,Priority,Date,TargetURL,Notes
 "Optimized core metadata & schema","On-Page SEO","Completed","High","2026-10-24","https://boulderdecisions.com/","Updated meta tags"
 "Fixed crawl 404 errors","Technical SEO","In Progress","High","2026-10-24","https://boulderdecisions.com/","Redirected broken links"`}
-            className="w-full rounded-lg border border-slate-200 bg-white p-3 font-mono text-xs text-slate-800 shadow-2xs focus:ring-1 focus:ring-blue-500 outline-none"
+            className="w-full rounded-lg border border-slate-200 bg-white p-3 font-mono text-xs text-slate-800 shadow-2xs focus:ring-1 focus:ring-[#14532D] outline-none"
           />
           <div className="flex justify-end">
             <Button
@@ -285,7 +285,7 @@ export default function BulkImportActivities({ onImport, onCancel }) {
               size="sm"
               disabled={!csvText.trim()}
               onClick={handleParsePasted}
-              className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold cursor-pointer"
+              className="gap-1.5 bg-[#14532D] hover:bg-[#1B6B45] text-white text-xs font-semibold cursor-pointer"
             >
               <ArrowRight className="h-3.5 w-3.5" />
               <span>Preview & Parse Data</span>
@@ -298,7 +298,7 @@ export default function BulkImportActivities({ onImport, onCancel }) {
       {hasParsed && fileName && (
         <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-white">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-md bg-blue-50 text-blue-600">
+            <div className="p-2 rounded-md bg-emerald-50 text-[#14532D]">
               <FileSpreadsheet className="h-4 w-4" />
             </div>
             <div>
@@ -363,7 +363,7 @@ export default function BulkImportActivities({ onImport, onCancel }) {
                   value="append"
                   checked={importMode === 'append'}
                   onChange={() => setImportMode('append')}
-                  className="text-blue-600 focus:ring-blue-500 h-3.5 w-3.5"
+                  className="text-[#14532D] focus:ring-[#14532D] h-3.5 w-3.5"
                 />
                 <span>Append to Existing</span>
               </label>
@@ -374,7 +374,7 @@ export default function BulkImportActivities({ onImport, onCancel }) {
                   value="replace"
                   checked={importMode === 'replace'}
                   onChange={() => setImportMode('replace')}
-                  className="text-blue-600 focus:ring-blue-500 h-3.5 w-3.5"
+                  className="text-[#14532D] focus:ring-[#14532D] h-3.5 w-3.5"
                 />
                 <span>Replace All</span>
               </label>
@@ -407,7 +407,7 @@ export default function BulkImportActivities({ onImport, onCancel }) {
                         <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{act.notes}</p>
                       )}
                       {act.targetUrl && (
-                        <p className="text-[10px] font-mono text-blue-600 truncate mt-0.5 max-w-sm">
+                        <p className="text-[10px] font-mono text-[#14532D] truncate mt-0.5 max-w-sm">
                           {act.targetUrl}
                         </p>
                       )}

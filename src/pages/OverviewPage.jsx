@@ -261,7 +261,7 @@ export default function OverviewPage({ onNavigate }) {
 
         {traffic?.timeOnSiteOrganic && (
           <div className="mt-4 flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-3">
-            <div className="h-9 w-9 rounded-md bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
+            <div className="h-9 w-9 rounded-md bg-emerald-50 text-[#14532D] flex items-center justify-center shrink-0">
               <Clock className="h-4 w-4" />
             </div>
             <div className="flex-1 min-w-0">
@@ -345,7 +345,7 @@ export default function OverviewPage({ onNavigate }) {
       {/* ========================================================================= */}
       <SectionCard
         icon={overviewTab === 'backlinks' ? Link2 : ListChecks}
-        iconClassName={overviewTab === 'backlinks' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}
+        iconClassName={overviewTab === 'backlinks' ? 'bg-emerald-50 text-emerald-600' : 'bg-emerald-50 text-[#14532D]'}
         title="SEO Activities & Backlinks Submissions"
         subtitle={`${totalBacklinks} Total Backlinks • ${totalActivities} Recorded SEO Campaigns & Tasks`}
         actions={
@@ -380,7 +380,7 @@ export default function OverviewPage({ onNavigate }) {
               onClick={() => setOverviewTab('activities')}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                 overviewTab === 'activities'
-                  ? 'bg-blue-600 text-white shadow-2xs'
+                  ? 'bg-[#14532D] text-white shadow-2xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -412,7 +412,7 @@ export default function OverviewPage({ onNavigate }) {
                   overviewCategoryView === 'active'
                     ? overviewTab === 'backlinks'
                       ? 'bg-white text-emerald-800 shadow-2xs'
-                      : 'bg-white text-blue-800 shadow-2xs'
+                      : 'bg-white text-[#14532D] shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -436,12 +436,12 @@ export default function OverviewPage({ onNavigate }) {
               </div>
               <span className="text-xl font-bold text-emerald-900 mt-1 block">{liveBacklinks}</span>
             </div>
-            <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-3 text-center sm:text-left">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-center sm:text-left">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-medium text-blue-800 uppercase tracking-wider block">In Progress</span>
-                <Clock className="h-3.5 w-3.5 text-blue-600 hidden sm:inline" />
+                <span className="text-[11px] font-medium text-emerald-800 uppercase tracking-wider block">In Progress</span>
+                <Clock className="h-3.5 w-3.5 text-emerald-600 hidden sm:inline" />
               </div>
-              <span className="text-xl font-bold text-blue-900 mt-1 block">{inProgressBacklinks}</span>
+              <span className="text-xl font-bold text-emerald-900 mt-1 block">{inProgressBacklinks}</span>
             </div>
             <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 text-center sm:text-left">
               <div className="flex items-center justify-between">
@@ -470,12 +470,12 @@ export default function OverviewPage({ onNavigate }) {
               </div>
               <span className="text-xl font-bold text-emerald-900 mt-1 block">{completedActivities}</span>
             </div>
-            <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-3 text-center sm:text-left">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-center sm:text-left">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-medium text-blue-800 uppercase tracking-wider block">In Progress</span>
-                <Clock className="h-3.5 w-3.5 text-blue-600 hidden sm:inline" />
+                <span className="text-[11px] font-medium text-emerald-800 uppercase tracking-wider block">In Progress</span>
+                <Clock className="h-3.5 w-3.5 text-emerald-600 hidden sm:inline" />
               </div>
-              <span className="text-xl font-bold text-blue-900 mt-1 block">{inProgressActivities}</span>
+              <span className="text-xl font-bold text-emerald-900 mt-1 block">{inProgressActivities}</span>
             </div>
             <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 text-center sm:text-left">
               <div className="flex items-center justify-between">
@@ -491,7 +491,7 @@ export default function OverviewPage({ onNavigate }) {
         <div className="pt-2">
           <div className="flex items-center justify-between gap-2 mb-3">
             <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-              <Layers className={`h-4 w-4 ${overviewTab === 'backlinks' ? 'text-emerald-600' : 'text-blue-600'}`} />
+              <Layers className="h-4 w-4 text-emerald-600" />
               {overviewTab === 'backlinks' ? 'Backlink Categories Breakdown' : 'SEO Activity Categories Breakdown'}
             </span>
           </div>
@@ -503,27 +503,17 @@ export default function OverviewPage({ onNavigate }) {
                 onClick={handleNavigateToActivities}
                 className={`p-3 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-between select-none relative group ${
                   cat.count > 0
-                    ? overviewTab === 'backlinks'
-                      ? 'border-emerald-200/90 bg-white hover:border-emerald-400 hover:shadow-xs'
-                      : 'border-blue-200/90 bg-white hover:border-blue-400 hover:shadow-xs'
+                    ? 'border-emerald-200/90 bg-white hover:border-emerald-400 hover:shadow-xs'
                     : 'border-slate-200/70 bg-slate-50/50 hover:bg-white hover:border-slate-300'
                 }`}
                 title={`Click to view ${cat.name} in SEO Activities`}
               >
                 {cat.count > 0 && (
-                  <span
-                    className={`absolute top-2 right-2 h-2 w-2 rounded-full ${
-                      overviewTab === 'backlinks' ? 'bg-emerald-500' : 'bg-blue-500'
-                    }`}
-                  />
+                  <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-emerald-500" />
                 )}
                 <p
                   className={`text-2xl font-black tracking-tight ${
-                    cat.count > 0
-                      ? overviewTab === 'backlinks'
-                        ? 'text-emerald-600'
-                        : 'text-blue-600'
-                      : 'text-slate-400'
+                    cat.count > 0 ? 'text-emerald-600' : 'text-slate-400'
                   }`}
                 >
                   {cat.count}
@@ -583,7 +573,7 @@ export default function OverviewPage({ onNavigate }) {
                         {b.status === 'Live / Indexed' ? (
                           <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                         ) : b.status === 'In Progress' ? (
-                          <Clock className="h-4 w-4 text-blue-600" />
+                          <Clock className="h-4 w-4 text-emerald-600" />
                         ) : (
                           <Calendar className="h-4 w-4 text-amber-500" />
                         )}
@@ -594,7 +584,7 @@ export default function OverviewPage({ onNavigate }) {
                             href={b.sourceUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="font-semibold text-blue-600 hover:underline text-xs inline-flex items-center gap-1 break-all"
+                            className="font-semibold text-[#14532D] hover:underline text-xs inline-flex items-center gap-1 break-all"
                           >
                             <span>{b.sourceUrl}</span>
                             <ExternalLink className="h-3 w-3 shrink-0" />
@@ -617,7 +607,7 @@ export default function OverviewPage({ onNavigate }) {
                             b.da >= 80
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                               : b.da >= 50
-                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              ? 'bg-emerald-50 text-[#14532D] border border-emerald-200'
                               : 'bg-slate-100 text-slate-700'
                           }`}>
                             DA {b.da}
@@ -644,7 +634,7 @@ export default function OverviewPage({ onNavigate }) {
               <button
                 type="button"
                 onClick={handleNavigateToActivities}
-                className="text-xs text-blue-700 hover:text-blue-800 font-semibold cursor-pointer inline-flex items-center gap-1"
+                className="text-xs text-[#14532D] hover:text-emerald-800 font-semibold cursor-pointer inline-flex items-center gap-1"
               >
                 <span>View all activities ({totalActivities})</span>
                 <ArrowRight className="h-3 w-3" />
@@ -669,7 +659,7 @@ export default function OverviewPage({ onNavigate }) {
                         {a.status === 'Completed' ? (
                           <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                         ) : a.status === 'In Progress' ? (
-                          <Clock className="h-4 w-4 text-blue-600" />
+                          <Clock className="h-4 w-4 text-emerald-600" />
                         ) : (
                           <Calendar className="h-4 w-4 text-amber-500" />
                         )}
@@ -753,7 +743,7 @@ export default function OverviewPage({ onNavigate }) {
 
           {executiveInsights.octoberPriorities && (
             <div className="mt-5 pt-4 border-t border-slate-100">
-              <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+              <p className="text-xs font-semibold text-[#14532D] uppercase tracking-wide mb-2 flex items-center gap-1.5">
                 <Target className="h-3.5 w-3.5" /> Next SEO Priorities
               </p>
               <ol className="space-y-1.5 list-decimal list-inside">

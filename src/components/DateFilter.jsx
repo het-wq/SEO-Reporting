@@ -66,13 +66,13 @@ export default function DateFilter({
                   type="button"
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-sm transition-colors cursor-pointer text-left ${
                     filterType === opt.id
-                      ? 'bg-blue-50 text-blue-700 font-semibold'
+                      ? 'bg-emerald-50 text-[#14532D] font-semibold'
                       : 'text-slate-700 hover:bg-slate-100'
                   }`}
                   onClick={() => handleSelectType(opt.id)}
                 >
                   <span>{opt.label}</span>
-                  {filterType === opt.id && <Check className="h-4 w-4 text-blue-600" />}
+                  {filterType === opt.id && <Check className="h-4 w-4 text-[#14532D]" />}
                 </button>
               ))}
             </div>
@@ -82,7 +82,7 @@ export default function DateFilter({
         {/* Month Picker when 'month_wise' is selected */}
         {filterType === 'month_wise' && (
           <select
-            className="h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-sm text-slate-800 shadow-xs outline-none focus:ring-1 focus:ring-blue-500"
+            className="h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-sm text-slate-800 shadow-xs outline-none focus:ring-1 focus:ring-[#14532D]"
             value={filterParams.month || '2026-10'}
             onChange={(e) => onFilterParamsChange({ ...filterParams, month: e.target.value })}
           >
