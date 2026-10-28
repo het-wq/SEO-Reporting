@@ -6,6 +6,7 @@ import {
   Settings,
   Calendar,
   RotateCcw,
+  ServerOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -70,7 +71,42 @@ export default function NoReportData({ customMessage }) {
     );
   }
 
-  // 2. Case: Not connected to Google
+  // 2. Case: Backend API server is offline
+  const isBackendOffline = errorObj?.status === 'backend_offline' || backendHealth?.status === 'offline';
+  if (isBackendOffline) {
+    return (
+      <Card className="border-red-200 bg-red-50/60 shadow-xs my-8 max-w-lg mx-auto">
+        <CardContent className="py-9 px-6 text-center space-y-4">
+          <div className="h-14 w-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto ring-8 ring-red-50">
+            <ServerOff className="h-7 w-7" />
+          </div>
+
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-slate-900">
+              Backend API Server Offline (Port 5001)
+            </h3>
+            <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
+              Cannot connect to the backend server at <code className="bg-white px-1.5 py-0.5 rounded border border-red-200 text-red-700">http://localhost:5001</code>.
+              Please start both servers with <code className="bg-white px-1.5 py-0.5 rounded border border-red-200 text-red-700 font-semibold">npm run dev</code> in your terminal.
+            </p>
+          </div>
+
+          <div className="pt-2 flex justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refresh}
+              className="gap-1.5 text-xs bg-white text-slate-700 hover:bg-slate-50 cursor-pointer"
+            >
+              <RotateCcw className="h-3.5 w-3.5" /> <span>Retry Connection</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // 3. Case: Not connected to Google
   if (!backendHealth.hasToken) {
     return (
       <Card className="border-dashed border-2 border-slate-200 bg-white shadow-none my-8 max-w-lg mx-auto">

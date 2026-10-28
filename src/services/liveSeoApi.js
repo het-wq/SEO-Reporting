@@ -124,14 +124,21 @@ export const checkBackendHealth = async () => {
 };
 
 export const getGoogleAuthUrl = async () => {
-  const res = await fetch(`${BACKEND_BASE}/api/auth/google/url`, {
-    credentials: 'include',
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.message || data.error || 'Failed to generate Google OAuth URL');
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/auth/google/url`, {
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || data.error || 'Failed to generate Google OAuth URL');
+    }
+    return data;
+  } catch (err) {
+    if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+      throw new Error('Backend API server is offline (http://localhost:5001). Please run "npm run dev" to start both the backend server and frontend.');
+    }
+    throw err;
   }
-  return data;
 };
 
 export const disconnectGoogleAuth = async () => {
@@ -214,32 +221,41 @@ export const fetchDashboardLiveReport = async ({
     ? (Array.isArray(nonBrandTerms) ? nonBrandTerms : String(nonBrandTerms).split(',').map((s) => s.trim()).filter(Boolean))
     : (cfg.nonBrandKeywords ? cfg.nonBrandKeywords.split(',').map((s) => s.trim()).filter(Boolean) : undefined);
 
-  const res = await fetch(`${BACKEND_BASE}/api/dashboard/live-report`, {
-    method: 'POST',
-    headers: getHeaders(),
-    credentials: 'include',
-    body: JSON.stringify({
-      startDate,
-      endDate,
-      prevStartDate: prevStartDate || undefined,
-      prevEndDate: prevEndDate || undefined,
-      propertyId: cfg.ga4PropertyId,
-      siteUrl: cfg.gscSiteUrl,
-      brandTerms: effectiveBrandTerms,
-      nonBrandTerms: effectiveNonBrandTerms,
-      periodLabel,
-      previousPeriodLabel,
-      forceRefresh,
-    }),
-  });
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/dashboard/live-report`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({
+        startDate,
+        endDate,
+        prevStartDate: prevStartDate || undefined,
+        prevEndDate: prevEndDate || undefined,
+        propertyId: cfg.ga4PropertyId,
+        siteUrl: cfg.gscSiteUrl,
+        brandTerms: effectiveBrandTerms,
+        nonBrandTerms: effectiveNonBrandTerms,
+        periodLabel,
+        previousPeriodLabel,
+        forceRefresh,
+      }),
+    });
 
-  const body = await res.json();
-  if (!res.ok) {
-    const err = new Error(body.message || body.error || `HTTP ${res.status}`);
-    err.status = body.status;
-    err.actionUrl = body.actionUrl;
-    err.actionLabel = body.actionLabel;
+    const body = await res.json();
+    if (!res.ok) {
+      const err = new Error(body.message || body.error || `HTTP ${res.status}`);
+      err.status = body.status;
+      err.actionUrl = body.actionUrl;
+      err.actionLabel = body.actionLabel;
+      throw err;
+    }
+    return body;
+  } catch (err) {
+    if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+      const offlineErr = new Error('Backend API server is offline (cannot reach http://localhost:5001). Please run "npm run dev" to start both the server and frontend.');
+      offlineErr.status = 'backend_offline';
+      throw offlineErr;
+    }
     throw err;
   }
-  return body;
 };

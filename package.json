@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "start": "concurrently \"node server.js\" \"vite\"",
+    "dev": "concurrently \"node server.js\" \"vite\"",
     "dev:all": "concurrently \"node server.js\" \"vite\"",
-    "dev": "vite",
+    "dev:frontend": "vite",
+    "dev:server": "node server.js",
     "server": "node server.js",
     "build": "vite build",
     "lint": "oxlint",
