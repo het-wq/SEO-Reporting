@@ -164,7 +164,7 @@ export const getLiveDashboardReport = async ({
 
   // 4. Fetch Local SEO, Backlinks, AI Citations
   const [localSeo, backlinks, aiCitations] = await Promise.all([
-    getLocalSeoOverview(),
+    getLocalSeoOverview({ startDate, endDate, prevStartDate, prevEndDate, req, auth }),
     getBacklinksOverview(),
     getAiVisibilityOverview(),
   ]);

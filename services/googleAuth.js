@@ -17,6 +17,7 @@ export const getClientSecret = () => process.env.GOOGLE_CLIENT_SECRET;
 export const REQUIRED_SCOPES = [
   'https://www.googleapis.com/auth/webmasters.readonly',
   'https://www.googleapis.com/auth/analytics.readonly',
+  'https://www.googleapis.com/auth/business.manage',
 ];
 
 // In-memory cache of tokens
@@ -263,13 +264,30 @@ export const classifyGoogleError = (error, provider = 'Google API') => {
   const msg = error?.message || String(error);
   const code = error?.code || error?.status || 500;
 
+  if (msg.includes('insufficient authentication scopes') || msg.includes('ACCESS_TOKEN_SCOPE_INSUFFICIENT')) {
+    return {
+      status: 'scope_insufficient',
+      code: 403,
+      message: 'Active Google login token does not have Google Business Profile permissions. Please click "Re-authorize" to grant Business Profile access.',
+      actionLabel: 'Re-authorize Google Account',
+      originalError: msg,
+    };
+  }
+
   if (msg.includes('has not been used in project') || msg.includes('disabled')) {
     const projectMatch = msg.match(/project[ =](\d+)/i) || msg.match(/(\d{8,})/);
     const projectId = projectMatch ? projectMatch[1] : 'your project';
     const isGsc = msg.includes('searchconsole');
-    const apiName = isGsc ? 'Google Search Console API' : 'Google Analytics Data API';
+    const isGbp = msg.includes('businessprofileperformance') || msg.includes('mybusiness');
+    const apiName = isGsc
+      ? 'Google Search Console API'
+      : isGbp
+      ? 'Google Business Profile Performance API'
+      : 'Google Analytics Data API';
     const actionUrl = isGsc
       ? `https://console.developers.google.com/apis/api/searchconsole.googleapis.com/overview?project=${projectId}`
+      : isGbp
+      ? `https://console.developers.google.com/apis/api/businessprofileperformance.googleapis.com/overview?project=${projectId}`
       : `https://console.developers.google.com/apis/api/analyticsdata.googleapis.com/overview?project=${projectId}`;
 
     return {

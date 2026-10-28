@@ -316,12 +316,19 @@ export const testIntegration = async (providerId, req) => {
   }
 
   if (providerId === 'localSeo') {
-    const res = await getLocalSeoOverview();
+    const res = await getLocalSeoOverview({ req: extraParams?.req });
+    const isSuccess = Boolean(res.connected || (res.configured && !res.requiresReauth));
     return {
-      success: res.configured,
+      success: isSuccess,
       status: res.status,
-      message: res.configured ? `Connected to ${res.provider}` : res.description,
+      message: res.requiresReauth
+        ? res.description
+        : res.connected
+        ? `Connected: ${res.provider} (${res.location?.title || 'Active'})`
+        : res.description,
       instructions: res.instructions,
+      actionLabel: res.actionLabel,
+      location: res.location,
     };
   }
 

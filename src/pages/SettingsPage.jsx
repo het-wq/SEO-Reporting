@@ -342,28 +342,56 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Card 4: Local SEO Provider */}
+        {/* Card 4: Local SEO & Google Business Profile Performance */}
         <Card className="border-slate-200 shadow-xs flex flex-col justify-between md:col-span-2">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-[#14532D]" />
-                <CardTitle className="text-sm font-bold text-slate-900">Local SEO & Geo-Grid Tracker</CardTitle>
+                <CardTitle className="text-sm font-bold text-slate-900">
+                  Google Business Profile Performance API &amp; Local SEO
+                </CardTitle>
               </div>
-              <Badge variant="outline" className="text-[10px]">BrightLocal / GBP</Badge>
+              <Badge variant={isGoogleConnected ? 'success' : 'secondary'} className="text-[10px]">
+                {isGoogleConnected ? 'API Active' : 'Login Required'}
+              </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-3 pt-0">
             <p className="text-xs text-slate-600 leading-relaxed">
-              Google Maps 3x3 ranking maps require a local rank tracking provider API. Local organic search queries from Google Search Console are actively displayed in the Keyword Rankings tab.
+              Google Business Profile Performance API (<code>businessprofileperformance.googleapis.com</code>) delivers real customer telemetry on Google Maps impressions, Search impressions, website visits, phone calls, and direction clicks directly to the Local SEO tab.
             </p>
+
+            {testResults.localSeo && (
+              <div
+                className={`p-2.5 rounded text-xs ${
+                  testResults.localSeo.result?.success
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    : 'bg-amber-50 text-amber-800 border border-amber-200'
+                }`}
+              >
+                <p className="font-semibold">{testResults.localSeo.result?.message}</p>
+                {testResults.localSeo.result?.actionLabel && (
+                  <button
+                    type="button"
+                    onClick={handleStartGoogleOAuth}
+                    className="underline font-bold block mt-1 cursor-pointer"
+                  >
+                    {testResults.localSeo.result.actionLabel} →
+                  </button>
+                )}
+              </div>
+            )}
+
             <Button
               variant="outline"
               size="sm"
               onClick={() => runTest('localSeo')}
+              disabled={testResults.localSeo?.testing}
               className="w-full text-xs font-semibold bg-slate-50 hover:bg-slate-100"
             >
-              <span>Check Local SEO Status</span>
+              {testResults.localSeo?.testing ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+              <span>Test Google Business Profile Connection</span>
             </Button>
           </CardContent>
         </Card>
