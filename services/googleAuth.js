@@ -25,6 +25,26 @@ let inMemoryTokens = null;
 
 export const loadStoredTokens = () => {
   if (inMemoryTokens) return inMemoryTokens;
+
+  // 1. Check environment variables (ideal for persistent Vercel deployment)
+  if (process.env.GOOGLE_TOKENS_JSON) {
+    try {
+      inMemoryTokens = JSON.parse(process.env.GOOGLE_TOKENS_JSON);
+      return inMemoryTokens;
+    } catch (err) {
+      console.error('Error parsing GOOGLE_TOKENS_JSON from env:', err.message);
+    }
+  }
+
+  if (process.env.GOOGLE_REFRESH_TOKEN) {
+    inMemoryTokens = {
+      refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+      access_token: process.env.GOOGLE_ACCESS_TOKEN || undefined,
+    };
+    return inMemoryTokens;
+  }
+
+  // 2. Check disk tokens.json file
   try {
     if (fs.existsSync(TOKENS_FILE)) {
       const data = fs.readFileSync(TOKENS_FILE, 'utf-8');
