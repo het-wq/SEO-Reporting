@@ -4,6 +4,7 @@ import { getBacklinksOverview } from './backlinksService.js';
 import { getLocalSeoOverview } from './localSeoService.js';
 import { getAiVisibilityOverview } from './aiVisibilityService.js';
 import { parseBrandTerms } from './brandAnalysisService.js';
+import { listGscSites } from './gscService.js';
 
 // Records last successful check timestamps and statuses
 const integrationTelemetry = {
@@ -343,4 +344,165 @@ export const testIntegration = async (providerId, req) => {
   }
 
   return { success: false, message: `Unknown provider: ${providerId}` };
+};
+
+/**
+ * Retrieve discovered Google Analytics accounts, GA4 properties, Search Console sites,
+ * and unified account profiles for the authenticated Google user.
+ */
+export const getGoogleAccounts = async (req) => {
+  const auth = getAuth(req);
+  if (!auth) {
+    return {
+      authenticated: false,
+      message: 'Not authenticated with Google',
+      accounts: [],
+      ga4Accounts: [],
+      gscSites: [],
+      userProfile: null,
+    };
+  }
+
+  let userProfile = null;
+  try {
+    const oauth2 = google.oauth2({ version: 'v2', auth });
+    const uRes = await oauth2.userinfo.get();
+    if (uRes?.data) {
+      userProfile = {
+        email: uRes.data.email || null,
+        name: uRes.data.name || null,
+        picture: uRes.data.picture || null,
+      };
+    }
+  } catch {
+    // Scope might not include userinfo on existing tokens, ignore
+  }
+
+  let ga4Accounts = [];
+  let ga4Error = null;
+  try {
+    const analyticsadmin = google.analyticsadmin({ version: 'v1beta', auth });
+    const res = await analyticsadmin.accountSummaries.list({ pageSize: 200 });
+    const summaries = res.data?.accountSummaries || [];
+    ga4Accounts = summaries.map((acc) => ({
+      accountId: acc.account ? acc.account.replace(/^accounts\//, '') : '',
+      accountName: acc.displayName || 'Google Analytics Account',
+      properties: (acc.propertySummaries || []).map((p) => ({
+        propertyId: p.property ? p.property.replace(/^properties\//, '') : '',
+        propertyName: p.displayName || 'GA4 Property',
+        propertyType: p.propertyType,
+      })),
+    }));
+  } catch (err) {
+    ga4Error = classifyGoogleError(err, 'Google Analytics Admin');
+  }
+
+  let gscSites = [];
+  let gscError = null;
+  try {
+    const rawSites = await listGscSites(auth);
+    gscSites = (rawSites || []).map((s) => ({
+      siteUrl: s.siteUrl,
+      permissionLevel: s.permissionLevel || 'Verified',
+    }));
+  } catch (err) {
+    gscError = classifyGoogleError(err, 'Google Search Console');
+  }
+
+  // Construct unified accounts list
+  const accounts = [];
+  const matchedGscUrls = new Set();
+
+  const normalizeDomain = (str) => {
+    return (str || '')
+      .toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/^sc-domain:/, '')
+      .replace(/\/$/, '')
+      .replace(/^www\./, '');
+  };
+
+  // 1. From GA4 Properties
+  for (const acc of ga4Accounts) {
+    for (const prop of acc.properties) {
+      const propNorm = normalizeDomain(prop.propertyName);
+      const accNorm = normalizeDomain(acc.accountName);
+
+      // Try finding matching GSC site
+      let matchedGsc = gscSites.find((s) => {
+        const sNorm = normalizeDomain(s.siteUrl);
+        return (
+          (sNorm && propNorm && (sNorm.includes(propNorm) || propNorm.includes(sNorm))) ||
+          (sNorm && accNorm && (sNorm.includes(accNorm) || accNorm.includes(sNorm)))
+        );
+      });
+
+      if (!matchedGsc && gscSites.length > 0) {
+        if (gscSites.length === 1) matchedGsc = gscSites[0];
+      }
+
+      if (matchedGsc) {
+        matchedGscUrls.add(matchedGsc.siteUrl);
+      }
+
+      accounts.push({
+        id: `ga4-${prop.propertyId}`,
+        name: `${acc.accountName} - ${prop.propertyName}`,
+        accountName: acc.accountName,
+        propertyName: prop.propertyName,
+        ga4PropertyId: prop.propertyId,
+        gscSiteUrl: matchedGsc ? matchedGsc.siteUrl : (process.env.GSC_SITE_URL || 'https://boulderdecisions.com/'),
+        brandKeywords: acc.accountName,
+        source: matchedGsc ? 'matched' : 'ga4',
+      });
+    }
+  }
+
+  // 2. From unmatched GSC Sites
+  for (const site of gscSites) {
+    if (!matchedGscUrls.has(site.siteUrl)) {
+      const cleanName = site.siteUrl
+        .replace(/^https?:\/\//, '')
+        .replace(/^sc-domain:/, '')
+        .replace(/\/$/, '');
+
+      accounts.push({
+        id: `gsc-${encodeURIComponent(site.siteUrl)}`,
+        name: cleanName,
+        accountName: cleanName,
+        propertyName: site.siteUrl,
+        ga4PropertyId: process.env.GA4_PROPERTY_ID || '516707960',
+        gscSiteUrl: site.siteUrl,
+        brandKeywords: cleanName.split('.')[0] || 'Brand',
+        source: 'gsc',
+      });
+    }
+  }
+
+  // 3. Always include default configured account if accounts list is empty or doesn't have Boulder Decision
+  const hasBoulder = accounts.some(
+    (a) => a.accountName?.toLowerCase().includes('boulder') || a.gscSiteUrl?.toLowerCase().includes('boulder')
+  );
+  if (!hasBoulder) {
+    accounts.unshift({
+      id: 'default-boulder-decision',
+      name: 'Boulder Decision',
+      accountName: 'Boulder Decision',
+      propertyName: 'Boulder Decision Web',
+      ga4PropertyId: process.env.GA4_PROPERTY_ID || '516707960',
+      gscSiteUrl: process.env.GSC_SITE_URL || 'https://boulderdecisions.com/',
+      brandKeywords: 'Boulder Decision,Boulder Decisions,boulderdecision,boulderdecisions,boulder decisions',
+      source: 'default',
+    });
+  }
+
+  return {
+    authenticated: true,
+    userProfile,
+    accounts,
+    ga4Accounts,
+    gscSites,
+    ga4Error,
+    gscError,
+  };
 };

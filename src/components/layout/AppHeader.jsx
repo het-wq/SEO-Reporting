@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, RefreshCw, Download, Printer, ChevronRight, User, AlertCircle, LogOut } from 'lucide-react';
+import { Menu, RefreshCw, Download, Printer, ChevronRight, AlertCircle, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,7 +14,7 @@ import { useReport } from '@/context/ReportContext';
 import { useAuth } from '@/context/AuthContext';
 
 export default function AppHeader({ pageTitle, onOpenMobileSidebar, onExportCsv }) {
-  const { comparisonLabel, loading, error, refresh } = useReport();
+  const { comparisonLabel, loading, error, refresh, clientName } = useReport();
   const { user, signOut } = useAuth();
 
   return (
@@ -31,7 +31,7 @@ export default function AppHeader({ pageTitle, onOpenMobileSidebar, onExportCsv 
 
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 text-xs text-[#6B7280]">
-              <span className="font-medium">Boulder Decision</span>
+              <span className="font-medium">{clientName || 'Boulder Decision'}</span>
               <ChevronRight className="h-3 w-3 text-[#9CA3AF]" />
               <span className="font-semibold text-[#111827]">{pageTitle}</span>
             </div>

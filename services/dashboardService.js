@@ -19,6 +19,7 @@ export const getLiveDashboardReport = async ({
   prevEndDate,
   propertyId: overridePropId,
   siteUrl: overrideSiteUrl,
+  clientName: overrideClientName,
   brandTerms: overrideBrandTerms,
   nonBrandTerms: overrideNonBrandTerms,
   periodLabel,
@@ -31,7 +32,8 @@ export const getLiveDashboardReport = async ({
 
   const brandKey = Array.isArray(overrideBrandTerms) ? overrideBrandTerms.join(',') : (overrideBrandTerms || '');
   const nonBrandKey = Array.isArray(overrideNonBrandTerms) ? overrideNonBrandTerms.join(',') : (overrideNonBrandTerms || '');
-  const cacheKey = `${startDate}_${endDate}_${prevStartDate}_${prevEndDate}_${ga4PropertyId}_${gscSiteUrl}_${brandKey}_${nonBrandKey}`;
+  const clientKey = overrideClientName || '';
+  const cacheKey = `${startDate}_${endDate}_${prevStartDate}_${prevEndDate}_${ga4PropertyId}_${gscSiteUrl}_${clientKey}_${brandKey}_${nonBrandKey}`;
   if (!forceRefresh && cache.has(cacheKey)) {
     const cached = cache.get(cacheKey);
     if (Date.now() - cached.timestamp < CACHE_TTL_MS) {
@@ -264,7 +266,7 @@ export const getLiveDashboardReport = async ({
 
   const report = {
     id: `live-${startDate}-${endDate}`,
-    client: process.env.CLIENT_NAME || 'Boulder Decision',
+    client: overrideClientName || process.env.CLIENT_NAME || 'Boulder Decision',
     isLive: true,
     period: periodLabel || `${startDate} to ${endDate}`,
     previousPeriod: previousPeriodLabel || `${prevStartDate} to ${prevEndDate}`,

@@ -3,6 +3,7 @@ import {
   fetchDashboardLiveReport,
   fetchIntegrationsStatus,
   checkBackendHealth,
+  getApiConfig,
 } from '@/services/liveSeoApi';
 import {
   calculateDateRanges,
@@ -157,7 +158,7 @@ export function ReportProvider({ children }) {
     report,
     hasReportData: Boolean(report && (report.traffic?.hasData || report.searchConsole?.hasData)),
     isLive: true,
-    clientName: report?.client || 'Boulder Decision',
+    clientName: report?.client || getApiConfig()?.selectedAccountName || 'Boulder Decision',
     loading,
     error,
     dateRangeInfo,

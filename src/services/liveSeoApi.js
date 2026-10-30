@@ -10,6 +10,9 @@ export const defaultConfig = {
   nonBrandKeywords: '',
   apiToken: '',
   googleConnected: false,
+  selectedAccountId: 'default',
+  selectedAccountName: 'Boulder Decision',
+  savedAccounts: [],
 };
 
 export const getCookie = (name) => {
@@ -233,6 +236,7 @@ export const fetchDashboardLiveReport = async ({
         prevEndDate: prevEndDate || undefined,
         propertyId: cfg.ga4PropertyId,
         siteUrl: cfg.gscSiteUrl,
+        clientName: cfg.selectedAccountName || undefined,
         brandTerms: effectiveBrandTerms,
         nonBrandTerms: effectiveNonBrandTerms,
         periodLabel,
@@ -258,4 +262,49 @@ export const fetchDashboardLiveReport = async ({
     }
     throw err;
   }
+};
+
+/**
+ * Fetch all discovered Google accounts, GA4 properties, and Search Console sites
+ */
+export const fetchGoogleAccounts = async () => {
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/integrations/google-accounts`, {
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || err.error || `HTTP ${res.status}: Failed to fetch Google accounts`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn('fetchGoogleAccounts warning:', err.message);
+    return {
+      authenticated: false,
+      accounts: [],
+      ga4Accounts: [],
+      gscSites: [],
+      error: err.message,
+    };
+  }
+};
+
+/**
+ * Switches the active connected account, saving GA4 Property ID, Search Console URL,
+ * and account identifiers to sync data across the entire dashboard.
+ */
+export const switchConnectedAccount = (account) => {
+  if (!account) return getApiConfig();
+  const current = getApiConfig();
+  const updates = {
+    selectedAccountId: account.id || account.ga4PropertyId || account.gscSiteUrl || 'custom',
+    selectedAccountName: account.accountName || account.name || 'Connected Account',
+    ga4PropertyId: account.ga4PropertyId !== undefined ? account.ga4PropertyId : current.ga4PropertyId,
+    gscSiteUrl: account.gscSiteUrl !== undefined ? account.gscSiteUrl : current.gscSiteUrl,
+  };
+  if (account.brandKeywords) {
+    updates.brandKeywords = account.brandKeywords;
+  }
+  return saveApiConfig(updates);
 };

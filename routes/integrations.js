@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllIntegrationsStatus, testIntegration } from '../services/integrationsService.js';
+import { getAllIntegrationsStatus, testIntegration, getGoogleAccounts } from '../services/integrationsService.js';
 import { clearStoredTokens, saveStoredTokens, clearAuthCookie } from '../services/googleAuth.js';
 
 const router = express.Router();
@@ -9,6 +9,16 @@ router.get('/status', async (req, res) => {
   try {
     const status = await getAllIntegrationsStatus(req);
     res.json(status);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/integrations/google-accounts
+router.get('/google-accounts', async (req, res) => {
+  try {
+    const data = await getGoogleAccounts(req);
+    res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

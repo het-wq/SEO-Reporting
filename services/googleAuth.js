@@ -18,6 +18,8 @@ export const REQUIRED_SCOPES = [
   'https://www.googleapis.com/auth/webmasters.readonly',
   'https://www.googleapis.com/auth/analytics.readonly',
   'https://www.googleapis.com/auth/business.manage',
+  'https://www.googleapis.com/auth/userinfo.email',
+  'https://www.googleapis.com/auth/userinfo.profile',
 ];
 
 // In-memory cache of tokens
@@ -299,15 +301,20 @@ export const classifyGoogleError = (error, provider = 'Google API') => {
     const projectId = projectMatch ? projectMatch[1] : 'your project';
     const isGsc = msg.includes('searchconsole');
     const isGbp = msg.includes('businessprofileperformance') || msg.includes('mybusiness');
+    const isAdmin = msg.includes('analyticsadmin');
     const apiName = isGsc
       ? 'Google Search Console API'
       : isGbp
       ? 'Google Business Profile Performance API'
+      : isAdmin
+      ? 'Google Analytics Admin API'
       : 'Google Analytics Data API';
     const actionUrl = isGsc
       ? `https://console.developers.google.com/apis/api/searchconsole.googleapis.com/overview?project=${projectId}`
       : isGbp
       ? `https://console.developers.google.com/apis/api/businessprofileperformance.googleapis.com/overview?project=${projectId}`
+      : isAdmin
+      ? `https://console.developers.google.com/apis/api/analyticsadmin.googleapis.com/overview?project=${projectId}`
       : `https://console.developers.google.com/apis/api/analyticsdata.googleapis.com/overview?project=${projectId}`;
 
     return {
