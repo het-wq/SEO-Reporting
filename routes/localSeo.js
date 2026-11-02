@@ -5,12 +5,17 @@ const router = express.Router();
 
 const handleOverview = async (req, res) => {
   try {
-    const { startDate, endDate, prevStartDate, prevEndDate } = { ...(req.query || {}), ...(req.body || {}) };
+    const { startDate, endDate, prevStartDate, prevEndDate, locationId, locationName } = {
+      ...(req.query || {}),
+      ...(req.body || {}),
+    };
     const data = await getLocalSeoOverview({
       startDate,
       endDate,
       prevStartDate,
       prevEndDate,
+      locationId,
+      locationName,
       req,
     });
     res.json(data);

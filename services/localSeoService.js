@@ -228,6 +228,8 @@ export const getLocalSeoOverview = async ({
   endDate = '2026-10-24',
   prevStartDate = '2026-09-01',
   prevEndDate = '2026-09-24',
+  locationId = null,
+  locationName = null,
   req = null,
   auth: customAuth = null,
 } = {}) => {
@@ -252,8 +254,29 @@ export const getLocalSeoOverview = async ({
     try {
       const locationRes = await listGbpLocations(req, auth);
 
-      // If scope grant is needed (current token lacks business.manage)
-      if (locationRes.requiresReauth) {
+      // Determine target location: explicit locationId > configuredLocationId > discovered locations[0]
+      const effectiveLocId = locationId || configuredLocationId || null;
+      let targetLocation = null;
+
+      if (effectiveLocId) {
+        const normalizedId = effectiveLocId.startsWith('locations/') ? effectiveLocId : `locations/${effectiveLocId}`;
+        const found = (locationRes.locations || []).find(
+          (loc) => loc.name === normalizedId || loc.name === effectiveLocId || loc.name?.endsWith(`/${effectiveLocId}`)
+        );
+        if (found) {
+          targetLocation = found;
+        } else {
+          targetLocation = {
+            name: normalizedId,
+            title: locationName || 'Selected Business Location',
+          };
+        }
+      } else if (locationRes.locations && locationRes.locations.length > 0) {
+        targetLocation = locationRes.locations[0];
+      }
+
+      // If scope grant is needed (current token lacks business.manage) and no explicit location was queried
+      if (locationRes.requiresReauth && !targetLocation) {
         return {
           configured: true,
           connected: false,
@@ -266,6 +289,7 @@ export const getLocalSeoOverview = async ({
           actionLabel: 'Re-authorize Google Account',
           cloudApiEnabled: true,
           location: null,
+          availableLocations: [],
           metrics: {
             totalImpressions: { current: 0, previous: 0, diffPct: 0, improvement: null },
             mapsImpressions: { current: 0, previous: 0, diffPct: 0, improvement: null },
@@ -277,11 +301,6 @@ export const getLocalSeoOverview = async ({
           dailyTrends: [],
         };
       }
-
-      // If locations found or explicitly configured
-      const targetLocation =
-        (locationRes.locations && locationRes.locations.length > 0 && locationRes.locations[0]) ||
-        (configuredLocationId ? { name: configuredLocationId.startsWith('locations/') ? configuredLocationId : `locations/${configuredLocationId}`, title: 'Boulder Decisions' } : null);
 
       if (targetLocation && targetLocation.name) {
         try {
@@ -300,8 +319,8 @@ export const getLocalSeoOverview = async ({
             status: 'connected',
             location: {
               name: targetLocation.name,
-              title: targetLocation.title || 'Boulder Decisions',
-              websiteUri: targetLocation.websiteUri || 'https://boulderdecisions.com/',
+              title: targetLocation.title || locationName || 'Business Location',
+              websiteUri: targetLocation.websiteUri || null,
               phoneNumbers: targetLocation.phoneNumbers || null,
               storefrontAddress: targetLocation.storefrontAddress || null,
             },
@@ -331,6 +350,7 @@ export const getLocalSeoOverview = async ({
             classified,
             cloudApiEnabled: true,
             location: targetLocation,
+            availableLocations: locationRes.locations || [],
             metrics: {
               totalImpressions: { current: 0, previous: 0, diffPct: 0, improvement: null },
               mapsImpressions: { current: 0, previous: 0, diffPct: 0, improvement: null },

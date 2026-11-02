@@ -1,7 +1,7 @@
 import { getAuth, getAuthStatus, classifyGoogleError } from './googleAuth.js';
 import { google } from 'googleapis';
 import { getBacklinksOverview } from './backlinksService.js';
-import { getLocalSeoOverview } from './localSeoService.js';
+import { getLocalSeoOverview, listGbpLocations } from './localSeoService.js';
 import { getAiVisibilityOverview } from './aiVisibilityService.js';
 import { parseBrandTerms } from './brandAnalysisService.js';
 import { listGscSites } from './gscService.js';
@@ -317,7 +317,9 @@ export const testIntegration = async (providerId, req) => {
   }
 
   if (providerId === 'localSeo') {
-    const res = await getLocalSeoOverview({ req: extraParams?.req });
+    const locationId = extraParams?.locationId || extraParams?.req?.body?.locationId || null;
+    const locationName = extraParams?.locationName || extraParams?.req?.body?.locationName || null;
+    const res = await getLocalSeoOverview({ locationId, locationName, req: extraParams?.req });
     const isSuccess = Boolean(res.connected || (res.configured && !res.requiresReauth));
     return {
       success: isSuccess,
@@ -330,6 +332,7 @@ export const testIntegration = async (providerId, req) => {
       instructions: res.instructions,
       actionLabel: res.actionLabel,
       location: res.location,
+      availableLocations: res.availableLocations || [],
     };
   }
 
@@ -347,8 +350,73 @@ export const testIntegration = async (providerId, req) => {
 };
 
 /**
+ * Derives appropriate brand search keywords for an account based on its name, property, or site URL.
+ * Never produces Boulder Decision keywords unless the account is actually Boulder Decision.
+ */
+export const deriveAccountBrandKeywords = ({ accountName, propertyName, siteUrl }) => {
+  const isBoulder =
+    (accountName && accountName.toLowerCase().includes('boulder')) ||
+    (propertyName && propertyName.toLowerCase().includes('boulder')) ||
+    (siteUrl && siteUrl.toLowerCase().includes('boulder'));
+
+  if (isBoulder) {
+    return 'Boulder Decision, Boulder Decisions, boulderdecision, boulderdecisions, boulder decisions';
+  }
+
+  const terms = new Set();
+
+  if (accountName) {
+    const clean = accountName.replace(/^accounts\//, '').trim();
+    if (clean && !/^\d+$/.test(clean)) {
+      terms.add(clean);
+      const parts = clean.split(/[\s\-_|:]+/).filter((p) => p.length > 2);
+      if (parts.length > 1) {
+        terms.add(parts.join(' '));
+        terms.add(parts.join(''));
+      }
+    }
+  }
+
+  if (propertyName) {
+    const clean = propertyName.replace(/^properties\//, '').trim();
+    if (clean && !/^\d+$/.test(clean)) {
+      terms.add(clean);
+      const parts = clean.split(/[\s\-_|:]+/).filter((p) => p.length > 2);
+      if (parts.length > 1) {
+        terms.add(parts.join(' '));
+        terms.add(parts.join(''));
+      }
+    }
+  }
+
+  if (siteUrl) {
+    const cleanDomain = siteUrl
+      .toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/^sc-domain:/, '')
+      .replace(/\/.*$/, '')
+      .replace(/^www\./, '');
+
+    const domainBase = cleanDomain.split('.')[0];
+    if (domainBase && domainBase.length > 2) {
+      terms.add(domainBase);
+      const spaced = domainBase.replace(/[-_]/g, ' ');
+      if (spaced !== domainBase) {
+        terms.add(spaced);
+      }
+    }
+  }
+
+  if (terms.size === 0) {
+    return accountName && !/^\d+$/.test(accountName) ? accountName : (propertyName || 'Brand');
+  }
+
+  return Array.from(terms).join(', ');
+};
+
+/**
  * Retrieve discovered Google Analytics accounts, GA4 properties, Search Console sites,
- * and unified account profiles for the authenticated Google user.
+ * Google Business Profile locations, and unified account profiles for the authenticated Google user.
  */
 export const getGoogleAccounts = async (req) => {
   const auth = getAuth(req);
@@ -359,6 +427,8 @@ export const getGoogleAccounts = async (req) => {
       accounts: [],
       ga4Accounts: [],
       gscSites: [],
+      gbpLocations: [],
+      gbpAccounts: [],
       userProfile: null,
     };
   }
@@ -409,6 +479,28 @@ export const getGoogleAccounts = async (req) => {
     gscError = classifyGoogleError(err, 'Google Search Console');
   }
 
+  let gbpLocations = [];
+  let gbpAccounts = [];
+  let gbpRequiresReauth = false;
+  let gbpError = null;
+  try {
+    const gbpRes = await listGbpLocations(req, auth);
+    gbpLocations = (gbpRes.locations || []).map((loc) => ({
+      name: loc.name,
+      title: loc.title || 'Business Location',
+      websiteUri: loc.websiteUri || null,
+      phoneNumbers: loc.phoneNumbers || null,
+      storefrontAddress: loc.storefrontAddress || null,
+    }));
+    gbpAccounts = gbpRes.accounts || [];
+    gbpRequiresReauth = Boolean(gbpRes.requiresReauth);
+    if (!gbpRes.success && gbpRes.error) {
+      gbpError = gbpRes.classified || { message: gbpRes.error };
+    }
+  } catch (err) {
+    gbpError = classifyGoogleError(err, 'Google Business Profile');
+  }
+
   // Construct unified accounts list
   const accounts = [];
   const matchedGscUrls = new Set();
@@ -418,8 +510,22 @@ export const getGoogleAccounts = async (req) => {
       .toLowerCase()
       .replace(/^https?:\/\//, '')
       .replace(/^sc-domain:/, '')
-      .replace(/\/$/, '')
+      .replace(/\/.*$/, '')
       .replace(/^www\./, '');
+  };
+
+  // Helper to find matching GBP location
+  const findMatchingGbp = (nameOrDomain) => {
+    if (!nameOrDomain || !gbpLocations.length) return null;
+    const target = normalizeDomain(nameOrDomain);
+    return gbpLocations.find((loc) => {
+      const titleNorm = normalizeDomain(loc.title);
+      const webNorm = normalizeDomain(loc.websiteUri);
+      return (
+        (titleNorm && target && (titleNorm.includes(target) || target.includes(titleNorm))) ||
+        (webNorm && target && (webNorm.includes(target) || target.includes(webNorm)))
+      );
+    });
   };
 
   // 1. From GA4 Properties
@@ -445,6 +551,17 @@ export const getGoogleAccounts = async (req) => {
         matchedGscUrls.add(matchedGsc.siteUrl);
       }
 
+      const matchedGbp =
+        findMatchingGbp(prop.propertyName) ||
+        findMatchingGbp(acc.accountName) ||
+        (matchedGsc ? findMatchingGbp(matchedGsc.siteUrl) : null);
+
+      const brandKeywords = deriveAccountBrandKeywords({
+        accountName: acc.accountName,
+        propertyName: prop.propertyName,
+        siteUrl: matchedGsc?.siteUrl,
+      });
+
       accounts.push({
         id: `ga4-${prop.propertyId}`,
         name: `${acc.accountName} - ${prop.propertyName}`,
@@ -452,7 +569,9 @@ export const getGoogleAccounts = async (req) => {
         propertyName: prop.propertyName,
         ga4PropertyId: prop.propertyId,
         gscSiteUrl: matchedGsc ? matchedGsc.siteUrl : (process.env.GSC_SITE_URL || 'https://boulderdecisions.com/'),
-        brandKeywords: acc.accountName,
+        gbpLocationId: matchedGbp ? matchedGbp.name : '',
+        gbpLocationName: matchedGbp ? matchedGbp.title : '',
+        brandKeywords,
         source: matchedGsc ? 'matched' : 'ga4',
       });
     }
@@ -464,16 +583,40 @@ export const getGoogleAccounts = async (req) => {
       const cleanName = site.siteUrl
         .replace(/^https?:\/\//, '')
         .replace(/^sc-domain:/, '')
-        .replace(/\/$/, '');
+        .replace(/\/.*$/, '');
+
+      const siteNorm = normalizeDomain(site.siteUrl);
+      const matchedGbp = findMatchingGbp(site.siteUrl);
+
+      // Find matching GA4 if any
+      let matchedGa4PropId = '';
+      for (const acc of ga4Accounts) {
+        for (const prop of acc.properties) {
+          const propNorm = normalizeDomain(prop.propertyName);
+          if (propNorm && siteNorm && (propNorm.includes(siteNorm) || siteNorm.includes(propNorm))) {
+            matchedGa4PropId = prop.propertyId;
+            break;
+          }
+        }
+        if (matchedGa4PropId) break;
+      }
+
+      const brandKeywords = deriveAccountBrandKeywords({
+        accountName: cleanName,
+        propertyName: site.siteUrl,
+        siteUrl: site.siteUrl,
+      });
 
       accounts.push({
         id: `gsc-${encodeURIComponent(site.siteUrl)}`,
         name: cleanName,
         accountName: cleanName,
         propertyName: site.siteUrl,
-        ga4PropertyId: process.env.GA4_PROPERTY_ID || '516707960',
+        ga4PropertyId: matchedGa4PropId,
         gscSiteUrl: site.siteUrl,
-        brandKeywords: cleanName.split('.')[0] || 'Brand',
+        gbpLocationId: matchedGbp ? matchedGbp.name : '',
+        gbpLocationName: matchedGbp ? matchedGbp.title : '',
+        brandKeywords,
         source: 'gsc',
       });
     }
@@ -491,7 +634,9 @@ export const getGoogleAccounts = async (req) => {
       propertyName: 'Boulder Decision Web',
       ga4PropertyId: process.env.GA4_PROPERTY_ID || '516707960',
       gscSiteUrl: process.env.GSC_SITE_URL || 'https://boulderdecisions.com/',
-      brandKeywords: 'Boulder Decision,Boulder Decisions,boulderdecision,boulderdecisions,boulder decisions',
+      gbpLocationId: process.env.GOOGLE_BUSINESS_LOCATION_ID || '',
+      gbpLocationName: 'Boulder Decisions',
+      brandKeywords: 'Boulder Decision, Boulder Decisions, boulderdecision, boulderdecisions, boulder decisions',
       source: 'default',
     });
   }
@@ -502,7 +647,11 @@ export const getGoogleAccounts = async (req) => {
     accounts,
     ga4Accounts,
     gscSites,
+    gbpLocations,
+    gbpAccounts,
+    gbpRequiresReauth,
     ga4Error,
     gscError,
+    gbpError,
   };
 };

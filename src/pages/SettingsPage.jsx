@@ -34,6 +34,7 @@ import {
   testIntegrationConnection,
   fetchGoogleAccounts,
   switchConnectedAccount,
+  deriveBrandKeywords,
 } from '@/services/liveSeoApi';
 import { useReport } from '@/context/ReportContext';
 
@@ -52,13 +53,18 @@ export default function SettingsPage() {
     accounts: [],
     ga4Accounts: [],
     gscSites: [],
+    gbpLocations: [],
+    gbpAccounts: [],
+    gbpRequiresReauth: false,
     userProfile: null,
     ga4Error: null,
     gscError: null,
+    gbpError: null,
   });
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [manualGa4, setManualGa4] = useState(false);
   const [manualGsc, setManualGsc] = useState(false);
+  const [manualGbp, setManualGbp] = useState(false);
 
   // Custom account profile modal state
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
@@ -66,6 +72,8 @@ export default function SettingsPage() {
     name: '',
     ga4PropertyId: '',
     gscSiteUrl: '',
+    gbpLocationId: '',
+    gbpLocationName: '',
     brandKeywords: '',
   });
 
@@ -209,7 +217,36 @@ export default function SettingsPage() {
       setManualGa4(true);
       return;
     }
-    const updated = saveApiConfig({ ...config, ga4PropertyId: propId });
+    const allAccounts = [
+      ...(googleAccountsData.accounts || []),
+      ...(config.savedAccounts || []),
+    ];
+    const matchedAcc = allAccounts.find((a) => a.ga4PropertyId === propId);
+    if (matchedAcc) {
+      const newConfig = switchConnectedAccount(matchedAcc);
+      setConfig(newConfig);
+      setAccountSwitchedNotice(`Connected data stream switched to "${matchedAcc.accountName || matchedAcc.name}".`);
+      setTimeout(() => setAccountSwitchedNotice(null), 5000);
+      refreshDashboard();
+      return;
+    }
+
+    let propName = '';
+    for (const acc of googleAccountsData.ga4Accounts || []) {
+      const p = acc.properties?.find((pr) => pr.propertyId === propId);
+      if (p) {
+        propName = p.propertyName;
+        break;
+      }
+    }
+
+    const derivedBrand = deriveBrandKeywords({ propertyName: propName, siteUrl: config.gscSiteUrl });
+    const updated = saveApiConfig({
+      ...config,
+      ga4PropertyId: propId,
+      selectedAccountName: propName || config.selectedAccountName,
+      brandKeywords: derivedBrand,
+    });
     setConfig(updated);
     refreshDashboard();
   };
@@ -220,7 +257,46 @@ export default function SettingsPage() {
       setManualGsc(true);
       return;
     }
-    const updated = saveApiConfig({ ...config, gscSiteUrl: siteUrl });
+    const allAccounts = [
+      ...(googleAccountsData.accounts || []),
+      ...(config.savedAccounts || []),
+    ];
+    const matchedAcc = allAccounts.find((a) => a.gscSiteUrl === siteUrl);
+    if (matchedAcc) {
+      const newConfig = switchConnectedAccount(matchedAcc);
+      setConfig(newConfig);
+      setAccountSwitchedNotice(`Connected data stream switched to "${matchedAcc.accountName || matchedAcc.name}".`);
+      setTimeout(() => setAccountSwitchedNotice(null), 5000);
+      refreshDashboard();
+      return;
+    }
+
+    const cleanSiteName = siteUrl.replace(/^https?:\/\//, '').replace(/^sc-domain:/, '').replace(/\/.*$/, '');
+    const derivedBrand = deriveBrandKeywords({ siteUrl, accountName: cleanSiteName });
+    const updated = saveApiConfig({
+      ...config,
+      gscSiteUrl: siteUrl,
+      selectedAccountName: cleanSiteName || config.selectedAccountName,
+      brandKeywords: derivedBrand,
+    });
+    setConfig(updated);
+    refreshDashboard();
+  };
+
+  // Switch Google Business Profile Location from Card 4
+  const handleGbpLocationChange = (locNameOrId) => {
+    if (locNameOrId === '__manual__') {
+      setManualGbp(true);
+      return;
+    }
+    const found = (googleAccountsData.gbpLocations || []).find(
+      (l) => l.name === locNameOrId || l.name?.endsWith(`/${locNameOrId}`)
+    );
+    const updated = saveApiConfig({
+      ...config,
+      gbpLocationId: locNameOrId,
+      gbpLocationName: found?.title || config.gbpLocationName || '',
+    });
     setConfig(updated);
     refreshDashboard();
   };
@@ -237,7 +313,9 @@ export default function SettingsPage() {
       propertyName: customAccountForm.name.trim(),
       ga4PropertyId: customAccountForm.ga4PropertyId.trim(),
       gscSiteUrl: customAccountForm.gscSiteUrl.trim(),
-      brandKeywords: customAccountForm.brandKeywords.trim() || customAccountForm.name.trim(),
+      gbpLocationId: customAccountForm.gbpLocationId.trim(),
+      gbpLocationName: customAccountForm.gbpLocationName.trim() || customAccountForm.name.trim(),
+      brandKeywords: customAccountForm.brandKeywords.trim() || deriveBrandKeywords(customAccountForm.name.trim()),
       source: 'custom',
     };
 
@@ -249,13 +327,22 @@ export default function SettingsPage() {
       selectedAccountName: newAcc.name,
       ga4PropertyId: newAcc.ga4PropertyId || config.ga4PropertyId,
       gscSiteUrl: newAcc.gscSiteUrl || config.gscSiteUrl,
+      gbpLocationId: newAcc.gbpLocationId || config.gbpLocationId,
+      gbpLocationName: newAcc.gbpLocationName || config.gbpLocationName,
       brandKeywords: newAcc.brandKeywords || config.brandKeywords,
     };
 
     setConfig(updatedConfig);
     saveApiConfig(updatedConfig);
     setShowAddAccountModal(false);
-    setCustomAccountForm({ name: '', ga4PropertyId: '', gscSiteUrl: '', brandKeywords: '' });
+    setCustomAccountForm({
+      name: '',
+      ga4PropertyId: '',
+      gscSiteUrl: '',
+      gbpLocationId: '',
+      gbpLocationName: '',
+      brandKeywords: '',
+    });
     setAccountSwitchedNotice(`Saved and connected to custom account "${newAcc.name}".`);
     setTimeout(() => setAccountSwitchedNotice(null), 5000);
     refreshDashboard();
@@ -290,6 +377,7 @@ export default function SettingsPage() {
     googleAccountsData.ga4Accounts.some((a) => a.properties?.length > 0);
 
   const hasDiscoveredGsc = googleAccountsData.gscSites?.length > 0;
+  const hasDiscoveredGbp = (googleAccountsData.gbpLocations || []).length > 0;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -466,7 +554,7 @@ export default function SettingsPage() {
 
               {/* Active Account Overview Badges */}
               {activeAccountObj && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-emerald-100">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1 border-t border-emerald-100">
                   <div className="p-2 rounded-lg bg-white border border-slate-200/80 shadow-xs flex flex-col justify-center">
                     <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Active Account</span>
                     <span className="text-xs font-bold text-slate-900 truncate" title={activeAccountObj.accountName || activeAccountObj.name}>
@@ -483,6 +571,12 @@ export default function SettingsPage() {
                     <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Connected Search Console</span>
                     <span className="text-xs font-mono font-semibold text-emerald-800 truncate" title={config.gscSiteUrl || 'Not specified'}>
                       {config.gscSiteUrl || 'Not specified'}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-white border border-slate-200/80 shadow-xs flex flex-col justify-center">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Connected Business Profile</span>
+                    <span className="text-xs font-mono font-semibold text-emerald-800 truncate" title={config.gbpLocationName || config.gbpLocationId || 'Not connected'}>
+                      {config.gbpLocationName || config.gbpLocationId || 'None'}
                     </span>
                   </div>
                 </div>
@@ -691,15 +785,16 @@ export default function SettingsPage() {
                 <label className="text-xs font-semibold text-slate-700">
                   Brand Matching Terms (comma-separated, case-insensitive)
                 </label>
-                {config.brandKeywords !== 'Boulder Decision,Boulder Decisions,boulderdecision,boulderdecisions,boulder decisions' && (
-                  <button
-                    type="button"
-                    onClick={() => setConfig((prev) => ({ ...prev, brandKeywords: 'Boulder Decision,Boulder Decisions,boulderdecision,boulderdecisions,boulder decisions' }))}
-                    className="text-[11px] text-[#14532D] hover:text-[#1B6B45] underline font-medium cursor-pointer"
-                  >
-                    Reset to Boulder Decisions
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const derived = deriveBrandKeywords(activeAccountObj || config.selectedAccountName);
+                    setConfig((prev) => ({ ...prev, brandKeywords: derived }));
+                  }}
+                  className="text-[11px] text-[#14532D] hover:text-[#1B6B45] underline font-medium cursor-pointer"
+                >
+                  Reset to {activeAccountObj?.accountName || config.selectedAccountName || 'Account'} Defaults
+                </button>
               </div>
               <Input
                 value={config.brandKeywords}
@@ -723,15 +818,102 @@ export default function SettingsPage() {
                   Google Business Profile Performance API &amp; Local SEO
                 </CardTitle>
               </div>
-              <Badge variant={isGoogleConnected ? 'success' : 'secondary'} className="text-[10px]">
-                {isGoogleConnected ? 'API Active' : 'Login Required'}
-              </Badge>
+              <div className="flex items-center gap-2">
+                {hasDiscoveredGbp && (
+                  <button
+                    type="button"
+                    onClick={() => setManualGbp(!manualGbp)}
+                    className="text-[11px] text-[#14532D] hover:underline font-medium cursor-pointer"
+                  >
+                    {manualGbp ? 'Select from discovered profiles' : 'Enter Location ID manually'}
+                  </button>
+                )}
+                <Badge variant={isGoogleConnected ? 'success' : 'secondary'} className="text-[10px]">
+                  {isGoogleConnected ? 'API Active' : 'Login Required'}
+                </Badge>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-3 pt-0">
             <p className="text-xs text-slate-600 leading-relaxed">
               Google Business Profile Performance API (<code>businessprofileperformance.googleapis.com</code>) delivers real customer telemetry on Google Maps impressions, Search impressions, website visits, phone calls, and direction clicks directly to the Local SEO tab.
             </p>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-semibold text-slate-700">Google Business Profile Location</label>
+                {!hasDiscoveredGbp && isGoogleConnected && (
+                  <span className="text-[10px] text-amber-700 font-medium">No verified profile auto-discovered — enter ID below</span>
+                )}
+              </div>
+
+              {!manualGbp && hasDiscoveredGbp ? (
+                <select
+                  value={config.gbpLocationId}
+                  onChange={(e) => handleGbpLocationChange(e.target.value)}
+                  className="w-full h-9 rounded-md border border-slate-300 bg-white px-3 text-xs font-mono text-slate-900 shadow-xs outline-none focus:ring-1 focus:ring-[#14532D] cursor-pointer"
+                >
+                  <option value="">Select a Google Business Profile location...</option>
+                  {googleAccountsData.gbpLocations.map((loc) => (
+                    <option key={loc.name} value={loc.name}>
+                      {loc.title} ({loc.name}) {loc.storefrontAddress?.locality ? `— ${loc.storefrontAddress.locality}` : ''}
+                    </option>
+                  ))}
+                  <option value="__manual__">Enter Custom Location ID manually...</option>
+                </select>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <Input
+                      placeholder="e.g. locations/1234567890 or 1234567890"
+                      value={config.gbpLocationId}
+                      onChange={(e) => setConfig((prev) => ({ ...prev, gbpLocationId: e.target.value }))}
+                      className="font-mono text-xs"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-0.5">Location resource name or ID</p>
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="Business Name (e.g. Boulder Decisions)"
+                      value={config.gbpLocationName}
+                      onChange={(e) => setConfig((prev) => ({ ...prev, gbpLocationName: e.target.value }))}
+                      className="text-xs"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-0.5">Display name for Local SEO reports</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {config.gbpLocationId && (
+              <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-50/80 border border-emerald-200 text-xs">
+                <div className="flex items-center gap-1.5 text-emerald-900">
+                  <MapPin className="h-3.5 w-3.5 text-[#14532D] shrink-0" />
+                  <span className="font-semibold">Active Location:</span>
+                  <span className="font-bold">{config.gbpLocationName || config.gbpLocationId}</span>
+                  <span className="font-mono text-[10px] text-emerald-700">({config.gbpLocationId})</span>
+                </div>
+                <Badge variant="outline" className="bg-white text-[#14532D] border-emerald-300 text-[10px] font-semibold">
+                  Connected
+                </Badge>
+              </div>
+            )}
+
+            {googleAccountsData.gbpRequiresReauth && (
+              <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1">
+                <p className="font-semibold">Google Business Profile permissions required for auto-discovery</p>
+                <p className="text-[11px] text-amber-800">
+                  Click Re-authorize to grant Business Profile management permissions to your Google login, or manually enter your Location ID above to fetch live performance metrics directly.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleStartGoogleOAuth}
+                  className="font-bold underline text-[#14532D] block cursor-pointer"
+                >
+                  Re-authorize Google Account →
+                </button>
+              </div>
+            )}
 
             {testResults.localSeo && (
               <div
@@ -757,8 +939,8 @@ export default function SettingsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => runTest('localSeo')}
-              disabled={testResults.localSeo?.testing}
+              onClick={() => runTest('localSeo', { locationId: config.gbpLocationId, locationName: config.gbpLocationName })}
+              disabled={testResults.localSeo?.testing || !isGoogleConnected}
               className="w-full text-xs font-semibold bg-slate-50 hover:bg-slate-100 cursor-pointer"
             >
               {testResults.localSeo?.testing ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
@@ -782,7 +964,7 @@ export default function SettingsPage() {
 
           <form onSubmit={handleSaveCustomAccount} className="space-y-4 py-2">
             <p className="text-xs text-slate-500">
-              Save a custom client account profile to quickly switch GA4 and Search Console data streams from the account dropdown.
+              Save a custom client account profile to quickly switch GA4, Search Console, and Google Business Profile data streams from the account dropdown.
             </p>
 
             <div className="space-y-1">
@@ -811,6 +993,16 @@ export default function SettingsPage() {
                 placeholder="e.g. https://example.com/ or sc-domain:example.com"
                 value={customAccountForm.gscSiteUrl}
                 onChange={(e) => setCustomAccountForm({ ...customAccountForm, gscSiteUrl: e.target.value })}
+                className="font-mono text-xs"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-700">Google Business Profile Location ID (optional)</label>
+              <Input
+                placeholder="e.g. locations/1234567890"
+                value={customAccountForm.gbpLocationId}
+                onChange={(e) => setCustomAccountForm({ ...customAccountForm, gbpLocationId: e.target.value })}
                 className="font-mono text-xs"
               />
             </div>

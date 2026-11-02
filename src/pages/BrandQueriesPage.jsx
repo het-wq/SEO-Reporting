@@ -38,17 +38,10 @@ import { useReport } from '@/context/ReportContext';
 import {
   getApiConfig,
   saveBrandAndNonBrandKeywords,
+  deriveBrandKeywords,
 } from '@/services/liveSeoApi';
 
 const TAB_LABELS = { all: 'All Devices', desktop: 'Desktop', mobile: 'Mobile' };
-
-const DEFAULT_BRAND_TERMS = [
-  'boulder decision',
-  'boulder decisions',
-  'boulderdecision',
-  'boulderdecisions',
-  'boulder decisions analytics',
-];
 
 function BrandTabPanel({ data, prevLabel, curLabel }) {
   if (!data) return null;
@@ -240,10 +233,17 @@ export default function BrandQueriesPage() {
     }
   };
 
-  // Reset to default brand terms
+  // Reset to default brand terms for the active account
   const handleResetDefaults = () => {
-    if (window.confirm('Reset branded keywords to Boulder Decision defaults?')) {
-      setBrandTerms(DEFAULT_BRAND_TERMS);
+    const cfg = getApiConfig();
+    const clientName = cfg.selectedAccountName || cfg.gscSiteUrl || 'Account';
+    if (window.confirm(`Reset branded keywords to ${clientName} defaults?`)) {
+      const derived = deriveBrandKeywords({
+        accountName: cfg.selectedAccountName,
+        siteUrl: cfg.gscSiteUrl,
+      });
+      const parsed = derived.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+      setBrandTerms(parsed);
       setNonBrandTerms([]);
       setIsDirty(true);
     }
@@ -253,9 +253,11 @@ export default function BrandQueriesPage() {
   const handleSaveAndReclassify = async () => {
     setSaveStatus('saving');
     try {
+      const cfg = getApiConfig();
       saveBrandAndNonBrandKeywords({
         brandKeywords: brandTerms,
         nonBrandKeywords: nonBrandTerms,
+        accountId: cfg.selectedAccountId,
       });
 
       // Reload live report with updated brand and non-brand rules
@@ -283,9 +285,11 @@ export default function BrandQueriesPage() {
     setBrandTerms(updatedBrand);
     setNonBrandTerms(updatedNonBrand);
 
+    const cfg = getApiConfig();
     saveBrandAndNonBrandKeywords({
       brandKeywords: updatedBrand,
       nonBrandKeywords: updatedNonBrand,
+      accountId: cfg.selectedAccountId,
     });
 
     if (loadLiveReport) {
@@ -302,9 +306,11 @@ export default function BrandQueriesPage() {
     setBrandTerms(updatedBrand);
     setNonBrandTerms(updatedNonBrand);
 
+    const cfg = getApiConfig();
     saveBrandAndNonBrandKeywords({
       brandKeywords: updatedBrand,
       nonBrandKeywords: updatedNonBrand,
+      accountId: cfg.selectedAccountId,
     });
 
     if (loadLiveReport) {

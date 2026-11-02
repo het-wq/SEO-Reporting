@@ -22,6 +22,8 @@ export const getLiveDashboardReport = async ({
   clientName: overrideClientName,
   brandTerms: overrideBrandTerms,
   nonBrandTerms: overrideNonBrandTerms,
+  locationId: overrideLocationId,
+  locationName: overrideLocationName,
   periodLabel,
   previousPeriodLabel,
   forceRefresh = false,
@@ -29,11 +31,12 @@ export const getLiveDashboardReport = async ({
   const auth = getAuth(req);
   const ga4PropertyId = overridePropId || process.env.GA4_PROPERTY_ID || '';
   const gscSiteUrl = overrideSiteUrl || process.env.GSC_SITE_URL || 'https://boulderdecisions.com/';
+  const locationId = overrideLocationId || process.env.GOOGLE_BUSINESS_LOCATION_ID || '';
 
   const brandKey = Array.isArray(overrideBrandTerms) ? overrideBrandTerms.join(',') : (overrideBrandTerms || '');
   const nonBrandKey = Array.isArray(overrideNonBrandTerms) ? overrideNonBrandTerms.join(',') : (overrideNonBrandTerms || '');
   const clientKey = overrideClientName || '';
-  const cacheKey = `${startDate}_${endDate}_${prevStartDate}_${prevEndDate}_${ga4PropertyId}_${gscSiteUrl}_${clientKey}_${brandKey}_${nonBrandKey}`;
+  const cacheKey = `${startDate}_${endDate}_${prevStartDate}_${prevEndDate}_${ga4PropertyId}_${gscSiteUrl}_${locationId}_${clientKey}_${brandKey}_${nonBrandKey}`;
   if (!forceRefresh && cache.has(cacheKey)) {
     const cached = cache.get(cacheKey);
     if (Date.now() - cached.timestamp < CACHE_TTL_MS) {
@@ -152,6 +155,7 @@ export const getLiveDashboardReport = async ({
       brandAnalysis = await getBrandAnalysis({
         auth,
         siteUrl: gscSiteUrl,
+        clientName: overrideClientName,
         startDate,
         endDate,
         prevStartDate,
@@ -166,7 +170,16 @@ export const getLiveDashboardReport = async ({
 
   // 4. Fetch Local SEO, Backlinks, AI Citations
   const [localSeo, backlinks, aiCitations] = await Promise.all([
-    getLocalSeoOverview({ startDate, endDate, prevStartDate, prevEndDate, req, auth }),
+    getLocalSeoOverview({
+      startDate,
+      endDate,
+      prevStartDate,
+      prevEndDate,
+      locationId: overrideLocationId,
+      locationName: overrideLocationName,
+      req,
+      auth,
+    }),
     getBacklinksOverview(),
     getAiVisibilityOverview(),
   ]);

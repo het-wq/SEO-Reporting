@@ -6,13 +6,113 @@ export const defaultConfig = {
   endpointUrl: BACKEND_BASE,
   ga4PropertyId: '',
   gscSiteUrl: 'https://boulderdecisions.com/',
-  brandKeywords: 'Boulder Decision,Boulder Decisions,boulderdecision,boulderdecisions,boulder decisions',
+  gbpLocationId: '',
+  gbpLocationName: '',
+  brandKeywords: 'Boulder Decision, Boulder Decisions, boulderdecision, boulderdecisions, boulder decisions',
   nonBrandKeywords: '',
   apiToken: '',
   googleConnected: false,
   selectedAccountId: 'default',
   selectedAccountName: 'Boulder Decision',
   savedAccounts: [],
+};
+
+const KEYWORDS_STORAGE_KEY = 'seo_account_keywords_map';
+
+export const getAccountKeywordsMap = () => {
+  try {
+    const raw = localStorage.getItem(KEYWORDS_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to parse account keywords map:', e);
+  }
+  return {};
+};
+
+export const saveAccountKeywords = (accountId, { brandKeywords, nonBrandKeywords }) => {
+  if (!accountId) return;
+  try {
+    const map = getAccountKeywordsMap();
+    map[accountId] = {
+      brandKeywords: Array.isArray(brandKeywords) ? brandKeywords.join(', ') : (brandKeywords || ''),
+      nonBrandKeywords: Array.isArray(nonBrandKeywords) ? nonBrandKeywords.join(', ') : (nonBrandKeywords || ''),
+      updatedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(KEYWORDS_STORAGE_KEY, JSON.stringify(map));
+  } catch (e) {
+    console.error('Failed to save account keywords map:', e);
+  }
+};
+
+/**
+ * Derives appropriate brand search keywords for an account based on its name, property, or site URL.
+ * Never produces Boulder Decision keywords unless the account is actually Boulder Decision.
+ */
+export const deriveBrandKeywords = (account) => {
+  if (!account) return 'Boulder Decision, Boulder Decisions, boulderdecision, boulderdecisions, boulder decisions';
+
+  const name = typeof account === 'string' ? account : (account.accountName || account.name || '');
+  const prop = typeof account === 'object' ? (account.propertyName || '') : '';
+  const site = typeof account === 'object' ? (account.gscSiteUrl || '') : '';
+
+  const isBoulder =
+    name.toLowerCase().includes('boulder') ||
+    prop.toLowerCase().includes('boulder') ||
+    site.toLowerCase().includes('boulder');
+
+  if (isBoulder) {
+    return 'Boulder Decision, Boulder Decisions, boulderdecision, boulderdecisions, boulder decisions';
+  }
+
+  const terms = new Set();
+
+  if (name) {
+    const clean = name.replace(/^accounts\//, '').trim();
+    if (clean && !/^\d+$/.test(clean) && clean.toLowerCase() !== 'connected account' && clean.toLowerCase() !== 'default') {
+      terms.add(clean);
+      const parts = clean.split(/[\s\-_|:]+/).filter((p) => p.length > 2);
+      if (parts.length > 1) {
+        terms.add(parts.join(' '));
+        terms.add(parts.join(''));
+      }
+    }
+  }
+
+  if (prop) {
+    const clean = prop.replace(/^properties\//, '').trim();
+    if (clean && !/^\d+$/.test(clean)) {
+      terms.add(clean);
+      const parts = clean.split(/[\s\-_|:]+/).filter((p) => p.length > 2);
+      if (parts.length > 1) {
+        terms.add(parts.join(' '));
+        terms.add(parts.join(''));
+      }
+    }
+  }
+
+  if (site) {
+    const cleanDomain = site
+      .toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/^sc-domain:/, '')
+      .replace(/\/.*$/, '')
+      .replace(/^www\./, '');
+
+    const domainBase = cleanDomain.split('.')[0];
+    if (domainBase && domainBase.length > 2) {
+      terms.add(domainBase);
+      const spaced = domainBase.replace(/[-_]/g, ' ');
+      if (spaced !== domainBase) {
+        terms.add(spaced);
+      }
+    }
+  }
+
+  if (terms.size === 0) {
+    return name && !/^\d+$/.test(name) ? name : (prop || 'Brand');
+  }
+
+  return Array.from(terms).join(', ');
 };
 
 export const getCookie = (name) => {
@@ -80,16 +180,25 @@ export const saveApiConfig = (newConfig) => {
   return newConfig;
 };
 
-export const saveBrandAndNonBrandKeywords = ({ brandKeywords, nonBrandKeywords }) => {
+export const saveBrandAndNonBrandKeywords = ({ brandKeywords, nonBrandKeywords, accountId }) => {
   const current = getApiConfig();
+  const targetAccId = accountId || current.selectedAccountId || 'default';
+
+  const bStr =
+    brandKeywords !== undefined
+      ? (Array.isArray(brandKeywords) ? brandKeywords.join(', ') : brandKeywords)
+      : current.brandKeywords;
+  const nbStr =
+    nonBrandKeywords !== undefined
+      ? (Array.isArray(nonBrandKeywords) ? nonBrandKeywords.join(', ') : nonBrandKeywords)
+      : current.nonBrandKeywords;
+
+  saveAccountKeywords(targetAccId, { brandKeywords: bStr, nonBrandKeywords: nbStr });
+
   const updated = {
     ...current,
-    ...(brandKeywords !== undefined ? {
-      brandKeywords: Array.isArray(brandKeywords) ? brandKeywords.join(',') : brandKeywords
-    } : {}),
-    ...(nonBrandKeywords !== undefined ? {
-      nonBrandKeywords: Array.isArray(nonBrandKeywords) ? nonBrandKeywords.join(',') : nonBrandKeywords
-    } : {}),
+    brandKeywords: bStr,
+    nonBrandKeywords: nbStr,
   };
   return saveApiConfig(updated);
 };
@@ -239,6 +348,8 @@ export const fetchDashboardLiveReport = async ({
         clientName: cfg.selectedAccountName || undefined,
         brandTerms: effectiveBrandTerms,
         nonBrandTerms: effectiveNonBrandTerms,
+        locationId: cfg.gbpLocationId || undefined,
+        locationName: cfg.gbpLocationName || undefined,
         periodLabel,
         previousPeriodLabel,
         forceRefresh,
@@ -285,6 +396,8 @@ export const fetchGoogleAccounts = async () => {
       accounts: [],
       ga4Accounts: [],
       gscSites: [],
+      gbpLocations: [],
+      gbpAccounts: [],
       error: err.message,
     };
   }
@@ -292,19 +405,49 @@ export const fetchGoogleAccounts = async () => {
 
 /**
  * Switches the active connected account, saving GA4 Property ID, Search Console URL,
- * and account identifiers to sync data across the entire dashboard.
+ * GBP Location ID, and per-account brand/non-brand keywords to sync data across the entire dashboard.
  */
 export const switchConnectedAccount = (account) => {
   if (!account) return getApiConfig();
   const current = getApiConfig();
+  const accountId = account.id || account.ga4PropertyId || account.gscSiteUrl || 'custom';
+  const accountName = account.accountName || account.name || 'Connected Account';
+
+  // Check if this account already has saved keywords in the map
+  const map = getAccountKeywordsMap();
+  const savedForAccount = map[accountId];
+
+  let brandKeywords = '';
+  let nonBrandKeywords = '';
+
+  const isCurrentBoulder =
+    accountName.toLowerCase().includes('boulder') ||
+    (account.propertyName && account.propertyName.toLowerCase().includes('boulder')) ||
+    (account.gscSiteUrl && account.gscSiteUrl.toLowerCase().includes('boulder'));
+
+  if (savedForAccount && savedForAccount.brandKeywords) {
+    brandKeywords = savedForAccount.brandKeywords;
+    nonBrandKeywords = savedForAccount.nonBrandKeywords || '';
+  } else if (account.brandKeywords && !(!isCurrentBoulder && account.brandKeywords.toLowerCase().includes('boulder'))) {
+    brandKeywords = account.brandKeywords;
+    nonBrandKeywords = account.nonBrandKeywords || '';
+  } else {
+    brandKeywords = deriveBrandKeywords(account);
+    nonBrandKeywords = '';
+  }
+
   const updates = {
-    selectedAccountId: account.id || account.ga4PropertyId || account.gscSiteUrl || 'custom',
-    selectedAccountName: account.accountName || account.name || 'Connected Account',
+    selectedAccountId: accountId,
+    selectedAccountName: accountName,
     ga4PropertyId: account.ga4PropertyId !== undefined ? account.ga4PropertyId : current.ga4PropertyId,
     gscSiteUrl: account.gscSiteUrl !== undefined ? account.gscSiteUrl : current.gscSiteUrl,
+    gbpLocationId: account.gbpLocationId !== undefined ? account.gbpLocationId : (current.gbpLocationId || ''),
+    gbpLocationName: account.gbpLocationName !== undefined ? account.gbpLocationName : (current.gbpLocationName || ''),
+    brandKeywords,
+    nonBrandKeywords,
   };
-  if (account.brandKeywords) {
-    updates.brandKeywords = account.brandKeywords;
-  }
+
+  saveAccountKeywords(accountId, { brandKeywords, nonBrandKeywords });
+
   return saveApiConfig(updates);
 };

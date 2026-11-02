@@ -5,9 +5,68 @@ const calcDiff = (curr, prev) => {
   return Math.round(((curr - prev) / prev) * 10000) / 100;
 };
 
-export const parseBrandTerms = (termsInput) => {
+export const deriveBrandTerms = ({ siteUrl, clientName } = {}) => {
+  const terms = new Set();
+
+  if (clientName && typeof clientName === 'string') {
+    const cleanClient = clientName.trim().toLowerCase();
+    if (cleanClient && cleanClient !== 'connected account' && cleanClient !== 'default') {
+      terms.add(cleanClient);
+      const parts = cleanClient.split(/[\s\-_|:]+/).filter((p) => p.length > 2);
+      if (parts.length > 1) {
+        terms.add(parts.join(' '));
+        terms.add(parts.join(''));
+      }
+    }
+  }
+
+  if (siteUrl && typeof siteUrl === 'string') {
+    const cleanDomain = siteUrl
+      .toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/^sc-domain:/, '')
+      .replace(/\/.*$/, '')
+      .replace(/^www\./, '');
+
+    const domainBase = cleanDomain.split('.')[0];
+    if (domainBase && domainBase.length > 2) {
+      terms.add(domainBase);
+      const splitHyphens = domainBase.replace(/[-_]/g, ' ');
+      if (splitHyphens !== domainBase) {
+        terms.add(splitHyphens);
+      }
+    }
+  }
+
+  if (terms.size === 0) {
+    return [
+      'boulder decision',
+      'boulder decisions',
+      'boulderdecision',
+      'boulderdecisions',
+      'boulder decision analytics',
+    ];
+  }
+
+  return Array.from(terms);
+};
+
+export const parseBrandTerms = (termsInput, context = {}) => {
   if (Array.isArray(termsInput) && termsInput.length > 0) {
     return termsInput.map((t) => String(t).trim().toLowerCase()).filter(Boolean);
+  }
+
+  if (typeof termsInput === 'string' && termsInput.trim()) {
+    return termsInput.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
+  }
+
+  const { siteUrl, clientName } = context || {};
+  const isBoulder =
+    (siteUrl && siteUrl.toLowerCase().includes('boulder')) ||
+    (clientName && clientName.toLowerCase().includes('boulder'));
+
+  if (!isBoulder && (siteUrl || clientName)) {
+    return deriveBrandTerms({ siteUrl, clientName });
   }
 
   const envTerms = process.env.BRAND_KEYWORDS;
@@ -27,6 +86,10 @@ export const parseBrandTerms = (termsInput) => {
 export const parseNonBrandTerms = (termsInput) => {
   if (Array.isArray(termsInput) && termsInput.length > 0) {
     return termsInput.map((t) => String(t).trim().toLowerCase()).filter(Boolean);
+  }
+
+  if (typeof termsInput === 'string' && termsInput.trim()) {
+    return termsInput.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
   }
 
   const envTerms = process.env.NON_BRAND_KEYWORDS;
@@ -53,6 +116,7 @@ export const isBrandQuery = (query, brandTerms = [], nonBrandTerms = []) => {
 export const getBrandAnalysis = async ({
   auth,
   siteUrl,
+  clientName,
   startDate,
   endDate,
   prevStartDate,
@@ -63,7 +127,7 @@ export const getBrandAnalysis = async ({
   if (!auth) throw new Error('Not authenticated with Google');
   if (!siteUrl) throw new Error('Search Console siteUrl is required');
 
-  const brandTerms = parseBrandTerms(userTerms);
+  const brandTerms = parseBrandTerms(userTerms, { siteUrl, clientName });
   const nonBrandTerms = parseNonBrandTerms(userNonBrandTerms);
   const searchconsole = google.searchconsole({ version: 'v1', auth });
 
