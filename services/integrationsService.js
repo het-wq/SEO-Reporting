@@ -317,9 +317,9 @@ export const testIntegration = async (providerId, req) => {
   }
 
   if (providerId === 'localSeo') {
-    const locationId = extraParams?.locationId || extraParams?.req?.body?.locationId || null;
-    const locationName = extraParams?.locationName || extraParams?.req?.body?.locationName || null;
-    const res = await getLocalSeoOverview({ locationId, locationName, req: extraParams?.req });
+    const locationId = req?.body?.locationId || null;
+    const locationName = req?.body?.locationName || null;
+    const res = await getLocalSeoOverview({ locationId, locationName, req });
     const isSuccess = Boolean(res.connected || (res.configured && !res.requiresReauth));
     return {
       success: isSuccess,
