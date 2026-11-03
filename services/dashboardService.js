@@ -6,6 +6,8 @@ import { getLocalSeoOverview } from './localSeoService.js';
 import { getBacklinksOverview } from './backlinksService.js';
 import { getAiVisibilityOverview } from './aiVisibilityService.js';
 import { updateTelemetry } from './integrationsService.js';
+import { getAccountKeywords } from '../data/accountKeywordsStore.js';
+import { getGoogleAdsOverview } from './googleAdsService.js';
 
 // Cache structure: key -> { timestamp, data }
 const cache = new Map();
@@ -148,7 +150,27 @@ export const getLiveDashboardReport = async ({
     }
   }
 
-  // 3. Fetch Brand Analysis
+  // 3. Fetch Brand Analysis with Database Keyword Resolution
+  let effectiveBrandTerms = overrideBrandTerms;
+  let effectiveNonBrandTerms = overrideNonBrandTerms;
+  if (!effectiveBrandTerms || (Array.isArray(effectiveBrandTerms) && effectiveBrandTerms.length === 0)) {
+    try {
+      const dbKw = await getAccountKeywords({
+        propertyId: ga4PropertyId,
+        siteUrl: gscSiteUrl,
+        accountName: overrideClientName,
+      });
+      if (dbKw?.brandKeywords) {
+        effectiveBrandTerms = dbKw.brandKeywords;
+      }
+      if (!effectiveNonBrandTerms && dbKw?.nonBrandKeywords) {
+        effectiveNonBrandTerms = dbKw.nonBrandKeywords;
+      }
+    } catch (e) {
+      console.warn('Could not load account keywords from DB for report:', e.message);
+    }
+  }
+
   let brandAnalysis = null;
   if (auth && gscSiteUrl) {
     try {
@@ -160,16 +182,16 @@ export const getLiveDashboardReport = async ({
         endDate,
         prevStartDate,
         prevEndDate,
-        brandTerms: overrideBrandTerms,
-        nonBrandTerms: overrideNonBrandTerms,
+        brandTerms: effectiveBrandTerms,
+        nonBrandTerms: effectiveNonBrandTerms,
       });
     } catch (err) {
       errors.brand = err.message;
     }
   }
 
-  // 4. Fetch Local SEO, Backlinks, AI Citations
-  const [localSeo, backlinks, aiCitations] = await Promise.all([
+  // 4. Fetch Local SEO, Backlinks, AI Citations, Google Ads
+  const [localSeo, backlinks, aiCitations, googleAds] = await Promise.all([
     getLocalSeoOverview({
       startDate,
       endDate,
@@ -182,6 +204,15 @@ export const getLiveDashboardReport = async ({
     }),
     getBacklinksOverview(),
     getAiVisibilityOverview(),
+    getGoogleAdsOverview({
+      startDate,
+      endDate,
+      prevStartDate,
+      prevEndDate,
+      accountName: overrideClientName,
+      req,
+      auth,
+    }),
   ]);
 
   // Construct Traffic object
@@ -312,6 +343,11 @@ export const getLiveDashboardReport = async ({
         provider: aiCitations.provider,
         configured: aiCitations.configured,
       },
+      googleAds: {
+        provider: googleAds.provider,
+        configured: googleAds.configured,
+        connected: googleAds.connected,
+      },
     },
 
     // Sub-reports
@@ -321,6 +357,7 @@ export const getLiveDashboardReport = async ({
     brandQueries,
     keywordRankings: gscQueries,
     localSeo,
+    googleAds,
     backlinks,
     aiCitations,
     seoActivities: {

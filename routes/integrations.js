@@ -1,6 +1,7 @@
 import express from 'express';
 import { getAllIntegrationsStatus, testIntegration, getGoogleAccounts } from '../services/integrationsService.js';
 import { clearStoredTokens, saveStoredTokens, clearAuthCookie } from '../services/googleAuth.js';
+import { getAccountKeywords, saveAccountKeywords } from '../data/accountKeywordsStore.js';
 
 const router = express.Router();
 
@@ -36,6 +37,46 @@ router.post('/test', async (req, res) => {
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/integrations/account-keywords
+router.get('/account-keywords', async (req, res) => {
+  try {
+    const { accountId, propertyId, siteUrl, accountName } = req.query;
+    const data = await getAccountKeywords({ accountId, propertyId, siteUrl, accountName });
+    res.json({ success: true, ...data });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/integrations/account-keywords
+router.post('/account-keywords', async (req, res) => {
+  try {
+    const {
+      accountId,
+      accountName,
+      propertyName,
+      ga4PropertyId,
+      gscSiteUrl,
+      brandKeywords,
+      nonBrandKeywords,
+    } = req.body;
+
+    const saved = await saveAccountKeywords({
+      accountId,
+      accountName,
+      propertyName,
+      ga4PropertyId,
+      gscSiteUrl,
+      brandKeywords,
+      nonBrandKeywords,
+    });
+
+    res.json({ success: true, saved });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

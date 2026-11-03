@@ -1,0 +1,42 @@
+{
+  "default-boulder-decision": {
+    "accountId": "default-boulder-decision",
+    "accountName": "Boulder Decision",
+    "propertyName": "Boulder Decision Web",
+    "ga4PropertyId": "516707960",
+    "gscSiteUrl": "https://boulderdecisions.com/",
+    "brandKeywords": "Boulder Decision, Boulder Decisions, boulderdecision, boulderdecisions, boulder decisions",
+    "nonBrandKeywords": "",
+    "updatedAt": "2026-11-03T10:45:16.742Z"
+  },
+  "seed-joint-injections": {
+    "accountId": "seed-joint-injections",
+    "accountName": "Joint Injections",
+    "propertyName": "Joint Injections",
+    "ga4PropertyId": "316531761",
+    "gscSiteUrl": "https://jointinjections.com/",
+    "brandKeywords": "Joint Injections, Joint Injection, jointinjections, joint injections",
+    "nonBrandKeywords": "knee pain injection, arthritis relief, joint pain clinic",
+    "updatedAt": "2026-11-03T10:45:16.744Z"
+  },
+  "seed-ebo2": {
+    "accountId": "seed-ebo2",
+    "accountName": "EBO2",
+    "propertyName": "EBO2 Therapy",
+    "ga4PropertyId": "316531762",
+    "gscSiteUrl": "https://ebo2therapy.com/",
+    "brandKeywords": "EBO2, EBO2 Therapy, ebo2, ebo2therapy",
+    "nonBrandKeywords": "blood filtration, ozone therapy, longevity clinic",
+    "updatedAt": "2026-11-03T10:45:16.744Z"
+  },
+  "ga4-999888": {
+    "accountId": "ga4-999888",
+    "accountName": "Custom MedSpa",
+    "propertyName": "Custom MedSpa Web",
+    "ga4PropertyId": "",
+    "gscSiteUrl": "",
+    "brandKeywords": "Custom MedSpa, CustomMedSpa, MedSpa Clinic",
+    "nonBrandKeywords": "botox near me, dermal fillers, laser facial",
+    "updatedAt": "2026-11-03T10:45:50.358Z"
+  }
+}

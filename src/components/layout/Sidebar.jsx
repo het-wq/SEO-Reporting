@@ -7,6 +7,7 @@ import {
   Tag,
   KeyRound,
   MapPin,
+  Megaphone,
   ListChecks,
   Settings,
   ChevronsLeft,
@@ -24,6 +25,7 @@ export const NAV_ITEMS = [
   { key: 'brand-queries', label: 'Brand vs Non-Brand', icon: Tag, section: 'menu' },
   { key: 'keywords', label: 'Keyword Rankings', icon: KeyRound, section: 'menu' },
   { key: 'local-seo', label: 'Local SEO', icon: MapPin, section: 'menu' },
+  { key: 'google-ads', label: 'Google Ads Reporting', icon: Megaphone, section: 'menu' },
   { key: 'seo-activities', label: 'SEO Activities', icon: ListChecks, section: 'menu' },
   { key: 'settings', label: 'Settings', icon: Settings, section: 'general' },
 ];

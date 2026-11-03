@@ -13,6 +13,7 @@ import DeviceInsightsPage from '@/pages/DeviceInsightsPage';
 import BrandQueriesPage from '@/pages/BrandQueriesPage';
 import KeywordRankingsPage from '@/pages/KeywordRankingsPage';
 import LocalSeoPage from '@/pages/LocalSeoPage';
+import GoogleAdsPage from '@/pages/GoogleAdsPage';
 import SeoActivitiesPage from '@/pages/SeoActivitiesPage';
 import SettingsPage from '@/pages/SettingsPage';
 
@@ -26,6 +27,7 @@ const PAGES = {
   'brand-queries': BrandQueriesPage,
   keywords: KeywordRankingsPage,
   'local-seo': LocalSeoPage,
+  'google-ads': GoogleAdsPage,
   'seo-activities': SeoActivitiesPage,
   settings: SettingsPage,
 };

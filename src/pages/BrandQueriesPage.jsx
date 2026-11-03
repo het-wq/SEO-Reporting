@@ -39,6 +39,7 @@ import {
   getApiConfig,
   saveBrandAndNonBrandKeywords,
   deriveBrandKeywords,
+  fetchAccountKeywordsFromDb,
 } from '@/services/liveSeoApi';
 
 const TAB_LABELS = { all: 'All Devices', desktop: 'Desktop', mobile: 'Mobile' };
@@ -142,9 +143,29 @@ export default function BrandQueriesPage() {
   const [isDirty, setIsDirty] = useState(false);
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved'
 
-  // Initialize keyword lists from saved config or report
+  // Initialize keyword lists from saved config, database store, or report
   useEffect(() => {
     const cfg = getApiConfig();
+    let isMounted = true;
+
+    // Fetch from database store for current active account
+    fetchAccountKeywordsFromDb({
+      accountId: cfg.selectedAccountId,
+      propertyId: cfg.ga4PropertyId,
+      siteUrl: cfg.gscSiteUrl,
+      accountName: cfg.selectedAccountName,
+    }).then((dbData) => {
+      if (!isMounted || !dbData) return;
+      if (dbData.brandKeywords) {
+        const parsed = dbData.brandKeywords.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+        if (parsed.length > 0) setBrandTerms(parsed);
+      }
+      if (dbData.nonBrandKeywords) {
+        const parsed = dbData.nonBrandKeywords.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+        setNonBrandTerms(parsed);
+      }
+    });
+
     if (cfg.brandKeywords) {
       const parsed = cfg.brandKeywords.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
       if (parsed.length > 0) setBrandTerms(parsed);
@@ -158,6 +179,10 @@ export default function BrandQueriesPage() {
     } else if (report?.brandQueries?.nonBrandTerms?.length) {
       setNonBrandTerms(report.brandQueries.nonBrandTerms);
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [report]);
 
   // Bulk add detection counter
@@ -258,6 +283,9 @@ export default function BrandQueriesPage() {
         brandKeywords: brandTerms,
         nonBrandKeywords: nonBrandTerms,
         accountId: cfg.selectedAccountId,
+        accountName: cfg.selectedAccountName,
+        ga4PropertyId: cfg.ga4PropertyId,
+        gscSiteUrl: cfg.gscSiteUrl,
       });
 
       // Reload live report with updated brand and non-brand rules

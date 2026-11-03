@@ -8,6 +8,8 @@ export const defaultConfig = {
   gscSiteUrl: 'https://boulderdecisions.com/',
   gbpLocationId: '',
   gbpLocationName: '',
+  googleAdsCustomerId: '',
+  googleAdsDeveloperToken: '',
   brandKeywords: 'Boulder Decision, Boulder Decisions, boulderdecision, boulderdecisions, boulder decisions',
   nonBrandKeywords: '',
   apiToken: '',
@@ -185,9 +187,77 @@ export const saveApiConfig = (newConfig) => {
   return newConfig;
 };
 
-export const saveBrandAndNonBrandKeywords = ({ brandKeywords, nonBrandKeywords, accountId }) => {
+/**
+ * Fetch account keywords directly from database on backend
+ */
+export const fetchAccountKeywordsFromDb = async ({ accountId, propertyId, siteUrl, accountName } = {}) => {
+  try {
+    const params = new URLSearchParams();
+    if (accountId) params.set('accountId', accountId);
+    if (propertyId) params.set('propertyId', propertyId);
+    if (siteUrl) params.set('siteUrl', siteUrl);
+    if (accountName) params.set('accountName', accountName);
+
+    const res = await fetch(`${BACKEND_BASE}/api/integrations/account-keywords?${params.toString()}`, {
+      headers: getHeaders(),
+      credentials: 'include',
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    console.warn('fetchAccountKeywordsFromDb error:', err.message);
+  }
+  return null;
+};
+
+/**
+ * Save account keywords directly to database on backend
+ */
+export const saveAccountKeywordsToDb = async ({
+  accountId,
+  accountName,
+  propertyName,
+  ga4PropertyId,
+  gscSiteUrl,
+  brandKeywords,
+  nonBrandKeywords,
+}) => {
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/integrations/account-keywords`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({
+        accountId,
+        accountName,
+        propertyName,
+        ga4PropertyId,
+        gscSiteUrl,
+        brandKeywords,
+        nonBrandKeywords,
+      }),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    console.warn('saveAccountKeywordsToDb error:', err.message);
+  }
+  return null;
+};
+
+export const saveBrandAndNonBrandKeywords = ({
+  brandKeywords,
+  nonBrandKeywords,
+  accountId,
+  accountName,
+  ga4PropertyId,
+  gscSiteUrl,
+}) => {
   const current = getApiConfig();
   const targetAccId = accountId || current.selectedAccountId || 'default';
+  const targetAccName = accountName || current.selectedAccountName || 'Connected Account';
 
   const bStr =
     brandKeywords !== undefined
@@ -198,7 +268,19 @@ export const saveBrandAndNonBrandKeywords = ({ brandKeywords, nonBrandKeywords, 
       ? (Array.isArray(nonBrandKeywords) ? nonBrandKeywords.join(', ') : nonBrandKeywords)
       : current.nonBrandKeywords;
 
+  // 1. Save to local storage cache map
   saveAccountKeywords(targetAccId, { brandKeywords: bStr, nonBrandKeywords: nbStr });
+
+  // 2. Persist to server database!
+  saveAccountKeywordsToDb({
+    accountId: targetAccId,
+    accountName: targetAccName,
+    propertyName: targetAccName,
+    ga4PropertyId: ga4PropertyId !== undefined ? ga4PropertyId : current.ga4PropertyId,
+    gscSiteUrl: gscSiteUrl !== undefined ? gscSiteUrl : current.gscSiteUrl,
+    brandKeywords: bStr,
+    nonBrandKeywords: nbStr,
+  });
 
   const updated = {
     ...current,
@@ -454,5 +536,67 @@ export const switchConnectedAccount = (account) => {
 
   saveAccountKeywords(accountId, { brandKeywords, nonBrandKeywords });
 
+  saveAccountKeywordsToDb({
+    accountId,
+    accountName,
+    propertyName: account.propertyName || accountName,
+    ga4PropertyId: updates.ga4PropertyId,
+    gscSiteUrl: updates.gscSiteUrl,
+    brandKeywords,
+    nonBrandKeywords,
+  });
+
   return saveApiConfig(updates);
 };
+
+/**
+ * Fetch Google Ads overview metrics, campaigns, keywords, and daily trends
+ */
+export const fetchGoogleAdsOverview = async ({
+  startDate,
+  endDate,
+  prevStartDate,
+  prevEndDate,
+  customerId,
+  developerToken,
+  accountName,
+} = {}) => {
+  const cfg = getApiConfig();
+  const params = new URLSearchParams();
+  if (startDate) params.set('startDate', startDate);
+  if (endDate) params.set('endDate', endDate);
+  if (prevStartDate) params.set('prevStartDate', prevStartDate);
+  if (prevEndDate) params.set('prevEndDate', prevEndDate);
+  if (customerId || cfg.googleAdsCustomerId) params.set('customerId', customerId || cfg.googleAdsCustomerId);
+  if (developerToken || cfg.googleAdsDeveloperToken) params.set('developerToken', developerToken || cfg.googleAdsDeveloperToken);
+  params.set('accountName', accountName || cfg.selectedAccountName || 'Boulder Decision');
+
+  const res = await fetch(`${BACKEND_BASE}/api/google-ads/overview?${params.toString()}`, {
+    headers: getHeaders(),
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.error || `HTTP ${res.status}: Failed to fetch Google Ads overview`);
+  }
+  return await res.json();
+};
+
+/**
+ * Test Google Ads API connection
+ */
+export const testGoogleAdsConnection = async (extraParams = {}) => {
+  const cfg = getApiConfig();
+  const res = await fetch(`${BACKEND_BASE}/api/google-ads/test`, {
+    method: 'POST',
+    headers: getHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({
+      customerId: cfg.googleAdsCustomerId,
+      developerToken: cfg.googleAdsDeveloperToken,
+      ...extraParams,
+    }),
+  });
+  return await res.json();
+};
+

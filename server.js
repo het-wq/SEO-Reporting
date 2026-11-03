@@ -11,6 +11,7 @@ import backlinksRouter from './routes/backlinks.js';
 import aiVisibilityRouter from './routes/aiVisibility.js';
 import integrationsRouter from './routes/integrations.js';
 import dashboardRouter from './routes/dashboard.js';
+import googleAdsRouter from './routes/googleAds.js';
 
 import {
   getOAuthClient,
@@ -54,6 +55,7 @@ app.use('/api/backlinks', backlinksRouter);
 app.use('/api/ai-visibility', aiVisibilityRouter);
 app.use('/api/integrations', integrationsRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/google-ads', googleAdsRouter);
 app.use('/api/reports', reportsRouter);
 
 // -----------------------------------------------------------------------------

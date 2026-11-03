@@ -3,6 +3,7 @@ import {
   Globe, Search, Smartphone, Tag, TrendingUp, TrendingDown,
   Lightbulb, Target, Clock, CalendarClock, AlertTriangle, KeyRound,
   Link2, CheckCircle2, Calendar, Layers, ExternalLink, ArrowRight, ListChecks,
+  Megaphone,
 } from 'lucide-react';
 import SectionCard from '@/components/dashboard/SectionCard';
 import MetricBox from '@/components/MetricBox';
@@ -692,6 +693,69 @@ export default function OverviewPage({ onNavigate }) {
           </div>
         )}
       </SectionCard>
+
+      {/* Google Ads Paid Search Summary */}
+      {report?.googleAds && (
+        <SectionCard
+          icon={Megaphone}
+          iconClassName="bg-emerald-50 text-[#14532D]"
+          title="Google Ads Paid Search Performance"
+          action={
+            <button
+              type="button"
+              onClick={() => onNavigate && onNavigate('google-ads')}
+              className="text-xs text-emerald-700 hover:text-emerald-800 font-semibold cursor-pointer inline-flex items-center gap-1"
+            >
+              <span>View full ads report</span>
+              <ArrowRight className="h-3 w-3" />
+            </button>
+          }
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mb-4">
+            <MetricBox
+              title="Ad Spend"
+              value={`$${(report.googleAds.metrics?.cost?.current || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+              previousValue={`$${(report.googleAds.metrics?.cost?.previous || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+              diff={report.googleAds.metrics?.cost?.diffPct || 0}
+            />
+            <MetricBox
+              title="Paid Clicks"
+              value={(report.googleAds.metrics?.clicks?.current || 0).toLocaleString()}
+              previousValue={(report.googleAds.metrics?.clicks?.previous || 0).toLocaleString()}
+              diff={report.googleAds.metrics?.clicks?.diffPct || 0}
+            />
+            <MetricBox
+              title="Avg CPC"
+              value={`$${(report.googleAds.metrics?.avgCpc?.current || 0).toFixed(2)}`}
+              previousValue={`$${(report.googleAds.metrics?.avgCpc?.previous || 0).toFixed(2)}`}
+              diff={report.googleAds.metrics?.avgCpc?.diffPct || 0}
+            />
+            <MetricBox
+              title="Paid Conversions"
+              value={(report.googleAds.metrics?.conversions?.current || 0).toLocaleString()}
+              previousValue={(report.googleAds.metrics?.conversions?.previous || 0).toLocaleString()}
+              diff={report.googleAds.metrics?.conversions?.diffPct || 0}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs">
+            <div className="flex items-center gap-2 text-slate-700 flex-wrap">
+              <span className="font-bold">Top Campaign:</span>
+              <span className="font-semibold text-slate-900">{report.googleAds.campaigns?.[0]?.name || 'Search - Local Intent'}</span>
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px]">
+                {report.googleAds.campaigns?.[0]?.clicks || 0} Clicks
+              </Badge>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigate && onNavigate('google-ads')}
+              className="text-xs font-semibold text-[#14532D] hover:underline cursor-pointer"
+            >
+              Analyze all {report.googleAds.campaigns?.length || 0} campaigns &amp; search terms →
+            </button>
+          </div>
+        </SectionCard>
+      )}
 
       {executiveInsights && (
         <SectionCard icon={Lightbulb} iconClassName="bg-amber-50 text-amber-600" title="Performance Insights">

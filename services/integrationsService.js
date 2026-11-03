@@ -5,6 +5,7 @@ import { getLocalSeoOverview, listGbpLocations } from './localSeoService.js';
 import { getAiVisibilityOverview } from './aiVisibilityService.js';
 import { parseBrandTerms } from './brandAnalysisService.js';
 import { listGscSites } from './gscService.js';
+import { getAccountKeywords } from '../data/accountKeywordsStore.js';
 
 // Records last successful check timestamps and statuses
 const integrationTelemetry = {
@@ -567,14 +568,16 @@ export const getGoogleAccounts = async (req) => {
         findMatchingGbp(acc.accountName) ||
         (matchedGsc ? findMatchingGbp(matchedGsc.siteUrl) : null);
 
-      const brandKeywords = deriveAccountBrandKeywords({
-        accountName: acc.accountName,
-        propertyName: prop.propertyName,
+      const accountId = `ga4-${prop.propertyId}`;
+      const kw = await getAccountKeywords({
+        accountId,
+        propertyId: prop.propertyId,
         siteUrl: matchedGsc?.siteUrl || '',
+        accountName: acc.accountName || prop.propertyName,
       });
 
       accounts.push({
-        id: `ga4-${prop.propertyId}`,
+        id: accountId,
         name: `${acc.accountName} - ${prop.propertyName}`,
         accountName: acc.accountName,
         propertyName: prop.propertyName,
@@ -582,7 +585,8 @@ export const getGoogleAccounts = async (req) => {
         gscSiteUrl: matchedGsc ? matchedGsc.siteUrl : '',
         gbpLocationId: matchedGbp ? matchedGbp.name : '',
         gbpLocationName: matchedGbp ? matchedGbp.title : '',
-        brandKeywords,
+        brandKeywords: kw.brandKeywords,
+        nonBrandKeywords: kw.nonBrandKeywords || '',
         source: matchedGsc ? 'matched' : 'ga4',
       });
     }
@@ -612,14 +616,16 @@ export const getGoogleAccounts = async (req) => {
         if (matchedGa4PropId) break;
       }
 
-      const brandKeywords = deriveAccountBrandKeywords({
-        accountName: cleanName,
-        propertyName: site.siteUrl,
+      const accountId = `gsc-${encodeURIComponent(site.siteUrl)}`;
+      const kw = await getAccountKeywords({
+        accountId,
+        propertyId: matchedGa4PropId,
         siteUrl: site.siteUrl,
+        accountName: cleanName,
       });
 
       accounts.push({
-        id: `gsc-${encodeURIComponent(site.siteUrl)}`,
+        id: accountId,
         name: cleanName,
         accountName: cleanName,
         propertyName: site.siteUrl,
@@ -627,7 +633,8 @@ export const getGoogleAccounts = async (req) => {
         gscSiteUrl: site.siteUrl,
         gbpLocationId: matchedGbp ? matchedGbp.name : '',
         gbpLocationName: matchedGbp ? matchedGbp.title : '',
-        brandKeywords,
+        brandKeywords: kw.brandKeywords,
+        nonBrandKeywords: kw.nonBrandKeywords || '',
         source: 'gsc',
       });
     }
@@ -638,6 +645,13 @@ export const getGoogleAccounts = async (req) => {
     (a) => a.accountName?.toLowerCase().includes('boulder') || a.gscSiteUrl?.toLowerCase().includes('boulder')
   );
   if (!hasBoulder) {
+    const kw = await getAccountKeywords({
+      accountId: 'default-boulder-decision',
+      propertyId: process.env.GA4_PROPERTY_ID || '516707960',
+      siteUrl: process.env.GSC_SITE_URL || 'https://boulderdecisions.com/',
+      accountName: 'Boulder Decision',
+    });
+
     accounts.unshift({
       id: 'default-boulder-decision',
       name: 'Boulder Decision',
@@ -647,7 +661,8 @@ export const getGoogleAccounts = async (req) => {
       gscSiteUrl: process.env.GSC_SITE_URL || 'https://boulderdecisions.com/',
       gbpLocationId: process.env.GOOGLE_BUSINESS_LOCATION_ID || '',
       gbpLocationName: 'Boulder Decisions',
-      brandKeywords: 'Boulder Decision, Boulder Decisions, boulderdecision, boulderdecisions, boulder decisions',
+      brandKeywords: kw.brandKeywords,
+      nonBrandKeywords: kw.nonBrandKeywords || '',
       source: 'default',
     });
   }

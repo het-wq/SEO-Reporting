@@ -13,6 +13,7 @@ import {
   LogOut,
   Building2,
   Plus,
+  Megaphone,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,9 @@ import {
   fetchGoogleAccounts,
   switchConnectedAccount,
   deriveBrandKeywords,
+  fetchAccountKeywordsFromDb,
+  saveBrandAndNonBrandKeywords,
+  testGoogleAdsConnection,
 } from '@/services/liveSeoApi';
 import { useReport } from '@/context/ReportContext';
 
@@ -138,6 +142,15 @@ export default function SettingsPage() {
 
   const handleSaveConfig = () => {
     saveApiConfig(config);
+    // Persist brand & non-brand keywords to database for active account
+    saveBrandAndNonBrandKeywords({
+      brandKeywords: config.brandKeywords,
+      nonBrandKeywords: config.nonBrandKeywords,
+      accountId: config.selectedAccountId,
+      accountName: config.selectedAccountName,
+      ga4PropertyId: config.ga4PropertyId,
+      gscSiteUrl: config.gscSiteUrl,
+    });
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);
     refreshDashboard();
@@ -167,7 +180,13 @@ export default function SettingsPage() {
     }));
 
     try {
-      const result = await testIntegrationConnection(providerId, extraParams);
+      let result;
+      if (providerId === 'googleAds') {
+        result = await testGoogleAdsConnection(extraParams);
+      } else {
+        result = await testIntegrationConnection(providerId, extraParams);
+      }
+
       setTestResults((prev) => ({
         ...prev,
         [providerId]: { testing: false, result },
@@ -188,7 +207,7 @@ export default function SettingsPage() {
   };
 
   // Switch account from master dropdown
-  const handleAccountChange = (selectedId) => {
+  const handleAccountChange = async (selectedId) => {
     if (selectedId === '__add_new__') {
       setShowAddAccountModal(true);
       return;
@@ -202,10 +221,29 @@ export default function SettingsPage() {
     const account = allAccounts.find((a) => a.id === selectedId);
     if (!account) return;
 
-    const newConfig = switchConnectedAccount(account);
+    // Fetch account-specific brand and non-brand keywords from database!
+    let dbKeywords = null;
+    try {
+      dbKeywords = await fetchAccountKeywordsFromDb({
+        accountId: account.id,
+        propertyId: account.ga4PropertyId,
+        siteUrl: account.gscSiteUrl,
+        accountName: account.accountName || account.name,
+      });
+    } catch (e) {
+      console.warn('Error fetching DB keywords on account switch:', e);
+    }
+
+    const accountWithDb = {
+      ...account,
+      brandKeywords: dbKeywords?.brandKeywords || account.brandKeywords || '',
+      nonBrandKeywords: dbKeywords?.nonBrandKeywords || account.nonBrandKeywords || '',
+    };
+
+    const newConfig = switchConnectedAccount(accountWithDb);
     setConfig(newConfig);
     setAccountSwitchedNotice(
-      `Connected data stream switched to "${account.accountName || account.name}". Live dashboard refreshed.`
+      `Connected data stream switched to "${account.accountName || account.name}". Brand keywords loaded from database.`
     );
     setTimeout(() => setAccountSwitchedNotice(null), 5000);
     refreshDashboard();
@@ -774,9 +812,14 @@ export default function SettingsPage() {
         {/* Card 3: Brand vs Non-Brand Matching Rules */}
         <Card className="border-slate-200 shadow-xs md:col-span-2">
           <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <Tag className="h-4 w-4 text-[#14532D]" />
-              <CardTitle className="text-sm font-bold text-slate-900">Brand vs Non-Brand Keyword Classifier</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-[#14532D]" />
+                <CardTitle className="text-sm font-bold text-slate-900">Brand vs Non-Brand Keyword Classifier</CardTitle>
+              </div>
+              <Badge variant="outline" className="text-[10px] bg-emerald-50 text-[#14532D] border-emerald-300 font-semibold">
+                Database Synced: {activeAccountObj?.accountName || config.selectedAccountName || 'Active Account'}
+              </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-3 pt-0">
@@ -956,6 +999,88 @@ export default function SettingsPage() {
             >
               {testResults.localSeo?.testing ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
               <span>Test Google Business Profile Connection</span>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Card 5: Google Ads Reporting API */}
+        <Card className="border-slate-200 shadow-xs flex flex-col justify-between md:col-span-2">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Megaphone className="h-4 w-4 text-[#14532D]" />
+                <CardTitle className="text-sm font-bold text-slate-900">
+                  Google Ads Reporting API (v17)
+                </CardTitle>
+              </div>
+              <Badge variant={isGoogleConnected ? 'success' : 'secondary'} className="text-[10px]">
+                {isGoogleConnected ? 'API Available' : 'Login Required'}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-0">
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Google Ads API streams live advertising telemetry including paid impressions, ad spend, CPC, conversions, campaign ROI, and search query triggers directly into the Google Ads Reporting tab.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Google Ads Customer ID
+                </label>
+                <Input
+                  placeholder="e.g. 123-456-7890 or 1234567890"
+                  value={config.googleAdsCustomerId || ''}
+                  onChange={(e) => setConfig((prev) => ({ ...prev, googleAdsCustomerId: e.target.value }))}
+                  className="font-mono text-xs"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">10-digit Google Ads account ID</p>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Developer Token (Optional)
+                </label>
+                <Input
+                  placeholder="Developer token from Google Ads API Center"
+                  value={config.googleAdsDeveloperToken || ''}
+                  onChange={(e) => setConfig((prev) => ({ ...prev, googleAdsDeveloperToken: e.target.value }))}
+                  className="font-mono text-xs"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">Optional for enterprise MCC accounts</p>
+              </div>
+            </div>
+
+            {testResults.googleAds?.result && (
+              <div
+                className={`p-2.5 rounded text-xs ${
+                  testResults.googleAds.result?.success
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    : 'bg-amber-50 text-amber-800 border border-amber-200'
+                }`}
+              >
+                <p className="font-semibold">{testResults.googleAds.result?.message}</p>
+                {testResults.googleAds.result?.actionLabel && (
+                  <button
+                    type="button"
+                    onClick={handleStartGoogleOAuth}
+                    className="underline font-bold block mt-1.5 cursor-pointer text-[#14532D] hover:text-[#1B6B45]"
+                  >
+                    {testResults.googleAds.result.actionLabel} →
+                  </button>
+                )}
+              </div>
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => runTest('googleAds', { customerId: config.googleAdsCustomerId, developerToken: config.googleAdsDeveloperToken })}
+              disabled={testResults.googleAds?.testing || !isGoogleConnected}
+              className="w-full text-xs font-semibold bg-slate-50 hover:bg-slate-100 cursor-pointer"
+            >
+              {testResults.googleAds?.testing ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+              <span>Test Google Ads API Connection</span>
             </Button>
           </CardContent>
         </Card>
