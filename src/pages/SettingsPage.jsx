@@ -668,7 +668,7 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {testResults.ga4 && (
+            {testResults.ga4?.result && (
               <div className={`p-2.5 rounded text-xs ${testResults.ga4.result?.success ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
                 <p className="font-semibold">{testResults.ga4.result?.message}</p>
                 {testResults.ga4.result?.actionUrl && (
@@ -747,7 +747,7 @@ export default function SettingsPage() {
               </p>
             </div>
 
-            {testResults.gsc && (
+            {testResults.gsc?.result && (
               <div className={`p-2.5 rounded text-xs ${testResults.gsc.result?.success ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
                 <p className="font-semibold">{testResults.gsc.result?.message}</p>
                 {testResults.gsc.result?.actionUrl && (
@@ -900,22 +900,33 @@ export default function SettingsPage() {
             )}
 
             {googleAccountsData.gbpRequiresReauth && (
-              <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1">
-                <p className="font-semibold">Google Business Profile permissions required for auto-discovery</p>
-                <p className="text-[11px] text-amber-800">
-                  Click Re-authorize to grant Business Profile management permissions to your Google login, or manually enter your Location ID above to fetch live performance metrics directly.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleStartGoogleOAuth}
-                  className="font-bold underline text-[#14532D] block cursor-pointer"
-                >
-                  Re-authorize Google Account →
-                </button>
+              <div className="p-3.5 rounded-lg bg-amber-50/90 border border-amber-200 text-amber-900 text-xs space-y-2.5">
+                <div className="flex items-start gap-2.5">
+                  <div className="p-1 rounded bg-amber-100 text-amber-800 mt-0.5 shrink-0">
+                    <ShieldCheck className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-bold text-amber-950">Google Business Profile Scope Permission Required</p>
+                    <p className="text-[11px] text-amber-900 leading-relaxed">
+                      Your current Google login does not have <code>business.manage</code> permissions to auto-discover Business Profiles. Click below to re-authorize and grant profile access, or enter your Location ID manually above.
+                    </p>
+                  </div>
+                </div>
+                <div className="pt-1 flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleStartGoogleOAuth}
+                    className="gap-2 text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white shadow-xs cursor-pointer"
+                  >
+                    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" className="h-3.5 w-3.5" />
+                    <span>Re-authorize Google Account</span>
+                  </Button>
+                </div>
               </div>
             )}
 
-            {testResults.localSeo && (
+            {testResults.localSeo?.result && (
               <div
                 className={`p-2.5 rounded text-xs ${
                   testResults.localSeo.result?.success
@@ -928,7 +939,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={handleStartGoogleOAuth}
-                    className="underline font-bold block mt-1 cursor-pointer"
+                    className="underline font-bold block mt-1.5 cursor-pointer text-[#14532D] hover:text-[#1B6B45]"
                   >
                     {testResults.localSeo.result.actionLabel} →
                   </button>

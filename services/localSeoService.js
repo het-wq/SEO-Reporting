@@ -340,13 +340,20 @@ export const getLocalSeoOverview = async ({
         } catch (perfErr) {
           console.warn('Google Business Profile Performance API error:', perfErr.message);
           const classified = classifyGoogleError(perfErr, 'Google Business Profile Performance API');
+          const isScopeErr = classified.status === 'scope_insufficient' || locationRes.requiresReauth;
 
           return {
             configured: true,
             connected: false,
+            requiresReauth: isScopeErr,
             provider: 'Google Business Profile Performance API',
-            status: classified.status,
+            status: isScopeErr ? 'reauth_required' : (classified.status || 'error'),
+            description: isScopeErr
+              ? 'Google Business Profile permissions required. Please re-authorize your Google Account to grant Business Profile management permissions.'
+              : (classified.message || perfErr.message),
             error: perfErr.message,
+            actionLabel: isScopeErr ? 'Re-authorize Google Account' : (classified.actionLabel || null),
+            actionUrl: classified.actionUrl || null,
             classified,
             cloudApiEnabled: true,
             location: targetLocation,
@@ -367,13 +374,16 @@ export const getLocalSeoOverview = async ({
       // Google Account is connected and API is enabled, but no verified location found yet
       return {
         configured: true,
-        connected: true,
+        connected: false,
+        requiresReauth: Boolean(locationRes.requiresReauth),
         provider: 'Google Business Profile Performance API',
-        status: 'connected',
+        status: locationRes.requiresReauth ? 'reauth_required' : 'location_setup_needed',
         locationSetupNeeded: true,
         title: 'Google Business Profile Connected',
-        description:
-          'Google Business Profile Performance API is active. No business location was automatically discovered for this Google login. Specify your Location ID in Settings or link your business profile.',
+        description: locationRes.requiresReauth
+          ? 'Google Business Profile permissions required. Please re-authorize your Google Account to grant Business Profile management permissions.'
+          : 'Google Business Profile Performance API is active. No business location was selected. Please enter or select a Location ID to fetch performance metrics.',
+        actionLabel: locationRes.requiresReauth ? 'Re-authorize Google Account' : null,
         cloudApiEnabled: true,
         availableLocations: locationRes.locations || [],
         accounts: locationRes.accounts || [],

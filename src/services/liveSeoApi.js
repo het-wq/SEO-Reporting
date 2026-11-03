@@ -55,10 +55,15 @@ export const deriveBrandKeywords = (account) => {
   const prop = typeof account === 'object' ? (account.propertyName || '') : '';
   const site = typeof account === 'object' ? (account.gscSiteUrl || '') : '';
 
+  const hasNonBoulderName =
+    (name && !name.toLowerCase().includes('boulder') && !/^\d+$/.test(name.trim()) && name.toLowerCase() !== 'connected account') ||
+    (prop && !prop.toLowerCase().includes('boulder') && !/^\d+$/.test(prop.trim()));
+
   const isBoulder =
-    name.toLowerCase().includes('boulder') ||
-    prop.toLowerCase().includes('boulder') ||
-    site.toLowerCase().includes('boulder');
+    !hasNonBoulderName &&
+    (name.toLowerCase().includes('boulder') ||
+     prop.toLowerCase().includes('boulder') ||
+     site.toLowerCase().includes('boulder'));
 
   if (isBoulder) {
     return 'Boulder Decision, Boulder Decisions, boulderdecision, boulderdecisions, boulder decisions';

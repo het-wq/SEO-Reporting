@@ -320,17 +320,18 @@ export const testIntegration = async (providerId, req) => {
     const locationId = req?.body?.locationId || null;
     const locationName = req?.body?.locationName || null;
     const res = await getLocalSeoOverview({ locationId, locationName, req });
-    const isSuccess = Boolean(res.connected || (res.configured && !res.requiresReauth));
+    const isSuccess = Boolean(res.connected && !res.requiresReauth);
     return {
       success: isSuccess,
       status: res.status,
       message: res.requiresReauth
-        ? res.description
+        ? (res.description || 'Google Business Profile permissions required. Please re-authorize your Google Account to grant Business Profile management permissions.')
         : res.connected
-        ? `Connected: ${res.provider} (${res.location?.title || 'Active'})`
-        : res.description,
+        ? `Connected: ${res.provider} (${res.location?.title || res.location?.name || 'Active'})`
+        : (res.description || res.error || 'Google Business Profile connection test failed. Please check your Location ID or re-authorize.'),
       instructions: res.instructions,
       actionLabel: res.actionLabel,
+      actionUrl: res.actionUrl,
       location: res.location,
       availableLocations: res.availableLocations || [],
     };
@@ -354,10 +355,15 @@ export const testIntegration = async (providerId, req) => {
  * Never produces Boulder Decision keywords unless the account is actually Boulder Decision.
  */
 export const deriveAccountBrandKeywords = ({ accountName, propertyName, siteUrl }) => {
+  const hasNonBoulderName =
+    (accountName && !accountName.toLowerCase().includes('boulder') && !/^\d+$/.test(accountName.trim())) ||
+    (propertyName && !propertyName.toLowerCase().includes('boulder') && !/^\d+$/.test(propertyName.trim()));
+
   const isBoulder =
-    (accountName && accountName.toLowerCase().includes('boulder')) ||
-    (propertyName && propertyName.toLowerCase().includes('boulder')) ||
-    (siteUrl && siteUrl.toLowerCase().includes('boulder'));
+    !hasNonBoulderName &&
+    ((accountName && accountName.toLowerCase().includes('boulder')) ||
+     (propertyName && propertyName.toLowerCase().includes('boulder')) ||
+     (siteUrl && siteUrl.toLowerCase().includes('boulder')));
 
   if (isBoulder) {
     return 'Boulder Decision, Boulder Decisions, boulderdecision, boulderdecisions, boulder decisions';
@@ -543,8 +549,13 @@ export const getGoogleAccounts = async (req) => {
         );
       });
 
-      if (!matchedGsc && gscSites.length > 0) {
-        if (gscSites.length === 1) matchedGsc = gscSites[0];
+      // If this account actually is Boulder Decision and no GSC site matched by domain, match boulderdecisions.com
+      const isAccBoulder =
+        acc.accountName?.toLowerCase().includes('boulder') ||
+        prop.propertyName?.toLowerCase().includes('boulder');
+
+      if (!matchedGsc && isAccBoulder && gscSites.length > 0) {
+        matchedGsc = gscSites.find((s) => s.siteUrl.toLowerCase().includes('boulder')) || gscSites[0];
       }
 
       if (matchedGsc) {
@@ -559,7 +570,7 @@ export const getGoogleAccounts = async (req) => {
       const brandKeywords = deriveAccountBrandKeywords({
         accountName: acc.accountName,
         propertyName: prop.propertyName,
-        siteUrl: matchedGsc?.siteUrl,
+        siteUrl: matchedGsc?.siteUrl || '',
       });
 
       accounts.push({
@@ -568,7 +579,7 @@ export const getGoogleAccounts = async (req) => {
         accountName: acc.accountName,
         propertyName: prop.propertyName,
         ga4PropertyId: prop.propertyId,
-        gscSiteUrl: matchedGsc ? matchedGsc.siteUrl : (process.env.GSC_SITE_URL || 'https://boulderdecisions.com/'),
+        gscSiteUrl: matchedGsc ? matchedGsc.siteUrl : '',
         gbpLocationId: matchedGbp ? matchedGbp.name : '',
         gbpLocationName: matchedGbp ? matchedGbp.title : '',
         brandKeywords,
