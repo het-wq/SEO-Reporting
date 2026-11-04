@@ -62,6 +62,9 @@ import {
   calculateActivityStats,
 } from '@/lib/activitiesData';
 
+import { useClient } from '@/context/ClientContext';
+import { addClientSeoActivityApi, addClientBacklinkApi } from '@/services/liveSeoApi';
+
 const STORAGE_KEY = ACTIVITIES_STORAGE_KEY;
 
 export const CATEGORIES = ACTIVITY_CATEGORIES;
@@ -69,15 +72,13 @@ export const CATEGORIES = ACTIVITY_CATEGORIES;
 const CHART_COLORS = ['#14532D', '#16a34a', '#1B6B45', '#2E9B62', '#d97706', '#dc2626', '#0891b2', '#db2777', '#22c55e', '#65a30d'];
 
 function hostnameOf(url) {
+  if (!url || typeof url !== 'string') return '';
   try {
     return new URL(url).hostname.replace('www.', '');
   } catch {
     return url;
   }
 }
-
-import { useClient } from '@/context/ClientContext';
-import { addClientSeoActivityApi, addClientBacklinkApi } from '@/services/liveSeoApi';
 
 export default function SeoActivitiesPage() {
   const { report, loading, selectedPeriod } = useReport();
@@ -109,7 +110,18 @@ export default function SeoActivitiesPage() {
   // Sync activities when client or report updates
   useEffect(() => {
     if (report?.seoActivities?.allActivities && report.seoActivities.allActivities.length > 0) {
-      setActivities(report.seoActivities.allActivities);
+      setActivities(
+        report.seoActivities.allActivities.map((a) => ({
+          id: a.id,
+          title: a.title || a.activity_title || '',
+          category: a.category || a.activity_type || 'General SEO',
+          status: a.status || 'Completed',
+          priority: a.priority || 'Medium',
+          date: a.date || a.activity_date || '',
+          targetUrl: a.targetUrl || a.target_url || '',
+          notes: a.notes || '',
+        }))
+      );
     } else {
       setActivities(getStoredActivities(selectedClientId));
     }
@@ -214,14 +226,22 @@ export default function SeoActivitiesPage() {
   // Filtered activities list
   const filteredActivities = useMemo(() => {
     return activities.filter((a) => {
-      const matchSearch =
-        !activitiesSearch ||
-        a.title.toLowerCase().includes(activitiesSearch.toLowerCase()) ||
-        a.notes.toLowerCase().includes(activitiesSearch.toLowerCase()) ||
-        (a.targetUrl && a.targetUrl.toLowerCase().includes(activitiesSearch.toLowerCase()));
+      const title = String(a?.title || a?.activity_title || '');
+      const notes = String(a?.notes || '');
+      const targetUrl = String(a?.targetUrl || a?.target_url || '');
+      const q = (activitiesSearch || '').toLowerCase().trim();
 
-      const matchStatus = statusFilter === 'All' || a.status === statusFilter;
-      const matchCategory = categoryFilter === 'All' || a.category === categoryFilter;
+      const matchSearch =
+        !q ||
+        title.toLowerCase().includes(q) ||
+        notes.toLowerCase().includes(q) ||
+        targetUrl.toLowerCase().includes(q);
+
+      const status = a?.status || '';
+      const category = a?.category || a?.activity_type || '';
+
+      const matchStatus = statusFilter === 'All' || status === statusFilter;
+      const matchCategory = categoryFilter === 'All' || category === categoryFilter;
 
       return matchSearch && matchStatus && matchCategory;
     });
@@ -274,7 +294,19 @@ export default function SeoActivitiesPage() {
   // Sync backlinks when client or report updates
   useEffect(() => {
     if (report?.backlinks?.items && report.backlinks.items.length > 0) {
-      setBacklinks(report.backlinks.items);
+      setBacklinks(
+        report.backlinks.items.map((b) => ({
+          id: b.id,
+          sourceUrl: b.sourceUrl || b.source_url || '',
+          targetUrl: b.targetUrl || b.target_url || '',
+          anchorText: b.anchorText || b.anchor_text || '',
+          category: b.category || b.link_type || 'Guest Post',
+          da: b.da !== undefined && b.da !== null ? b.da : (b.domain_authority ?? null),
+          status: b.status || 'Live / Indexed',
+          date: b.date || b.acquired_date || '',
+          notes: b.notes || '',
+        }))
+      );
     } else {
       setBacklinks(getStoredBacklinks(selectedClientId));
     }
@@ -423,15 +455,24 @@ export default function SeoActivitiesPage() {
   // Filtered Backlinks
   const filteredBacklinks = useMemo(() => {
     return backlinks.filter((b) => {
-      const matchSearch =
-        !backlinksSearch ||
-        b.sourceUrl.toLowerCase().includes(backlinksSearch.toLowerCase()) ||
-        b.targetUrl.toLowerCase().includes(backlinksSearch.toLowerCase()) ||
-        b.anchorText.toLowerCase().includes(backlinksSearch.toLowerCase()) ||
-        (b.notes && b.notes.toLowerCase().includes(backlinksSearch.toLowerCase()));
+      const sourceUrl = String(b?.sourceUrl || b?.source_url || '');
+      const targetUrl = String(b?.targetUrl || b?.target_url || '');
+      const anchorText = String(b?.anchorText || b?.anchor_text || '');
+      const notes = String(b?.notes || '');
+      const q = (backlinksSearch || '').toLowerCase().trim();
 
-      const matchStatus = backlinkStatusFilter === 'All' || b.status === backlinkStatusFilter;
-      const matchCategory = backlinkCategoryFilter === 'All' || b.category === backlinkCategoryFilter;
+      const matchSearch =
+        !q ||
+        sourceUrl.toLowerCase().includes(q) ||
+        targetUrl.toLowerCase().includes(q) ||
+        anchorText.toLowerCase().includes(q) ||
+        notes.toLowerCase().includes(q);
+
+      const status = b?.status || '';
+      const category = b?.category || b?.link_type || '';
+
+      const matchStatus = backlinkStatusFilter === 'All' || status === backlinkStatusFilter;
+      const matchCategory = backlinkCategoryFilter === 'All' || category === backlinkCategoryFilter;
 
       return matchSearch && matchStatus && matchCategory;
     });
@@ -464,16 +505,25 @@ export default function SeoActivitiesPage() {
   const allPosts = useMemo(() => {
     if (!report || !report.seoActivities) return [];
     const { onsiteBlogPosts = [], offsiteBlogPosts = [] } = report.seoActivities;
+    const normalizePost = (item, defaultType) => {
+      if (!item) return null;
+      if (typeof item === 'string') return { url: item, type: defaultType };
+      const urlStr = item.target_url || item.targetUrl || item.url || item.activity_title || item.title || '';
+      return { url: String(urlStr), type: item.type || defaultType };
+    };
     return [
-      ...onsiteBlogPosts.map((url) => ({ url, type: 'On-site blog' })),
-      ...offsiteBlogPosts.map((url) => ({ url, type: 'Guest / off-site' })),
+      ...onsiteBlogPosts.map((p) => normalizePost(p, 'On-site blog')).filter((p) => p && p.url),
+      ...offsiteBlogPosts.map((p) => normalizePost(p, 'Guest / off-site')).filter((p) => p && p.url),
     ];
   }, [report]);
 
-  const filteredPosts = useMemo(
-    () => allPosts.filter((p) => p.url.toLowerCase().includes(contentSearch.toLowerCase())),
-    [allPosts, contentSearch]
-  );
+  const filteredPosts = useMemo(() => {
+    const q = (contentSearch || '').toLowerCase().trim();
+    return allPosts.filter((p) => {
+      const u = typeof p?.url === 'string' ? p.url : String(p?.url || '');
+      return !q || u.toLowerCase().includes(q);
+    });
+  }, [allPosts, contentSearch]);
 
   if (loading && !report) return <Skeleton className="h-96" />;
   if (!report) return <NoReportData />;
@@ -976,7 +1026,7 @@ export default function SeoActivitiesPage() {
             size="sm"
             onClick={() =>
               exportToCsv(
-                `content-published-${curLabel.replace(/\s+/g, '-').toLowerCase()}`,
+                `content-published-${String(curLabel || 'report').replace(/\s+/g, '-').toLowerCase()}`,
                 allPosts.map((p) => ({ URL: p.url, Source: hostnameOf(p.url), Type: p.type }))
               )
             }
@@ -1005,8 +1055,8 @@ export default function SeoActivitiesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPosts.map((p) => (
-              <TableRow key={p.url}>
+            {filteredPosts.map((p, idx) => (
+              <TableRow key={p.url || idx}>
                 <TableCell>
                   <a
                     href={p.url}

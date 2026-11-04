@@ -182,7 +182,7 @@ export function calculateActivityStats(activitiesList) {
 
   const counts = {};
   items.forEach((a) => {
-    const cat = a.category || 'General SEO';
+    const cat = a.category || a.activity_type || 'General SEO';
     counts[cat] = (counts[cat] || 0) + 1;
   });
 

@@ -212,14 +212,20 @@ export function calculateBacklinkStats(backlinksList) {
   const inProgress = items.filter((b) => b.status === 'In Progress').length;
   const planned = items.filter((b) => b.status === 'Planned').length;
 
-  const rankedDa = items.filter((b) => b.da !== null && b.da !== undefined && !isNaN(b.da));
+  const rankedDa = items.filter((b) => {
+    const val = b.da !== undefined && b.da !== null ? b.da : b.domain_authority;
+    return val !== null && val !== undefined && !isNaN(val);
+  });
   const avgDa = rankedDa.length
-    ? (rankedDa.reduce((acc, b) => acc + Number(b.da), 0) / rankedDa.length).toFixed(1)
+    ? (rankedDa.reduce((acc, b) => {
+        const val = b.da !== undefined && b.da !== null ? b.da : b.domain_authority;
+        return acc + Number(val);
+      }, 0) / rankedDa.length).toFixed(1)
     : '—';
 
   const counts = {};
   items.forEach((b) => {
-    const cat = b.category || 'General Backlink';
+    const cat = b.category || b.link_type || 'General Backlink';
     counts[cat] = (counts[cat] || 0) + 1;
   });
 

@@ -603,20 +603,52 @@ export const getUnifiedClientDashboard = async (clientId, {
 
   // Format activities into structure expected by dashboard
   const formattedSeoActivities = {
-    onsiteBlogPosts: seoActivities.filter((a) => a.activity_type?.toLowerCase().includes('content') || a.activity_type?.toLowerCase().includes('onsite') || a.activity_type?.toLowerCase().includes('page')),
-    offsiteBlogPosts: seoActivities.filter((a) => a.activity_type?.toLowerCase().includes('guest') || a.activity_type?.toLowerCase().includes('offsite')),
-    offPageActivities: offPageActivities.length > 0 ? offPageActivities : seoActivities.filter((a) => a.activity_type?.toLowerCase().includes('listing') || a.activity_type?.toLowerCase().includes('submission')),
-    allActivities: seoActivities,
+    onsiteBlogPosts: seoActivities
+      .filter((a) => (a.activity_type || '').toLowerCase().includes('content') || (a.activity_type || '').toLowerCase().includes('onsite') || (a.activity_type || '').toLowerCase().includes('page'))
+      .map((a) => a.target_url || a.targetUrl || a.activity_title || a.title || ''),
+    offsiteBlogPosts: seoActivities
+      .filter((a) => (a.activity_type || '').toLowerCase().includes('guest') || (a.activity_type || '').toLowerCase().includes('offsite'))
+      .map((a) => a.target_url || a.targetUrl || a.activity_title || a.title || ''),
+    offPageActivities: (offPageActivities.length > 0 ? offPageActivities : seoActivities.filter((a) => (a.activity_type || '').toLowerCase().includes('listing') || (a.activity_type || '').toLowerCase().includes('submission'))).map((a) => ({
+      id: a.id,
+      title: a.activity_title || a.title || '',
+      category: a.activity_type || a.category || 'Off-Page SEO',
+      status: a.status || 'Completed',
+      priority: a.priority || 'Medium',
+      date: a.activity_date || a.date || '',
+      targetUrl: a.target_url || a.targetUrl || '',
+      notes: a.notes || '',
+    })),
+    allActivities: seoActivities.map((a) => ({
+      id: a.id,
+      title: a.activity_title || a.title || '',
+      category: a.activity_type || a.category || 'General SEO',
+      status: a.status || 'Completed',
+      priority: a.priority || 'Medium',
+      date: a.activity_date || a.date || '',
+      targetUrl: a.target_url || a.targetUrl || '',
+      notes: a.notes || '',
+    })),
     note: `Tracking active for ${client.name}`,
   };
 
   const formattedBacklinks = {
     provider: 'Supabase Multi-Client Backlinks',
     configured: true,
-    items: backlinks,
+    items: backlinks.map((b) => ({
+      id: b.id,
+      sourceUrl: b.source_url || b.sourceUrl || '',
+      targetUrl: b.target_url || b.targetUrl || '',
+      anchorText: b.anchor_text || b.anchorText || '',
+      category: b.category || b.link_type || 'Guest Post',
+      da: b.da !== undefined && b.da !== null ? b.da : (b.domain_authority ?? null),
+      status: b.status || 'Live / Indexed',
+      date: b.date || b.acquired_date || '',
+      notes: b.notes || '',
+    })),
     metrics: {
       totalBacklinks: backlinks.length,
-      referringDomains: new Set(backlinks.map((b) => b.domain_name || b.source_url)).size,
+      referringDomains: new Set(backlinks.map((b) => b.domain_name || b.source_url || b.sourceUrl)).size,
       liveLinks: backlinks.filter((b) => (b.status || '').toLowerCase().includes('live')).length,
     },
   };
