@@ -155,17 +155,27 @@ export const getApiConfig = () => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      const parsed = JSON.parse(saved);
+      let needsSave = false;
       // Migrate away from legacy Atlanta/Appliance demo values or misconfigured boulder domain
-      if (parsed.gscSiteUrl && (parsed.gscSiteUrl.includes('appliancecareofatlanta') || parsed.gscSiteUrl.includes('boulderdecision.com') || parsed.gscSiteUrl.startsWith('sc-domain:boulderdecision'))) {
+      if (!parsed.gscSiteUrl || parsed.gscSiteUrl.includes('appliancecareofatlanta') || (parsed.gscSiteUrl.includes('boulderdecision') && !parsed.gscSiteUrl.includes('https://boulderdecisions.com/')) || parsed.gscSiteUrl.startsWith('sc-domain:boulderdecision')) {
         parsed.gscSiteUrl = 'https://boulderdecisions.com/';
+        needsSave = true;
       }
       if (parsed.brandKeywords && parsed.brandKeywords.toLowerCase().includes('appliance care')) {
         parsed.brandKeywords = defaultConfig.brandKeywords;
+        needsSave = true;
+      }
+      if (needsSave) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+        } catch {
+          // ignore
+        }
       }
       return {
         ...defaultConfig,
         ...parsed,
+        gscSiteUrl: parsed.gscSiteUrl && !parsed.gscSiteUrl.includes('boulderdecision.com') ? parsed.gscSiteUrl : 'https://boulderdecisions.com/',
         googleConnected: parsed.googleConnected || isCookieLoggedIn,
       };
     }

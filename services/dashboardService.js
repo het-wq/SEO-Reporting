@@ -36,8 +36,11 @@ export const getLiveDashboardReport = async ({
   const isBoulder = overrideClientName && overrideClientName.toLowerCase().includes('boulder');
 
   // Multi-client property isolation: only use Boulder env vars if the query is explicitly for Boulder or legacy default
-  const ga4PropertyId = overridePropId || (isExplicitClientQuery ? (isBoulder ? process.env.GA4_PROPERTY_ID : '') : (process.env.GA4_PROPERTY_ID || ''));
-  const gscSiteUrl = overrideSiteUrl || (isExplicitClientQuery ? (isBoulder ? process.env.GSC_SITE_URL : '') : (process.env.GSC_SITE_URL || 'https://boulderdecisions.com/'));
+  let resolvedGscSiteUrl = overrideSiteUrl || (isExplicitClientQuery ? (isBoulder ? process.env.GSC_SITE_URL : '') : (process.env.GSC_SITE_URL || 'https://boulderdecisions.com/'));
+  if (resolvedGscSiteUrl && (resolvedGscSiteUrl.includes('boulderdecision') || isBoulder) && resolvedGscSiteUrl !== 'https://boulderdecisions.com/') {
+    resolvedGscSiteUrl = 'https://boulderdecisions.com/';
+  }
+  const gscSiteUrl = resolvedGscSiteUrl;
   const locationId = overrideLocationId || process.env.GOOGLE_BUSINESS_LOCATION_ID || '';
 
   const brandKey = Array.isArray(overrideBrandTerms) ? overrideBrandTerms.join(',') : (overrideBrandTerms || '');

@@ -13,8 +13,12 @@ const router = express.Router();
 
 const parseParams = (req) => {
   const q = req.method === 'POST' ? req.body : req.query;
+  let siteUrl = q.siteUrl || process.env.GSC_SITE_URL || 'https://boulderdecisions.com/';
+  if (siteUrl && (siteUrl.includes('boulderdecision') || siteUrl.startsWith('sc-domain:boulderdecision')) && siteUrl !== 'https://boulderdecisions.com/') {
+    siteUrl = 'https://boulderdecisions.com/';
+  }
   return {
-    siteUrl: q.siteUrl || process.env.GSC_SITE_URL || 'https://boulderdecisions.com/',
+    siteUrl,
     startDate: q.startDate,
     endDate: q.endDate,
     prevStartDate: q.prevStartDate,

@@ -561,10 +561,12 @@ export const getUnifiedClientDashboard = async (clientId, {
   const ga4Mapping = properties.find((p) => p.property_type === 'GA4');
   const gscMapping = properties.find((p) => p.property_type === 'GSC');
 
-  // ONLY fallback to environment if the client is explicitly Boulder
   const isBoulder = client.name.toLowerCase().includes('boulder');
-  const ga4PropertyId = ga4Mapping?.property_id || (isBoulder ? process.env.GA4_PROPERTY_ID : null);
-  const gscSiteUrl = gscMapping?.property_id || (isBoulder ? process.env.GSC_SITE_URL : null);
+  const ga4PropertyId = ga4Mapping?.property_id || (isBoulder ? (process.env.GA4_PROPERTY_ID || '516707960') : null);
+  let gscSiteUrl = gscMapping?.property_id || (isBoulder ? (process.env.GSC_SITE_URL || 'https://boulderdecisions.com/') : null);
+  if (isBoulder && gscSiteUrl && (gscSiteUrl.includes('boulderdecision') || gscSiteUrl.startsWith('sc-domain:'))) {
+    gscSiteUrl = 'https://boulderdecisions.com/';
+  }
 
   // Fetch brand terms for this client
   const brandRows = await getClientBrandTerms(client.id);
