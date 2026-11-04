@@ -138,8 +138,24 @@ export default function BrandQueriesPage() {
   const [keywordSearch, setKeywordSearch] = useState('');
 
   // Local active rules lists
-  const [brandTerms, setBrandTerms] = useState(DEFAULT_BRAND_TERMS);
-  const [nonBrandTerms, setNonBrandTerms] = useState([]);
+  const [brandTerms, setBrandTerms] = useState(() => {
+    const cfg = getApiConfig();
+    if (cfg.brandKeywords) {
+      return cfg.brandKeywords.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+    }
+    const derived = deriveBrandKeywords({
+      accountName: cfg.selectedAccountName,
+      siteUrl: cfg.gscSiteUrl,
+    });
+    return (derived || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+  });
+  const [nonBrandTerms, setNonBrandTerms] = useState(() => {
+    const cfg = getApiConfig();
+    if (cfg.nonBrandKeywords) {
+      return cfg.nonBrandKeywords.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+    }
+    return [];
+  });
   const [isDirty, setIsDirty] = useState(false);
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved'
 
