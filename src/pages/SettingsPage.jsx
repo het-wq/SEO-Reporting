@@ -509,7 +509,7 @@ export default function SettingsPage() {
 
       {/* Main Settings Navigation Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full bg-slate-100 p-1 rounded-xl gap-1">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full bg-slate-100 p-1 rounded-xl gap-1">
           <TabsTrigger value="clients" className="text-xs font-semibold gap-1.5 cursor-pointer data-[state=active]:bg-white data-[state=active]:text-[#14532D] data-[state=active]:shadow-xs">
             <Building2 className="h-3.5 w-3.5" />
             <span>Clients</span>
@@ -525,10 +525,6 @@ export default function SettingsPage() {
           <TabsTrigger value="brands" className="text-xs font-semibold gap-1.5 cursor-pointer data-[state=active]:bg-white data-[state=active]:text-[#14532D] data-[state=active]:shadow-xs">
             <Tag className="h-3.5 w-3.5" />
             <span>Brand Keywords</span>
-          </TabsTrigger>
-          <TabsTrigger value="providers" className="text-xs font-semibold gap-1.5 cursor-pointer data-[state=active]:bg-white data-[state=active]:text-[#14532D] data-[state=active]:shadow-xs">
-            <Megaphone className="h-3.5 w-3.5" />
-            <span>SEO &amp; Ads APIs</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1209,160 +1205,6 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* =================================================================== */}
-        {/* TAB 5: THIRD-PARTY SEO & ADS INTEGRATIONS                           */}
-        {/* =================================================================== */}
-        <TabsContent value="providers" className="mt-4 space-y-4">
-          {/* Client Selection Bar for SEO & Ads APIs */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-            <div className="flex-1 space-y-1">
-              <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Building2 className="h-3.5 w-3.5 text-[#14532D]" />
-                <span>Client for SEO &amp; Ads APIs</span>
-              </label>
-              <select
-                value={mappingClientId}
-                onChange={(e) => setMappingClientId(e.target.value)}
-                className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-900 shadow-2xs outline-none focus:ring-1 focus:ring-[#14532D]"
-              >
-                {(clientList.length > 0 ? clientList : clients).map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.domain || 'no domain'})
-                  </option>
-                ))}
-              </select>
-            </div>
-            {activeMappingClient && (
-              <Badge variant="outline" className="bg-emerald-50 text-[#14532D] border-emerald-300 text-[11px] font-semibold self-start sm:self-center">
-                Configuring: {activeMappingClient.name}
-              </Badge>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Local SEO & Google Business Profile */}
-            <Card className="border-slate-200 shadow-xs flex flex-col justify-between md:col-span-2">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-[#14532D]" />
-                    <CardTitle className="text-sm font-bold text-slate-900">Google Business Profile Performance (Local SEO)</CardTitle>
-                  </div>
-                  <Badge variant={isGoogleConnected ? 'success' : 'secondary'} className="text-[10px]">
-                    {isGoogleConnected ? 'API Active' : 'Login Required'}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3 pt-0">
-                <p className="text-xs text-slate-600">
-                  Google Business Profile Performance API delivers real customer telemetry on Google Maps impressions, Search impressions, website visits, phone calls, and direction clicks.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div>
-                    <Input
-                      placeholder="e.g. locations/1234567890"
-                      value={mappingGbpLocationId}
-                      onChange={(e) => setMappingGbpLocationId(e.target.value)}
-                      className="font-mono text-xs"
-                    />
-                    <p className="text-[10px] text-slate-400 mt-0.5">Location resource name or ID</p>
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="Business Name (e.g. Boulder Decisions)"
-                      value={mappingGbpLocationName}
-                      onChange={(e) => setMappingGbpLocationName(e.target.value)}
-                      className="text-xs"
-                    />
-                    <p className="text-[10px] text-slate-400 mt-0.5">Display name for Local SEO reports</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => runTest('localSeo', { locationId: mappingGbpLocationId, locationName: mappingGbpLocationName })}
-                    disabled={testResults.localSeo?.testing || !isGoogleConnected}
-                    className="w-full sm:w-auto text-xs font-semibold bg-slate-50 hover:bg-slate-100 cursor-pointer"
-                  >
-                    {testResults.localSeo?.testing ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
-                    <span>Test Google Business Profile Connection</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleSavePropertyMapping}
-                    className="w-full sm:w-auto text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white cursor-pointer ml-auto"
-                  >
-                    <Save className="h-3.5 w-3.5 mr-1" />
-                    <span>Save to Client Mapping</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Google Ads Reporting API */}
-            <Card className="border-slate-200 shadow-xs flex flex-col justify-between md:col-span-2">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Megaphone className="h-4 w-4 text-[#14532D]" />
-                    <CardTitle className="text-sm font-bold text-slate-900">Google Ads Reporting API (v17)</CardTitle>
-                  </div>
-                  <Badge variant={isGoogleConnected ? 'success' : 'secondary'} className="text-[10px]">
-                    {isGoogleConnected ? 'API Available' : 'Login Required'}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3 pt-0">
-                <p className="text-xs text-slate-600">
-                  Google Ads API streams live advertising telemetry including paid impressions, ad spend, CPC, conversions, campaign ROI, and search query triggers.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">Google Ads Customer ID</label>
-                    <Input
-                      placeholder="e.g. 123-456-7890 or 1234567890"
-                      value={mappingGoogleAdsCustomerId}
-                      onChange={(e) => setMappingGoogleAdsCustomerId(e.target.value)}
-                      className="font-mono text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">Developer Token (Optional)</label>
-                    <Input
-                      placeholder="Developer token from Google Ads API Center"
-                      value={mappingGoogleAdsDevToken}
-                      onChange={(e) => setMappingGoogleAdsDevToken(e.target.value)}
-                      className="font-mono text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => runTest('googleAds', { customerId: mappingGoogleAdsCustomerId, developerToken: mappingGoogleAdsDevToken })}
-                    disabled={testResults.googleAds?.testing || !isGoogleConnected}
-                    className="w-full sm:w-auto text-xs font-semibold bg-slate-50 hover:bg-slate-100 cursor-pointer"
-                  >
-                    {testResults.googleAds?.testing ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
-                    <span>Test Google Ads API Connection</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleSavePropertyMapping}
-                    className="w-full sm:w-auto text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white cursor-pointer ml-auto"
-                  >
-                    <Save className="h-3.5 w-3.5 mr-1" />
-                    <span>Save to Client Mapping</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
       </Tabs>
 
       {/* Add Client Modal Dialog */}
