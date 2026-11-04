@@ -20,6 +20,8 @@ import {
   Sparkles,
   BarChart3,
   Percent,
+  Info,
+  AlertCircle,
 } from 'lucide-react';
 import SectionCard from '@/components/dashboard/SectionCard';
 import MetricBox from '@/components/MetricBox';
@@ -174,9 +176,16 @@ export default function GoogleAdsPage({ onNavigate }) {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-bold text-slate-900 tracking-tight">Google Ads Reporting</h1>
-              <Badge variant="success" className="text-[10px] font-semibold bg-emerald-100 text-[#14532D]">
-                API Stream Active
-              </Badge>
+              {data.liveApiUsed ? (
+                <Badge variant="success" className="text-[10px] font-semibold bg-emerald-100 text-[#14532D] border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-1.5 inline-block animate-pulse"></span>
+                  Live Google Ads API
+                </Badge>
+              ) : (
+                <Badge variant="warning" className="text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+                  Sample / Demo Data
+                </Badge>
+              )}
               <Badge variant="outline" className="text-[10px] font-medium border-slate-200 text-slate-600 bg-slate-50">
                 Account: {activeAccountName}
               </Badge>
@@ -210,6 +219,31 @@ export default function GoogleAdsPage({ onNavigate }) {
           </Button>
         </div>
       </div>
+
+      {/* Demo / Sample Data Notice */}
+      {!data.liveApiUsed && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-amber-50/90 border border-amber-200 text-amber-950 text-xs shadow-xs">
+          <div className="flex items-start gap-2.5">
+            <Info className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-amber-900">
+                Demo Preview Mode (Sample Telemetry for {activeAccountName})
+              </p>
+              <p className="text-amber-800/90 text-[11px] mt-0.5">
+                The metrics displayed below are simulated sample data for layout and feature evaluation. To stream 100% real live data directly from your Google Ads account, connect your <strong>Google Ads Customer ID</strong> and <strong>Developer Token</strong> in Settings.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={navigateToSettings}
+            className="text-xs h-8 bg-white border-amber-300 text-amber-900 shrink-0 hover:bg-amber-100 cursor-pointer self-start sm:self-auto"
+          >
+            Connect Real Ads Account
+          </Button>
+        </div>
+      )}
 
       {fetchError && (
         <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between">

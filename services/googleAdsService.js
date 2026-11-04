@@ -143,6 +143,7 @@ export const getGoogleAdsOverview = async ({
 
   let liveApiUsed = false;
   let liveApiError = null;
+  let parsedLiveCampaigns = [];
 
   // 1. Attempt live Google Ads API if credentials are provided
   if (auth && effectiveCustomerId && effectiveDevToken) {
@@ -170,7 +171,42 @@ export const getGoogleAdsOverview = async ({
       });
 
       if (liveData) {
-        liveApiUsed = true;
+        const liveCampaigns = [];
+        const rawBatches = Array.isArray(liveData) ? liveData : [liveData];
+        for (const batch of rawBatches) {
+          const results = batch.results || [];
+          for (const row of results) {
+            if (row.campaign) {
+              const costMicros = Number(row.metrics?.costMicros || 0);
+              const cost = Math.round((costMicros / 1000000) * 100) / 100;
+              const clicks = Number(row.metrics?.clicks || 0);
+              const impressions = Number(row.metrics?.impressions || 0);
+              const conversions = Number(row.metrics?.conversions || 0);
+              const avgCpcMicros = Number(row.metrics?.averageCpc || 0);
+              const avgCpc = Math.round((avgCpcMicros / 1000000) * 100) / 100;
+              const ctr = Math.round(Number(row.metrics?.ctr || 0) * 10000) / 100;
+              const budgetMicros = Number(row.campaignBudget?.amountMicros || 0);
+              const budget = Math.round((budgetMicros / 1000000) * 100) / 100;
+
+              liveCampaigns.push({
+                id: row.campaign.id || row.campaign.resourceName,
+                name: row.campaign.name || 'Campaign',
+                status: row.campaign.status || 'ENABLED',
+                budget,
+                clicks,
+                impressions,
+                cost,
+                conversions,
+                avgCpc,
+                ctr,
+              });
+            }
+          }
+        }
+        if (liveCampaigns.length > 0) {
+          liveApiUsed = true;
+          parsedLiveCampaigns = liveCampaigns;
+        }
       }
     } catch (err) {
       console.warn('Google Ads Live API call failed, falling back to telemetry:', err.message);
@@ -180,7 +216,7 @@ export const getGoogleAdsOverview = async ({
 
   // 2. Generate account-specific data
   const preset = getAccountCampaignPresets(accountName);
-  const campaigns = preset.campaigns;
+  const campaigns = (liveApiUsed && parsedLiveCampaigns.length > 0) ? parsedLiveCampaigns : preset.campaigns;
   const keywords = preset.keywords;
   const searchTerms = preset.searchTerms;
 
@@ -266,6 +302,7 @@ export const getGoogleAdsOverview = async ({
     configured: Boolean(effectiveCustomerId),
     connected: Boolean(auth),
     liveApiUsed,
+    dataSource: liveApiUsed ? 'live_google_ads_api' : 'sample_telemetry',
     liveApiError,
     provider: 'Google Ads Reporting API',
     customerId: effectiveCustomerId || 'demo-client-account',
