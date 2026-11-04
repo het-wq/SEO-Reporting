@@ -35,7 +35,7 @@ export const getLiveDashboardReport = async ({
   const auth = getAuth(req);
   const isBoulder = overrideClientName && overrideClientName.toLowerCase().includes('boulder');
 
-  // Multi-client property isolation: only use Boulder env vars if the query is explicitly for Boulder or legacy default
+  const ga4PropertyId = overridePropId || (isExplicitClientQuery ? (isBoulder ? (process.env.GA4_PROPERTY_ID || '516707960') : '') : (process.env.GA4_PROPERTY_ID || '516707960'));
   let resolvedGscSiteUrl = overrideSiteUrl || (isExplicitClientQuery ? (isBoulder ? process.env.GSC_SITE_URL : '') : (process.env.GSC_SITE_URL || 'https://boulderdecisions.com/'));
   if (resolvedGscSiteUrl && (resolvedGscSiteUrl.includes('boulderdecision') || isBoulder) && resolvedGscSiteUrl !== 'https://boulderdecisions.com/') {
     resolvedGscSiteUrl = 'https://boulderdecisions.com/';
