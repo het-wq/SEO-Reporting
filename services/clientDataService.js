@@ -560,6 +560,8 @@ export const getUnifiedClientDashboard = async (clientId, {
   const properties = await getClientGoogleProperties(client.id);
   const ga4Mapping = properties.find((p) => p.property_type === 'GA4');
   const gscMapping = properties.find((p) => p.property_type === 'GSC');
+  const gbpMapping = properties.find((p) => p.property_type === 'GBP');
+  const adsMapping = properties.find((p) => p.property_type === 'ADS');
 
   const isBoulder = client.name.toLowerCase().includes('boulder');
   const ga4PropertyId = ga4Mapping?.property_id || (isBoulder ? (process.env.GA4_PROPERTY_ID || '516707960') : null);
@@ -665,6 +667,8 @@ export const getUnifiedClientDashboard = async (clientId, {
     mappings: {
       ga4: ga4Mapping || { property_id: ga4PropertyId, property_name: `${client.name} GA4`, is_active: Boolean(ga4PropertyId) },
       gsc: gscMapping || { property_id: gscSiteUrl, property_name: `${client.name} GSC`, is_active: Boolean(gscSiteUrl) },
+      gbp: gbpMapping || null,
+      ads: adsMapping || null,
       all: properties,
     },
     clientKeywords: keywords,

@@ -6,6 +6,7 @@ import { getAiVisibilityOverview } from './aiVisibilityService.js';
 import { parseBrandTerms } from './brandAnalysisService.js';
 import { listGscSites } from './gscService.js';
 import { getAccountKeywords } from '../data/accountKeywordsStore.js';
+import { testGoogleAdsConnection } from './googleAdsService.js';
 
 // Records last successful check timestamps and statuses
 const integrationTelemetry = {
@@ -346,6 +347,11 @@ export const testIntegration = async (providerId, req) => {
       message: res.configured ? `Connected to ${res.provider}` : res.description,
       instructions: res.instructions,
     };
+  }
+
+  if (providerId === 'googleAds' || providerId === 'ads') {
+    const res = await testGoogleAdsConnection(req);
+    return res;
   }
 
   return { success: false, message: `Unknown provider: ${providerId}` };

@@ -21,6 +21,7 @@ import {
   X,
   AlertCircle,
   Link2,
+  BarChart3,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -109,10 +110,14 @@ export default function SettingsPage() {
     domain: '',
   });
 
-  // Property Mapping state
+  // Property & API Mapping state (GA4, GSC, Google Business Profile, Google Ads)
   const [mappingClientId, setMappingClientId] = useState(selectedClientId || '');
   const [mappingGa4PropId, setMappingGa4PropId] = useState('');
   const [mappingGscSiteUrl, setMappingGscSiteUrl] = useState('');
+  const [mappingGbpLocationId, setMappingGbpLocationId] = useState('');
+  const [mappingGbpLocationName, setMappingGbpLocationName] = useState('');
+  const [mappingGoogleAdsCustomerId, setMappingGoogleAdsCustomerId] = useState('');
+  const [mappingGoogleAdsDevToken, setMappingGoogleAdsDevToken] = useState('');
   const [clientPropertiesList, setClientPropertiesList] = useState([]);
   const [loadingProperties, setLoadingProperties] = useState(false);
 
@@ -180,10 +185,15 @@ export default function SettingsPage() {
       setClientPropertiesList(props);
       const ga4 = props.find((p) => p.property_type === 'GA4');
       const gsc = props.find((p) => p.property_type === 'GSC');
-      if (ga4) setMappingGa4PropId(ga4.property_id);
-      else setMappingGa4PropId('');
-      if (gsc) setMappingGscSiteUrl(gsc.property_id);
-      else setMappingGscSiteUrl('');
+      const gbp = props.find((p) => p.property_type === 'GBP');
+      const ads = props.find((p) => p.property_type === 'ADS');
+
+      setMappingGa4PropId(ga4 ? ga4.property_id : '');
+      setMappingGscSiteUrl(gsc ? gsc.property_id : '');
+      setMappingGbpLocationId(gbp ? gbp.property_id : '');
+      setMappingGbpLocationName(gbp ? (gbp.property_name || '') : '');
+      setMappingGoogleAdsCustomerId(ads ? ads.property_id : '');
+      setMappingGoogleAdsDevToken(ads ? (ads.property_name || '') : '');
     } catch (e) {
       console.warn('Failed to load client properties:', e);
     } finally {
@@ -298,7 +308,7 @@ export default function SettingsPage() {
 
     try {
       const promises = [];
-      if (mappingGa4PropId) {
+      if (mappingGa4PropId && mappingGa4PropId.trim()) {
         promises.push(
           mapClientPropertyApi(mappingClientId, {
             property_type: 'GA4',
@@ -307,7 +317,7 @@ export default function SettingsPage() {
           })
         );
       }
-      if (mappingGscSiteUrl) {
+      if (mappingGscSiteUrl && mappingGscSiteUrl.trim()) {
         promises.push(
           mapClientPropertyApi(mappingClientId, {
             property_type: 'GSC',
@@ -316,9 +326,27 @@ export default function SettingsPage() {
           })
         );
       }
+      if (mappingGbpLocationId && mappingGbpLocationId.trim()) {
+        promises.push(
+          mapClientPropertyApi(mappingClientId, {
+            property_type: 'GBP',
+            property_id: mappingGbpLocationId.trim(),
+            property_name: mappingGbpLocationName.trim() || `GBP (${mappingGbpLocationId.trim()})`,
+          })
+        );
+      }
+      if (mappingGoogleAdsCustomerId && mappingGoogleAdsCustomerId.trim()) {
+        promises.push(
+          mapClientPropertyApi(mappingClientId, {
+            property_type: 'ADS',
+            property_id: mappingGoogleAdsCustomerId.trim(),
+            property_name: mappingGoogleAdsDevToken.trim() || `Ads (${mappingGoogleAdsCustomerId.trim()})`,
+          })
+        );
+      }
 
       await Promise.all(promises);
-      showToast('Google properties mapped and saved successfully!');
+      showToast('All Google properties & SEO/Ads APIs mapped and saved successfully!');
       await loadPropertiesForClient(mappingClientId);
       refreshDashboard();
     } catch (err) {
@@ -434,6 +462,11 @@ export default function SettingsPage() {
   const hasDiscoveredGa4 = googleAccountsData.ga4Accounts?.some((a) => a.properties?.length > 0);
   const hasDiscoveredGsc = (googleAccountsData.gscSites || []).length > 0;
   const hasDiscoveredGbp = (googleAccountsData.gbpLocations || []).length > 0;
+
+  const activeMappingClient = useMemo(
+    () => (clientList.length > 0 ? clientList : clients).find((c) => c.id === mappingClientId) || null,
+    [clientList, clients, mappingClientId]
+  );
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -698,19 +731,31 @@ export default function SettingsPage() {
         <TabsContent value="mapping" className="mt-4 space-y-4">
           <Card className="border-slate-200 shadow-xs">
             <CardHeader className="pb-3 border-b border-slate-100">
-              <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Globe className="h-4 w-4 text-[#14532D]" />
-                <span>Google Property Mapping (client_google_properties)</span>
-              </CardTitle>
-              <p className="text-xs text-slate-500">
-                Map Google Analytics 4 properties and Google Search Console sites to individual clients.
-              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-[#14532D]" />
+                    <span>Property &amp; API Mapping (client_google_properties)</span>
+                  </CardTitle>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Map Google Analytics 4, Search Console, Google Business Profile (Local SEO), and Google Ads APIs per client.
+                  </p>
+                </div>
+                {activeMappingClient && (
+                  <Badge variant="outline" className="bg-emerald-50 text-[#14532D] border-emerald-300 text-[11px] font-semibold self-start sm:self-auto">
+                    Client: {activeMappingClient.name}
+                  </Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-5 pt-4">
               {/* Client Selection for Mapping */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700">1. Select Client</label>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="flex-1 space-y-1">
+                  <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 text-[#14532D]" />
+                    <span>Select Client to Configure</span>
+                  </label>
                   <select
                     value={mappingClientId}
                     onChange={(e) => setMappingClientId(e.target.value)}
@@ -723,83 +768,285 @@ export default function SettingsPage() {
                     ))}
                   </select>
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700">2. Assign GA4 Property</label>
-                  {hasDiscoveredGa4 ? (
-                    <select
-                      value={mappingGa4PropId}
-                      onChange={(e) => setMappingGa4PropId(e.target.value)}
-                      className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-mono text-slate-900 shadow-2xs outline-none focus:ring-1 focus:ring-[#14532D]"
+                {activeMappingClient?.website_url && (
+                  <div className="text-xs text-slate-500 pt-1 sm:pt-0 sm:border-l sm:border-slate-200 sm:pl-4">
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Website</p>
+                    <a
+                      href={activeMappingClient.website_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium text-[#14532D] hover:underline flex items-center gap-1 mt-0.5"
                     >
-                      <option value="">Choose discovered GA4 property...</option>
-                      {googleAccountsData.ga4Accounts.map((acc) => (
-                        <optgroup key={acc.accountId} label={`Account: ${acc.accountName}`}>
-                          {acc.properties.map((p) => (
-                            <option key={p.propertyId} value={p.propertyId}>
-                              {p.propertyName} ({p.propertyId})
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
-                  ) : (
-                    <Input
-                      placeholder="e.g. 516707960"
-                      value={mappingGa4PropId}
-                      onChange={(e) => setMappingGa4PropId(e.target.value)}
-                      className="font-mono text-xs"
-                    />
-                  )}
+                      <span>{activeMappingClient.website_url}</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* 4 Cards Grid for GA4, GSC, Google Business Profile, Google Ads */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 1. GA4 Property */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-md bg-blue-50 text-blue-700">
+                          <BarChart3 className="h-4 w-4" />
+                        </div>
+                        <span className="text-xs font-bold text-slate-900">1. Google Analytics 4 (GA4)</span>
+                      </div>
+                      <Badge className="bg-blue-600 text-white text-[10px]">GA4</Badge>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mb-2.5">
+                      Streams live sessions, engagement rate, organic traffic, and page views.
+                    </p>
+                    {hasDiscoveredGa4 ? (
+                      <select
+                        value={mappingGa4PropId}
+                        onChange={(e) => setMappingGa4PropId(e.target.value)}
+                        className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-mono text-slate-900 shadow-2xs outline-none focus:ring-1 focus:ring-blue-600"
+                      >
+                        <option value="">Choose discovered GA4 property...</option>
+                        {googleAccountsData.ga4Accounts.map((acc) => (
+                          <optgroup key={acc.accountId} label={`Account: ${acc.accountName}`}>
+                            {acc.properties.map((p) => (
+                              <option key={p.propertyId} value={p.propertyId}>
+                                {p.propertyName} ({p.propertyId})
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                    ) : (
+                      <Input
+                        placeholder="e.g. 516707960"
+                        value={mappingGa4PropId}
+                        onChange={(e) => setMappingGa4PropId(e.target.value)}
+                        className="font-mono text-xs"
+                      />
+                    )}
+                    <p className="text-[10px] text-slate-400 mt-1">Property numeric ID (9 digits)</p>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => runTest('ga4', { propertyId: mappingGa4PropId })}
+                      disabled={testResults.ga4?.testing || !isGoogleConnected}
+                      className="text-xs h-7 gap-1 font-medium bg-slate-50 hover:bg-slate-100 cursor-pointer"
+                    >
+                      {testResults.ga4?.testing && <RefreshCw className="h-3 w-3 animate-spin mr-1" />}
+                      <span>Test GA4</span>
+                    </Button>
+                    {testResults.ga4?.result && (
+                      <span className={`text-[10px] font-semibold truncate max-w-[180px] ${testResults.ga4.result.success ? 'text-emerald-700' : 'text-red-600'}`}>
+                        {testResults.ga4.result.success ? '✓ Connected' : '✗ Failed'}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700">3. Assign Search Console Site</label>
-                  {hasDiscoveredGsc ? (
-                    <select
-                      value={mappingGscSiteUrl}
-                      onChange={(e) => setMappingGscSiteUrl(e.target.value)}
-                      className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-mono text-slate-900 shadow-2xs outline-none focus:ring-1 focus:ring-[#14532D]"
+                {/* 2. GSC Site */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-md bg-emerald-50 text-emerald-800">
+                          <Search className="h-4 w-4" />
+                        </div>
+                        <span className="text-xs font-bold text-slate-900">2. Google Search Console (GSC)</span>
+                      </div>
+                      <Badge className="bg-emerald-700 text-white text-[10px]">GSC</Badge>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mb-2.5">
+                      Streams live clicks, search impressions, CTR, queries, and keyword rankings.
+                    </p>
+                    {hasDiscoveredGsc ? (
+                      <select
+                        value={mappingGscSiteUrl}
+                        onChange={(e) => setMappingGscSiteUrl(e.target.value)}
+                        className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-mono text-slate-900 shadow-2xs outline-none focus:ring-1 focus:ring-emerald-600"
+                      >
+                        <option value="">Choose verified site URL...</option>
+                        {googleAccountsData.gscSites.map((s) => (
+                          <option key={s.siteUrl} value={s.siteUrl}>
+                            {s.siteUrl}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <Input
+                        placeholder="e.g. https://boulderdecisions.com/ or sc-domain:domain.com"
+                        value={mappingGscSiteUrl}
+                        onChange={(e) => setMappingGscSiteUrl(e.target.value)}
+                        className="font-mono text-xs"
+                      />
+                    )}
+                    <p className="text-[10px] text-slate-400 mt-1">Verified site URL or sc-domain: prefix</p>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => runTest('gsc', { siteUrl: mappingGscSiteUrl })}
+                      disabled={testResults.gsc?.testing || !isGoogleConnected}
+                      className="text-xs h-7 gap-1 font-medium bg-slate-50 hover:bg-slate-100 cursor-pointer"
                     >
-                      <option value="">Choose verified site URL...</option>
-                      {googleAccountsData.gscSites.map((s) => (
-                        <option key={s.siteUrl} value={s.siteUrl}>
-                          {s.siteUrl}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <Input
-                      placeholder="e.g. sc-domain:example.com"
-                      value={mappingGscSiteUrl}
-                      onChange={(e) => setMappingGscSiteUrl(e.target.value)}
-                      className="font-mono text-xs"
-                    />
-                  )}
+                      {testResults.gsc?.testing && <RefreshCw className="h-3 w-3 animate-spin mr-1" />}
+                      <span>Test GSC</span>
+                    </Button>
+                    {testResults.gsc?.result && (
+                      <span className={`text-[10px] font-semibold truncate max-w-[180px] ${testResults.gsc.result.success ? 'text-emerald-700' : 'text-red-600'}`}>
+                        {testResults.gsc.result.success ? '✓ Connected' : '✗ Failed'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. Google Business Profile Performance (Local SEO) */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-md bg-amber-50 text-amber-800">
+                          <MapPin className="h-4 w-4" />
+                        </div>
+                        <span className="text-xs font-bold text-slate-900">3. Google Business Profile (Local SEO)</span>
+                      </div>
+                      <Badge className="bg-amber-600 text-white text-[10px]">GBP / Local SEO</Badge>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mb-2.5">
+                      Streams live Maps impressions, search profile views, phone calls, and direction clicks.
+                    </p>
+                    <div className="space-y-2">
+                      <div>
+                        <Input
+                          placeholder="e.g. locations/1234567890"
+                          value={mappingGbpLocationId}
+                          onChange={(e) => setMappingGbpLocationId(e.target.value)}
+                          className="font-mono text-xs"
+                        />
+                        <p className="text-[10px] text-slate-400 mt-0.5">Location resource name or ID</p>
+                      </div>
+                      <div>
+                        <Input
+                          placeholder="Business Name (e.g. Boulder Decisions)"
+                          value={mappingGbpLocationName}
+                          onChange={(e) => setMappingGbpLocationName(e.target.value)}
+                          className="text-xs"
+                        />
+                        <p className="text-[10px] text-slate-400 mt-0.5">Display name for Local SEO reports</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => runTest('localSeo', { locationId: mappingGbpLocationId, locationName: mappingGbpLocationName })}
+                      disabled={testResults.localSeo?.testing || !isGoogleConnected}
+                      className="text-xs h-7 gap-1 font-medium bg-slate-50 hover:bg-slate-100 cursor-pointer"
+                    >
+                      {testResults.localSeo?.testing && <RefreshCw className="h-3 w-3 animate-spin mr-1" />}
+                      <span>Test Business Profile</span>
+                    </Button>
+                    {testResults.localSeo?.result && (
+                      <span className={`text-[10px] font-semibold truncate max-w-[180px] ${testResults.localSeo.result.success ? 'text-emerald-700' : 'text-red-600'}`}>
+                        {testResults.localSeo.result.success ? '✓ Connected' : '✗ Failed'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 4. Google Ads Reporting API */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-md bg-purple-50 text-purple-800">
+                          <Megaphone className="h-4 w-4" />
+                        </div>
+                        <span className="text-xs font-bold text-slate-900">4. Google Ads Reporting API (v17)</span>
+                      </div>
+                      <Badge className="bg-purple-600 text-white text-[10px]">Google Ads</Badge>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mb-2.5">
+                      Streams live advertising telemetry: ad spend, CPC, conversions, campaign ROI, and search terms.
+                    </p>
+                    <div className="space-y-2">
+                      <div>
+                        <Input
+                          placeholder="e.g. 123-456-7890 or 1234567890"
+                          value={mappingGoogleAdsCustomerId}
+                          onChange={(e) => setMappingGoogleAdsCustomerId(e.target.value)}
+                          className="font-mono text-xs"
+                        />
+                        <p className="text-[10px] text-slate-400 mt-0.5">Google Ads Customer ID (10 digits)</p>
+                      </div>
+                      <div>
+                        <Input
+                          placeholder="Developer token from Google Ads API Center (Optional)"
+                          value={mappingGoogleAdsDevToken}
+                          onChange={(e) => setMappingGoogleAdsDevToken(e.target.value)}
+                          className="font-mono text-xs"
+                        />
+                        <p className="text-[10px] text-slate-400 mt-0.5">Developer Token (Optional)</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => runTest('googleAds', { customerId: mappingGoogleAdsCustomerId, developerToken: mappingGoogleAdsDevToken })}
+                      disabled={testResults.googleAds?.testing || !isGoogleConnected}
+                      className="text-xs h-7 gap-1 font-medium bg-slate-50 hover:bg-slate-100 cursor-pointer"
+                    >
+                      {testResults.googleAds?.testing && <RefreshCw className="h-3 w-3 animate-spin mr-1" />}
+                      <span>Test Google Ads</span>
+                    </Button>
+                    {testResults.googleAds?.result && (
+                      <span className={`text-[10px] font-semibold truncate max-w-[180px] ${testResults.googleAds.result.success ? 'text-emerald-700' : 'text-red-600'}`}>
+                        {testResults.googleAds.result.success ? '✓ Connected' : '✗ Failed'}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              {/* Save All Button */}
+              <div className="flex justify-end pt-2">
                 <Button
                   onClick={handleSavePropertyMapping}
-                  className="gap-1.5 text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white cursor-pointer"
+                  className="gap-2 text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white cursor-pointer px-4 py-2"
                 >
-                  <Save className="h-3.5 w-3.5" />
-                  <span>Save Property Mapping</span>
+                  <Save className="h-4 w-4" />
+                  <span>Save All Property &amp; API Mappings for {activeMappingClient?.name || 'Selected Client'}</span>
                 </Button>
               </div>
 
               {/* Current Properties for Selected Client Table */}
-              <div className="space-y-2 pt-2">
-                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                  Active Property Mappings for Selected Client
-                </h4>
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Layers className="h-3.5 w-3.5 text-[#14532D]" />
+                    <span>Active Properties &amp; APIs for {activeMappingClient?.name || 'Selected Client'}</span>
+                  </h4>
+                  <Badge variant="outline" className="text-[10px] font-semibold">
+                    {clientPropertiesList.length} Mapped
+                  </Badge>
+                </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Type</TableHead>
-                      <TableHead>Property Identifier / Site URL</TableHead>
-                      <TableHead>Display Label</TableHead>
+                      <TableHead>Property Identifier / Resource</TableHead>
+                      <TableHead>Display Label / Token</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Action</TableHead>
                     </TableRow>
@@ -809,8 +1056,24 @@ export default function SettingsPage() {
                       clientPropertiesList.map((p) => (
                         <TableRow key={p.id || p.property_id}>
                           <TableCell>
-                            <Badge className={p.property_type === 'GA4' ? 'bg-blue-600 text-white' : 'bg-emerald-700 text-white'}>
-                              {p.property_type}
+                            <Badge
+                              className={
+                                p.property_type === 'GA4'
+                                  ? 'bg-blue-600 text-white'
+                                  : p.property_type === 'GSC'
+                                  ? 'bg-emerald-700 text-white'
+                                  : p.property_type === 'GBP'
+                                  ? 'bg-amber-600 text-white'
+                                  : p.property_type === 'ADS'
+                                  ? 'bg-purple-600 text-white'
+                                  : 'bg-slate-700 text-white'
+                              }
+                            >
+                              {p.property_type === 'GBP'
+                                ? 'GBP / Local SEO'
+                                : p.property_type === 'ADS'
+                                ? 'Google Ads'
+                                : p.property_type}
                             </Badge>
                           </TableCell>
                           <TableCell className="font-mono text-xs font-semibold text-slate-800">{p.property_id}</TableCell>
@@ -836,7 +1099,7 @@ export default function SettingsPage() {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center py-6 text-slate-400 text-xs">
-                          No properties explicitly mapped for this client yet. Assign GA4 and Search Console above.
+                          No properties or APIs explicitly mapped for this client yet. Configure and save above.
                         </TableCell>
                       </TableRow>
                     )}
@@ -950,6 +1213,32 @@ export default function SettingsPage() {
         {/* TAB 5: THIRD-PARTY SEO & ADS INTEGRATIONS                           */}
         {/* =================================================================== */}
         <TabsContent value="providers" className="mt-4 space-y-4">
+          {/* Client Selection Bar for SEO & Ads APIs */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <div className="flex-1 space-y-1">
+              <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5 text-[#14532D]" />
+                <span>Client for SEO &amp; Ads APIs</span>
+              </label>
+              <select
+                value={mappingClientId}
+                onChange={(e) => setMappingClientId(e.target.value)}
+                className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-900 shadow-2xs outline-none focus:ring-1 focus:ring-[#14532D]"
+              >
+                {(clientList.length > 0 ? clientList : clients).map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.domain || 'no domain'})
+                  </option>
+                ))}
+              </select>
+            </div>
+            {activeMappingClient && (
+              <Badge variant="outline" className="bg-emerald-50 text-[#14532D] border-emerald-300 text-[11px] font-semibold self-start sm:self-center">
+                Configuring: {activeMappingClient.name}
+              </Badge>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Local SEO & Google Business Profile */}
             <Card className="border-slate-200 shadow-xs flex flex-col justify-between md:col-span-2">
@@ -957,7 +1246,7 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-[#14532D]" />
-                    <CardTitle className="text-sm font-bold text-slate-900">Google Business Profile Performance</CardTitle>
+                    <CardTitle className="text-sm font-bold text-slate-900">Google Business Profile Performance (Local SEO)</CardTitle>
                   </div>
                   <Badge variant={isGoogleConnected ? 'success' : 'secondary'} className="text-[10px]">
                     {isGoogleConnected ? 'API Active' : 'Login Required'}
@@ -972,8 +1261,8 @@ export default function SettingsPage() {
                   <div>
                     <Input
                       placeholder="e.g. locations/1234567890"
-                      value={config.gbpLocationId || ''}
-                      onChange={(e) => setConfig((prev) => ({ ...prev, gbpLocationId: e.target.value }))}
+                      value={mappingGbpLocationId}
+                      onChange={(e) => setMappingGbpLocationId(e.target.value)}
                       className="font-mono text-xs"
                     />
                     <p className="text-[10px] text-slate-400 mt-0.5">Location resource name or ID</p>
@@ -981,24 +1270,34 @@ export default function SettingsPage() {
                   <div>
                     <Input
                       placeholder="Business Name (e.g. Boulder Decisions)"
-                      value={config.gbpLocationName || ''}
-                      onChange={(e) => setConfig((prev) => ({ ...prev, gbpLocationName: e.target.value }))}
+                      value={mappingGbpLocationName}
+                      onChange={(e) => setMappingGbpLocationName(e.target.value)}
                       className="text-xs"
                     />
                     <p className="text-[10px] text-slate-400 mt-0.5">Display name for Local SEO reports</p>
                   </div>
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => runTest('localSeo', { locationId: config.gbpLocationId, locationName: config.gbpLocationName })}
-                  disabled={testResults.localSeo?.testing || !isGoogleConnected}
-                  className="w-full text-xs font-semibold bg-slate-50 hover:bg-slate-100 cursor-pointer"
-                >
-                  {testResults.localSeo?.testing ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
-                  <span>Test Google Business Profile Connection</span>
-                </Button>
+                <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => runTest('localSeo', { locationId: mappingGbpLocationId, locationName: mappingGbpLocationName })}
+                    disabled={testResults.localSeo?.testing || !isGoogleConnected}
+                    className="w-full sm:w-auto text-xs font-semibold bg-slate-50 hover:bg-slate-100 cursor-pointer"
+                  >
+                    {testResults.localSeo?.testing ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+                    <span>Test Google Business Profile Connection</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSavePropertyMapping}
+                    className="w-full sm:w-auto text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white cursor-pointer ml-auto"
+                  >
+                    <Save className="h-3.5 w-3.5 mr-1" />
+                    <span>Save to Client Mapping</span>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -1024,8 +1323,8 @@ export default function SettingsPage() {
                     <label className="text-xs font-semibold text-slate-700 block mb-1">Google Ads Customer ID</label>
                     <Input
                       placeholder="e.g. 123-456-7890 or 1234567890"
-                      value={config.googleAdsCustomerId || ''}
-                      onChange={(e) => setConfig((prev) => ({ ...prev, googleAdsCustomerId: e.target.value }))}
+                      value={mappingGoogleAdsCustomerId}
+                      onChange={(e) => setMappingGoogleAdsCustomerId(e.target.value)}
                       className="font-mono text-xs"
                     />
                   </div>
@@ -1033,23 +1332,33 @@ export default function SettingsPage() {
                     <label className="text-xs font-semibold text-slate-700 block mb-1">Developer Token (Optional)</label>
                     <Input
                       placeholder="Developer token from Google Ads API Center"
-                      value={config.googleAdsDeveloperToken || ''}
-                      onChange={(e) => setConfig((prev) => ({ ...prev, googleAdsDeveloperToken: e.target.value }))}
+                      value={mappingGoogleAdsDevToken}
+                      onChange={(e) => setMappingGoogleAdsDevToken(e.target.value)}
                       className="font-mono text-xs"
                     />
                   </div>
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => runTest('googleAds', { customerId: config.googleAdsCustomerId, developerToken: config.googleAdsDeveloperToken })}
-                  disabled={testResults.googleAds?.testing || !isGoogleConnected}
-                  className="w-full text-xs font-semibold bg-slate-50 hover:bg-slate-100 cursor-pointer"
-                >
-                  {testResults.googleAds?.testing ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
-                  <span>Test Google Ads API Connection</span>
-                </Button>
+                <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => runTest('googleAds', { customerId: mappingGoogleAdsCustomerId, developerToken: mappingGoogleAdsDevToken })}
+                    disabled={testResults.googleAds?.testing || !isGoogleConnected}
+                    className="w-full sm:w-auto text-xs font-semibold bg-slate-50 hover:bg-slate-100 cursor-pointer"
+                  >
+                    {testResults.googleAds?.testing ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+                    <span>Test Google Ads API Connection</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSavePropertyMapping}
+                    className="w-full sm:w-auto text-xs font-semibold bg-[#14532D] hover:bg-[#1B6B45] text-white cursor-pointer ml-auto"
+                  >
+                    <Save className="h-3.5 w-3.5 mr-1" />
+                    <span>Save to Client Mapping</span>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
