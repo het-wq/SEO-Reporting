@@ -10,11 +10,11 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- -----------------------------------------------------------------------------
--- A. CLIENTS TABLE
+-- 1. CLIENTS TABLE
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.clients (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
   website_url TEXT,
   domain TEXT,
   status BOOLEAN DEFAULT true NOT NULL,
@@ -22,8 +22,15 @@ CREATE TABLE IF NOT EXISTS public.clients (
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS website_url TEXT;
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS domain TEXT;
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS status BOOLEAN DEFAULT true;
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_name_unique ON public.clients (lower(trim(name)));
+
 -- -----------------------------------------------------------------------------
--- B. GOOGLE CONNECTIONS TABLE (Encrypted Refresh Tokens, Multi-Account Support)
+-- 2. GOOGLE CONNECTIONS TABLE (Encrypted Refresh Tokens, Multi-Account Support)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.google_connections (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -37,7 +44,7 @@ CREATE TABLE IF NOT EXISTS public.google_connections (
 );
 
 -- -----------------------------------------------------------------------------
--- C. CLIENT GOOGLE PROPERTIES (Key Mapping Table)
+-- 3. CLIENT GOOGLE PROPERTIES (Key Mapping Table)
 -- Maps a Client to their GA4 and GSC Properties under a Google Connection
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.client_google_properties (
@@ -48,18 +55,18 @@ CREATE TABLE IF NOT EXISTS public.client_google_properties (
   property_id TEXT NOT NULL,
   property_name TEXT,
   is_active BOOLEAN DEFAULT true NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  CONSTRAINT unique_client_property UNIQUE (client_id, property_type, property_id)
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cgp_unique ON public.client_google_properties (client_id, property_type, property_id);
 
 -- -----------------------------------------------------------------------------
--- D. CLIENT KEYWORDS (Rank Tracking)
+-- 4. CLIENT KEYWORDS (Rank Tracking)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.client_keywords (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
   keyword TEXT NOT NULL,
-  keyword_type TEXT DEFAULT 'non_branded' CHECK (keyword_type IN ('branded', 'non_branded')),
+  keyword_type TEXT DEFAULT 'non_branded',
   target_url TEXT,
   target_location TEXT,
   target_position INTEGER,
@@ -68,20 +75,27 @@ CREATE TABLE IF NOT EXISTS public.client_keywords (
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+ALTER TABLE public.client_keywords ADD COLUMN IF NOT EXISTS keyword_type TEXT DEFAULT 'non_branded';
+ALTER TABLE public.client_keywords ADD COLUMN IF NOT EXISTS target_url TEXT;
+ALTER TABLE public.client_keywords ADD COLUMN IF NOT EXISTS target_location TEXT;
+ALTER TABLE public.client_keywords ADD COLUMN IF NOT EXISTS target_position INTEGER;
+ALTER TABLE public.client_keywords ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+ALTER TABLE public.client_keywords ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+
 -- -----------------------------------------------------------------------------
--- E. CLIENT BRAND TERMS (Branded Query Filtering Rules)
+-- 5. CLIENT BRAND TERMS (Branded Query Filtering Rules)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.client_brand_terms (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
   term TEXT NOT NULL,
   match_type TEXT DEFAULT 'contains',
-  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  CONSTRAINT unique_client_brand_term UNIQUE (client_id, term)
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cbt_unique ON public.client_brand_terms (client_id, lower(trim(term)));
 
 -- -----------------------------------------------------------------------------
--- F. GSC DAILY METRICS (Stored Reporting Data)
+-- 6. GSC DAILY METRICS (Stored Reporting Data)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.gsc_daily_metrics (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -94,12 +108,12 @@ CREATE TABLE IF NOT EXISTS public.gsc_daily_metrics (
   impressions INTEGER DEFAULT 0 NOT NULL,
   ctr NUMERIC DEFAULT 0 NOT NULL,
   position NUMERIC DEFAULT 0 NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  CONSTRAINT unique_gsc_metric_row UNIQUE (client_id, property_id, date, query, page)
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_gsc_unique ON public.gsc_daily_metrics (client_id, property_id, date, query, page);
 
 -- -----------------------------------------------------------------------------
--- G. GA4 DAILY METRICS (Stored Reporting Data)
+-- 7. GA4 DAILY METRICS (Stored Reporting Data)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.ga4_daily_metrics (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -112,12 +126,12 @@ CREATE TABLE IF NOT EXISTS public.ga4_daily_metrics (
   conversions NUMERIC DEFAULT 0 NOT NULL,
   organic_sessions INTEGER DEFAULT 0 NOT NULL,
   engagement_rate NUMERIC DEFAULT 0 NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  CONSTRAINT unique_ga4_metric_row UNIQUE (client_id, property_id, date)
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ga4_unique ON public.ga4_daily_metrics (client_id, property_id, date);
 
 -- -----------------------------------------------------------------------------
--- H. SEO ACTIVITIES (On-page, Technical, Content, Link Building tasks)
+-- 8. SEO ACTIVITIES (On-page, Technical, Content, Link Building tasks)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.seo_activities (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -132,8 +146,16 @@ CREATE TABLE IF NOT EXISTS public.seo_activities (
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+ALTER TABLE public.seo_activities ADD COLUMN IF NOT EXISTS activity_title TEXT;
+ALTER TABLE public.seo_activities ADD COLUMN IF NOT EXISTS activity_description TEXT;
+ALTER TABLE public.seo_activities ADD COLUMN IF NOT EXISTS activity_type TEXT;
+ALTER TABLE public.seo_activities ADD COLUMN IF NOT EXISTS activity_date DATE DEFAULT CURRENT_DATE;
+ALTER TABLE public.seo_activities ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'Planned';
+ALTER TABLE public.seo_activities ADD COLUMN IF NOT EXISTS assigned_to UUID;
+ALTER TABLE public.seo_activities ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+
 -- -----------------------------------------------------------------------------
--- I. BACKLINKS TABLE
+-- 9. BACKLINKS TABLE
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.backlinks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -149,7 +171,7 @@ CREATE TABLE IF NOT EXISTS public.backlinks (
 );
 
 -- -----------------------------------------------------------------------------
--- J. OFF-PAGE ACTIVITIES TABLE (Submissions, Citations, Bookmarking)
+-- 10. OFF-PAGE ACTIVITIES TABLE (Submissions, Citations, Bookmarking)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.off_page_activities (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -164,16 +186,16 @@ CREATE TABLE IF NOT EXISTS public.off_page_activities (
 );
 
 -- -----------------------------------------------------------------------------
--- K. CLIENT MEMBERS TABLE (Multi-User Access Control)
+-- 11. CLIENT MEMBERS TABLE (Multi-User Access Control)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.client_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
   user_id UUID NOT NULL,
   role TEXT DEFAULT 'viewer' NOT NULL CHECK (role IN ('owner', 'admin', 'editor', 'viewer')),
-  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  CONSTRAINT unique_client_member UNIQUE (client_id, user_id)
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_client_members_unique ON public.client_members (client_id, user_id);
 
 -- -----------------------------------------------------------------------------
 -- PERFORMANCE INDEXES
@@ -241,7 +263,8 @@ CREATE POLICY "Allow all for client_members" ON public.client_members FOR ALL US
 -- SEED INITIAL 7 CLIENTS & PROPERTY MAPPINGS
 -- =============================================================================
 INSERT INTO public.clients (name, website_url, domain, status)
-VALUES
+SELECT c.name, c.website_url, c.domain, c.status
+FROM (VALUES
   ('Boulder', 'https://boulderdecisions.com/', 'boulderdecisions.com', true),
   ('Conscious Medicine', 'https://consciousmed.com/', 'consciousmed.com', true),
   ('Besowell', 'https://besowell.com/', 'besowell.com', true),
@@ -249,10 +272,10 @@ VALUES
   ('Appliance Care', 'https://appliancecareservice.com/', 'appliancecareservice.com', true),
   ('Iynix Digital', 'https://iynixdigital.com/', 'iynixdigital.com', true),
   ('The Plumb Hero', 'https://theplumbhero.com/', 'theplumbhero.com', true)
-ON CONFLICT (name) DO UPDATE SET
-  website_url = EXCLUDED.website_url,
-  domain = EXCLUDED.domain,
-  status = EXCLUDED.status;
+) AS c(name, website_url, domain, status)
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.clients existing WHERE lower(trim(existing.name)) = lower(trim(c.name))
+);
 
 -- SEED CLIENT GOOGLE PROPERTIES
 INSERT INTO public.client_google_properties (client_id, property_type, property_id, property_name, is_active)
@@ -274,10 +297,11 @@ JOIN (VALUES
   ('The Plumb Hero', 'GA4', '412098117', 'The Plumb Hero GA4'),
   ('The Plumb Hero', 'GSC', 'sc-domain:theplumbhero.com', 'theplumbhero.com (Domain)')
 ) AS p(client_name, property_type, property_id, property_name)
-ON c.name = p.client_name
-ON CONFLICT (client_id, property_type, property_id) DO UPDATE SET
-  property_name = EXCLUDED.property_name,
-  is_active = EXCLUDED.is_active;
+ON lower(trim(c.name)) = lower(trim(p.client_name))
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.client_google_properties cgp 
+  WHERE cgp.client_id = c.id AND cgp.property_type = p.property_type AND cgp.property_id = p.property_id
+);
 
 -- SEED CLIENT BRAND TERMS
 INSERT INTO public.client_brand_terms (client_id, term, match_type)
@@ -306,8 +330,11 @@ JOIN (VALUES
   ('The Plumb Hero', 'plumb hero'),
   ('The Plumb Hero', 'plumbhero')
 ) AS b(client_name, term)
-ON c.name = b.client_name
-ON CONFLICT (client_id, term) DO NOTHING;
+ON lower(trim(c.name)) = lower(trim(b.client_name))
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.client_brand_terms cbt
+  WHERE cbt.client_id = c.id AND lower(trim(cbt.term)) = lower(trim(b.term))
+);
 
 -- SEED CLIENT KEYWORDS
 INSERT INTO public.client_keywords (client_id, keyword, keyword_type, target_url, target_position, status)
@@ -337,7 +364,11 @@ JOIN (VALUES
   ('The Plumb Hero', 'clogged drain cleaning service', 'non_branded', 'https://theplumbhero.com/drain-cleaning', 2),
   ('The Plumb Hero', 'the plumb hero emergency plumbing', 'branded', 'https://theplumbhero.com/', 1)
 ) AS k(client_name, keyword, keyword_type, target_url, target_position)
-ON c.name = k.client_name;
+ON lower(trim(c.name)) = lower(trim(k.client_name))
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.client_keywords ck
+  WHERE ck.client_id = c.id AND lower(trim(ck.keyword)) = lower(trim(k.keyword))
+);
 
 -- SEED SEO ACTIVITIES
 INSERT INTO public.seo_activities (client_id, activity_title, activity_description, activity_type, activity_date, status)
@@ -354,7 +385,11 @@ JOIN (VALUES
   ('Iynix Digital', 'Published 4 deep-dive case studies with ROI metrics', 'Showcased 340% organic traffic growth for tech clients.', 'Content & Blog', 13, 'Completed'),
   ('The Plumb Hero', 'Optimized Google Map Pack profile with 42 verified reviews', 'Ranked #1 in map pack for emergency plumbing keywords.', 'Local SEO', 15, 'Completed')
 ) AS a(client_name, title, description, activity_type, days_ago, status)
-ON c.name = a.client_name;
+ON lower(trim(c.name)) = lower(trim(a.client_name))
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.seo_activities sa
+  WHERE sa.client_id = c.id AND lower(trim(sa.activity_title)) = lower(trim(a.title))
+);
 
 -- SEED BACKLINKS
 INSERT INTO public.backlinks (client_id, source_url, target_url, domain_name, anchor_text, link_type, status)
@@ -369,7 +404,11 @@ JOIN (VALUES
   ('Iynix Digital', 'https://clutch.co/profile/iynix-digital', 'https://iynixdigital.com/', 'clutch.co', 'Iynix Digital SEO Agency', 'Directory', 'Live / Indexed'),
   ('The Plumb Hero', 'https://www.yelp.com/biz/the-plumb-hero', 'https://theplumbhero.com/', 'yelp.com', 'The Plumb Hero Plumbers', 'Business Listing', 'Live / Indexed')
 ) AS bl(client_name, source_url, target_url, domain_name, anchor_text, link_type, status)
-ON c.name = bl.client_name;
+ON lower(trim(c.name)) = lower(trim(bl.client_name))
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.backlinks b
+  WHERE b.client_id = c.id AND lower(trim(b.source_url)) = lower(trim(bl.source_url))
+);
 
 -- SEED OFF-PAGE ACTIVITIES
 INSERT INTO public.off_page_activities (client_id, activity_name, activity_description, activity_type, activity_date, status, reference_url)
@@ -384,4 +423,9 @@ JOIN (VALUES
   ('Iynix Digital', 'B2B SaaS Growth Quora Answer', 'Authored 1,200 word SaaS inbound play on Quora', 'Quora Submission', 5, 'Completed', 'https://quora.com/How-do-SaaS-scale-SEO'),
   ('The Plumb Hero', 'Frozen Pipe Community Thread', 'Emergency plumbing advice post in local community forum', 'Forum Submission', 4, 'Completed', 'https://reddit.com/r/Plumbing/comments/frozen_pipe')
 ) AS o(client_name, name, description, type, days_ago, status, ref_url)
-ON c.name = o.client_name;
+ON lower(trim(c.name)) = lower(trim(o.client_name))
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.off_page_activities opa
+  WHERE opa.client_id = c.id AND lower(trim(opa.activity_name)) = lower(trim(o.name))
+);
+
