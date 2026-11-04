@@ -47,15 +47,18 @@ function DashboardShell() {
     const refreshToken = urlParams.get('refresh_token');
     const expiryDate = urlParams.get('expiry_date');
 
-    if (authStatus === 'success' && token) {
-      const tokensObj = {
-        access_token: token,
-        refresh_token: refreshToken || undefined,
-        expiry_date: expiryDate ? Number(expiryDate) : undefined,
-      };
-      setCookie('seo_auth_tokens', JSON.stringify(tokensObj), 365);
+    if (authStatus === 'success') {
+      if (token) {
+        const tokensObj = {
+          access_token: token,
+          refresh_token: refreshToken || undefined,
+          expiry_date: expiryDate ? Number(expiryDate) : undefined,
+        };
+        setCookie('seo_auth_tokens', JSON.stringify(tokensObj), 365);
+        saveApiConfig({ apiToken: token, googleConnected: true });
+      }
       setCookie('seo_logged_in', 'true', 365);
-      saveApiConfig({ apiToken: token, googleConnected: true });
+      saveApiConfig({ googleConnected: true });
       window.history.replaceState({}, document.title, window.location.pathname);
       refresh();
     } else if (authStatus === 'error') {

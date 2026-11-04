@@ -8,7 +8,6 @@ import { getAiVisibilityOverview } from './aiVisibilityService.js';
 import { updateTelemetry } from './integrationsService.js';
 import { getAccountKeywords } from '../data/accountKeywordsStore.js';
 import { getGoogleAdsOverview } from './googleAdsService.js';
-import { syncGa4DailyMetrics, syncGscDailyMetrics } from './metricsSyncService.js';
 
 // Cache structure: key -> { timestamp, data }
 const cache = new Map();
@@ -88,9 +87,6 @@ export const getLiveDashboardReport = async ({
         startDate,
         endDate,
       });
-      if (ga4Trends.length > 0 && clientId) {
-        syncGa4DailyMetrics({ clientId, propertyId: ga4PropertyId, dailyTrends: ga4Trends }).catch(() => {});
-      }
     } catch (e) {
       console.warn('GA4 trends error:', e.message);
     }
@@ -136,9 +132,6 @@ export const getLiveDashboardReport = async ({
         endDate,
         rowLimit: 250,
       });
-      if (gscQueries.length > 0 && clientId) {
-        syncGscDailyMetrics({ clientId, propertyId: gscSiteUrl, queries: gscQueries, startDate }).catch(() => {});
-      }
     } catch (e) {
       console.warn('GSC queries error:', e.message);
     }

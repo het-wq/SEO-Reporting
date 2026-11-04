@@ -156,9 +156,9 @@ export const getApiConfig = () => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Migrate away from legacy Atlanta/Appliance demo values
-      if (parsed.gscSiteUrl && (parsed.gscSiteUrl.includes('appliancecareofatlanta') || parsed.gscSiteUrl.includes('boulderdecision.com'))) {
-        parsed.gscSiteUrl = defaultConfig.gscSiteUrl;
+      // Migrate away from legacy Atlanta/Appliance demo values or misconfigured boulder domain
+      if (parsed.gscSiteUrl && (parsed.gscSiteUrl.includes('appliancecareofatlanta') || parsed.gscSiteUrl.includes('boulderdecision.com') || parsed.gscSiteUrl.startsWith('sc-domain:boulderdecision'))) {
+        parsed.gscSiteUrl = 'https://boulderdecisions.com/';
       }
       if (parsed.brandKeywords && parsed.brandKeywords.toLowerCase().includes('appliance care')) {
         parsed.brandKeywords = defaultConfig.brandKeywords;

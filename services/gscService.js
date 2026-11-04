@@ -291,7 +291,8 @@ export const getGscDevices = async ({
 /**
  * List verified sites in the authenticated user's Search Console
  */
-export const listGscSites = async (auth) => {
+export const listGscSites = async (authOrOptions) => {
+  const auth = authOrOptions?.auth || authOrOptions;
   if (!auth) throw new Error('Not authenticated with Google');
   const searchconsole = google.searchconsole({ version: 'v1', auth });
   const response = await searchconsole.sites.list();
