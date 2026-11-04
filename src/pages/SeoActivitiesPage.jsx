@@ -76,8 +76,12 @@ function hostnameOf(url) {
   }
 }
 
+import { useClient } from '@/context/ClientContext';
+import { addClientSeoActivityApi, addClientBacklinkApi } from '@/services/liveSeoApi';
+
 export default function SeoActivitiesPage() {
   const { report, loading, selectedPeriod } = useReport();
+  const { selectedClientId, selectedClient } = useClient();
 
   // Search and filters for written activities
   const [activitiesSearch, setActivitiesSearch] = useState('');
@@ -95,22 +99,32 @@ export default function SeoActivitiesPage() {
     status: 'Completed',
     priority: 'High',
     date: new Date().toISOString().split('T')[0],
-    targetUrl: 'https://boulderdecisions.com/',
+    targetUrl: selectedClient?.website_url || 'https://boulderdecisions.com/',
     notes: '',
   });
 
-  // Load activities from localStorage with helper
-  const [activities, setActivities] = useState(() => getStoredActivities());
+  // Load activities scoped to client
+  const [activities, setActivities] = useState(() => getStoredActivities(selectedClientId));
 
-  // Save activities to localStorage
+  // Sync activities when client or report updates
   useEffect(() => {
-    saveStoredActivities(activities);
-  }, [activities]);
+    if (report?.seoActivities?.allActivities && report.seoActivities.allActivities.length > 0) {
+      setActivities(report.seoActivities.allActivities);
+    } else {
+      setActivities(getStoredActivities(selectedClientId));
+    }
+  }, [selectedClientId, report?.seoActivities?.allActivities]);
+
+  // Save activities to client-scoped storage
+  useEffect(() => {
+    saveStoredActivities(activities, selectedClientId);
+  }, [activities, selectedClientId]);
 
   useEffect(() => {
     const handleActivitiesUpdate = (e) => {
-      if (e?.detail && Array.isArray(e.detail)) {
-        setActivities(e.detail);
+      const data = e?.detail?.activities || e?.detail;
+      if (Array.isArray(data)) {
+        setActivities(data);
       }
     };
     window.addEventListener('activities-updated', handleActivitiesUpdate);
@@ -255,16 +269,27 @@ export default function SeoActivitiesPage() {
   // =========================================================================
   // BACKLINKS & OFF-PAGE SUBMISSIONS STATE
   // =========================================================================
-  const [backlinks, setBacklinks] = useState(() => getStoredBacklinks());
+  const [backlinks, setBacklinks] = useState(() => getStoredBacklinks(selectedClientId));
 
+  // Sync backlinks when client or report updates
   useEffect(() => {
-    saveStoredBacklinks(backlinks);
-  }, [backlinks]);
+    if (report?.backlinks?.items && report.backlinks.items.length > 0) {
+      setBacklinks(report.backlinks.items);
+    } else {
+      setBacklinks(getStoredBacklinks(selectedClientId));
+    }
+  }, [selectedClientId, report?.backlinks?.items]);
+
+  // Save backlinks to client-scoped storage
+  useEffect(() => {
+    saveStoredBacklinks(backlinks, selectedClientId);
+  }, [backlinks, selectedClientId]);
 
   useEffect(() => {
     const handleBacklinksUpdate = (e) => {
-      if (e?.detail && Array.isArray(e.detail)) {
-        setBacklinks(e.detail);
+      const data = e?.detail?.backlinks || e?.detail;
+      if (Array.isArray(data)) {
+        setBacklinks(data);
       }
     };
     window.addEventListener('backlinks-updated', handleBacklinksUpdate);

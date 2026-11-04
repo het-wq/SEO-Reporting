@@ -8,6 +8,7 @@ import { getAiVisibilityOverview } from './aiVisibilityService.js';
 import { updateTelemetry } from './integrationsService.js';
 import { getAccountKeywords } from '../data/accountKeywordsStore.js';
 import { getGoogleAdsOverview } from './googleAdsService.js';
+import { syncGa4DailyMetrics, syncGscDailyMetrics } from './metricsSyncService.js';
 
 // Cache structure: key -> { timestamp, data }
 const cache = new Map();
@@ -29,15 +30,20 @@ export const getLiveDashboardReport = async ({
   periodLabel,
   previousPeriodLabel,
   forceRefresh = false,
+  isExplicitClientQuery = false,
+  clientId = null,
 }) => {
   const auth = getAuth(req);
-  const ga4PropertyId = overridePropId || process.env.GA4_PROPERTY_ID || '';
-  const gscSiteUrl = overrideSiteUrl || process.env.GSC_SITE_URL || 'https://boulderdecisions.com/';
+  const isBoulder = overrideClientName && overrideClientName.toLowerCase().includes('boulder');
+
+  // Multi-client property isolation: only use Boulder env vars if the query is explicitly for Boulder or legacy default
+  const ga4PropertyId = overridePropId || (isExplicitClientQuery ? (isBoulder ? process.env.GA4_PROPERTY_ID : '') : (process.env.GA4_PROPERTY_ID || ''));
+  const gscSiteUrl = overrideSiteUrl || (isExplicitClientQuery ? (isBoulder ? process.env.GSC_SITE_URL : '') : (process.env.GSC_SITE_URL || 'https://boulderdecisions.com/'));
   const locationId = overrideLocationId || process.env.GOOGLE_BUSINESS_LOCATION_ID || '';
 
   const brandKey = Array.isArray(overrideBrandTerms) ? overrideBrandTerms.join(',') : (overrideBrandTerms || '');
   const nonBrandKey = Array.isArray(overrideNonBrandTerms) ? overrideNonBrandTerms.join(',') : (overrideNonBrandTerms || '');
-  const clientKey = overrideClientName || '';
+  const clientKey = overrideClientName || clientId || '';
   const cacheKey = `${startDate}_${endDate}_${prevStartDate}_${prevEndDate}_${ga4PropertyId}_${gscSiteUrl}_${locationId}_${clientKey}_${brandKey}_${nonBrandKey}`;
   if (!forceRefresh && cache.has(cacheKey)) {
     const cached = cache.get(cacheKey);
@@ -47,6 +53,13 @@ export const getLiveDashboardReport = async ({
   }
 
   const errors = {};
+
+  if (!ga4PropertyId) {
+    errors.ga4 = `No GA4 property mapped for ${overrideClientName || 'this client'}. Go to Settings > Property Mapping to assign.`;
+  }
+  if (!gscSiteUrl) {
+    errors.gsc = `No Search Console property mapped for ${overrideClientName || 'this client'}. Go to Settings > Property Mapping to assign.`;
+  }
 
   // 1. Fetch GA4 Overview & Trends
   let ga4Overview = null;
@@ -75,6 +88,9 @@ export const getLiveDashboardReport = async ({
         startDate,
         endDate,
       });
+      if (ga4Trends.length > 0 && clientId) {
+        syncGa4DailyMetrics({ clientId, propertyId: ga4PropertyId, dailyTrends: ga4Trends }).catch(() => {});
+      }
     } catch (e) {
       console.warn('GA4 trends error:', e.message);
     }
@@ -120,6 +136,9 @@ export const getLiveDashboardReport = async ({
         endDate,
         rowLimit: 250,
       });
+      if (gscQueries.length > 0 && clientId) {
+        syncGscDailyMetrics({ clientId, propertyId: gscSiteUrl, queries: gscQueries, startDate }).catch(() => {});
+      }
     } catch (e) {
       console.warn('GSC queries error:', e.message);
     }

@@ -9,10 +9,13 @@ import {
   calculateDateRanges,
   formatPeriod,
 } from '@/utils/dateUtils';
+import { useClient } from '@/context/ClientContext';
 
 const ReportContext = createContext(null);
 
 export function ReportProvider({ children }) {
+  const { selectedClientId, selectedClient } = useClient();
+
   // Default to standard industry 28-day reporting period for live API reporting
   const [filterType, setFilterType] = useState('last_28_days');
   const [filterParams, setFilterParams] = useState({
@@ -89,6 +92,8 @@ export function ReportProvider({ children }) {
 
     try {
       const liveData = await fetchDashboardLiveReport({
+        clientId: selectedClientId,
+        clientName: selectedClient?.name,
         startDate: dateRangeInfo.startDate,
         endDate: dateRangeInfo.endDate,
         prevStartDate: dateRangeInfo.comparisonEnabled ? dateRangeInfo.prevStartDate : undefined,
@@ -117,7 +122,7 @@ export function ReportProvider({ children }) {
         setLoading(false);
       }
     }
-  }, [dateRangeInfo]);
+  }, [dateRangeInfo, selectedClientId, selectedClient]);
 
   // Load report when date range changes
   useEffect(() => {

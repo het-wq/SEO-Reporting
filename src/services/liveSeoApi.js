@@ -401,6 +401,8 @@ export const fetchGscSites = async () => {
  * Fetch unified live report for the entire dashboard
  */
 export const fetchDashboardLiveReport = async ({
+  clientId,
+  clientName,
   startDate,
   endDate,
   prevStartDate,
@@ -426,13 +428,14 @@ export const fetchDashboardLiveReport = async ({
       headers: getHeaders(),
       credentials: 'include',
       body: JSON.stringify({
+        clientId,
         startDate,
         endDate,
         prevStartDate: prevStartDate || undefined,
         prevEndDate: prevEndDate || undefined,
         propertyId: cfg.ga4PropertyId,
         siteUrl: cfg.gscSiteUrl,
-        clientName: cfg.selectedAccountName || undefined,
+        clientName: clientName || cfg.selectedAccountName || undefined,
         brandTerms: effectiveBrandTerms,
         nonBrandTerms: effectiveNonBrandTerms,
         locationId: cfg.gbpLocationId || undefined,
@@ -599,4 +602,185 @@ export const testGoogleAdsConnection = async (extraParams = {}) => {
   });
   return await res.json();
 };
+
+/**
+ * Multi-Client API Services
+ */
+
+export const fetchClientsApi = async () => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients`, {
+    headers: getHeaders(),
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to fetch clients');
+  const data = await res.json();
+  return data.clients || [];
+};
+
+export const createClientApi = async ({ name, website_url, domain }) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients`, {
+    method: 'POST',
+    headers: getHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ name, website_url, domain }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.error || 'Failed to create client');
+  }
+  return await res.json();
+};
+
+export const updateClientApi = async (clientId, updates) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/${clientId}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    credentials: 'include',
+    body: JSON.stringify(updates),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.error || 'Failed to update client');
+  }
+  return await res.json();
+};
+
+export const deleteClientApi = async (clientId) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/${clientId}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to deactivate client');
+  return await res.json();
+};
+
+export const fetchClientPropertiesApi = async (clientId) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/${clientId}/properties`, {
+    headers: getHeaders(),
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to fetch client properties');
+  const data = await res.json();
+  return data.properties || [];
+};
+
+export const mapClientPropertyApi = async (clientId, { property_type, property_id, property_name, google_connection_id }) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/${clientId}/properties`, {
+    method: 'POST',
+    headers: getHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ property_type, property_id, property_name, google_connection_id }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.error || 'Failed to map property');
+  }
+  return await res.json();
+};
+
+export const unmapClientPropertyApi = async (clientId, propertyId) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/${clientId}/properties/${encodeURIComponent(propertyId)}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to unmap property');
+  return await res.json();
+};
+
+export const fetchStoredGoogleConnectionsApi = async () => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/connections/all`, {
+    headers: getHeaders(),
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to fetch Google connections');
+  const data = await res.json();
+  return data.connections || [];
+};
+
+export const fetchClientKeywordsApi = async (clientId) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/${clientId}/keywords`, {
+    headers: getHeaders(),
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to fetch keywords');
+  const data = await res.json();
+  return data.keywords || [];
+};
+
+export const addClientKeywordApi = async (clientId, keywordData) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/${clientId}/keywords`, {
+    method: 'POST',
+    headers: getHeaders(),
+    credentials: 'include',
+    body: JSON.stringify(keywordData),
+  });
+  if (!res.ok) throw new Error('Failed to add keyword');
+  return await res.json();
+};
+
+export const fetchClientBrandTermsApi = async (clientId) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/${clientId}/brand-terms`, {
+    headers: getHeaders(),
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to fetch brand terms');
+  const data = await res.json();
+  return data.brandTerms || [];
+};
+
+export const saveClientBrandTermsApi = async (clientId, terms) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/${clientId}/brand-terms`, {
+    method: 'POST',
+    headers: getHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ terms }),
+  });
+  if (!res.ok) throw new Error('Failed to save brand terms');
+  return await res.json();
+};
+
+export const fetchClientSeoActivitiesApi = async (clientId) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/${clientId}/seo-activities`, {
+    headers: getHeaders(),
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to fetch SEO activities');
+  const data = await res.json();
+  return data.activities || [];
+};
+
+export const addClientSeoActivityApi = async (clientId, activityData) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/${clientId}/seo-activities`, {
+    method: 'POST',
+    headers: getHeaders(),
+    credentials: 'include',
+    body: JSON.stringify(activityData),
+  });
+  if (!res.ok) throw new Error('Failed to add activity');
+  return await res.json();
+};
+
+export const fetchClientBacklinksApi = async (clientId) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/${clientId}/backlinks`, {
+    headers: getHeaders(),
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to fetch backlinks');
+  const data = await res.json();
+  return data.backlinks || [];
+};
+
+export const addClientBacklinkApi = async (clientId, backlinkData) => {
+  const res = await fetch(`${BACKEND_BASE}/api/clients/${clientId}/backlinks`, {
+    method: 'POST',
+    headers: getHeaders(),
+    credentials: 'include',
+    body: JSON.stringify(backlinkData),
+  });
+  if (!res.ok) throw new Error('Failed to add backlink');
+  return await res.json();
+};
+
 

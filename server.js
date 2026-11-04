@@ -12,6 +12,7 @@ import aiVisibilityRouter from './routes/aiVisibility.js';
 import integrationsRouter from './routes/integrations.js';
 import dashboardRouter from './routes/dashboard.js';
 import googleAdsRouter from './routes/googleAds.js';
+import clientsRouter from './routes/clients.js';
 
 import {
   getOAuthClient,
@@ -30,6 +31,8 @@ import {
 import { seedIfEmpty, UPLOAD_DIR } from './data/reportStore.js';
 import { getGA4Overview } from './services/ga4Service.js';
 import { getGscPerformance, getGscQueries, getGscDevices } from './services/gscService.js';
+import { getSupabaseAdmin } from './services/supabaseAdmin.js';
+import { encryptToken } from './services/tokenEncryptionService.js';
 
 const app = express();
 const port = process.env.PORT || 5001;
@@ -47,6 +50,7 @@ if (!process.env.VERCEL) {
 // -----------------------------------------------------------------------------
 // Modular REST APIs
 // -----------------------------------------------------------------------------
+app.use('/api/clients', clientsRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/search-console', searchConsoleRouter);
 app.use('/api/rankings', rankingsRouter);
@@ -135,19 +139,58 @@ app.get('/api/auth/google/callback', async (req, res) => {
     const { tokens } = await oauthClient.getToken(code);
     saveStoredTokens(tokens);
 
+    // Fetch Google user identity
+    let googleUserEmail = null;
+    let googleUserId = null;
+    try {
+      oauthClient.setCredentials(tokens);
+      const oauth2 = google.oauth2({ version: 'v2', auth: oauthClient });
+      const uRes = await oauth2.userinfo.get();
+      if (uRes?.data) {
+        googleUserEmail = uRes.data.email || null;
+        googleUserId = uRes.data.id || null;
+      }
+    } catch (e) {
+      console.warn('Could not fetch userinfo in OAuth callback:', e.message);
+    }
+
+    // Persist securely to Supabase google_connections table
+    const supabase = getSupabaseAdmin();
+    if (supabase && googleUserEmail && tokens.refresh_token) {
+      try {
+        const encrypted = encryptToken(tokens.refresh_token);
+        await supabase.from('google_connections').upsert(
+          [
+            {
+              google_user_id: googleUserId,
+              google_email: googleUserEmail,
+              refresh_token_encrypted: encrypted,
+              scopes: REQUIRED_SCOPES,
+              status: true,
+              connected_at: new Date().toISOString(),
+            },
+          ],
+          { onConflict: 'google_email' }
+        );
+        console.log(`Saved encrypted Google connection for ${googleUserEmail} in Supabase`);
+      } catch (err) {
+        console.warn('Failed to record google_connection in Supabase:', err.message);
+      }
+    }
+
     const host = req.headers.host || 'localhost:5173';
     const proto = req.headers['x-forwarded-proto'] || (host.includes('localhost') ? 'http' : 'https');
     const isHttps = proto === 'https';
     const frontendBase = host.includes('localhost:5001') ? 'http://localhost:5173' : `${proto}://${host}`;
 
-    // Enable one-time login: Save credentials in 1-year persistent cookie
+    // Enable one-time login: Save credentials in persistent cookie
     res.setHeader('Set-Cookie', buildAuthCookie(tokens, isHttps));
 
+    // Notice: Never expose the raw refresh token in URL query parameters!
     const queryParams = new URLSearchParams({
       auth: 'success',
-      access_token: tokens.access_token || '',
-      refresh_token: tokens.refresh_token || '',
-      expiry_date: String(tokens.expiry_date || ''),
+      email: googleUserEmail || '',
+      connected: 'true',
     });
 
     res.redirect(`${frontendBase}/?${queryParams.toString()}`);

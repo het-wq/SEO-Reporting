@@ -56,8 +56,12 @@ const DEFAULT_CLIENT_KEYWORDS = [
   { id: 'ck-9', keyword: 'shortlist platforms that visualize topic clusters and show where supporting', targetUrl: 'https://boulderdecisions.com/blog' },
 ];
 
+import { useClient } from '@/context/ClientContext';
+import { addClientKeywordApi } from '@/services/liveSeoApi';
+
 export default function KeywordRankingsPage() {
   const { report, loading, selectedPeriod } = useReport();
+  const { selectedClientId, selectedClient } = useClient();
   const [activeTab, setActiveTab] = useState('seo'); // 'seo' | 'client'
 
   // SEO table states
@@ -77,24 +81,47 @@ export default function KeywordRankingsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState('');
 
-  // Persistent Client Keywords
+  const clientStorageKey = selectedClientId ? `${STORAGE_KEY}_${selectedClientId}` : STORAGE_KEY;
+
+  // Persistent Client Keywords scoped per client
   const [clientKeywords, setClientKeywords] = useState(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(clientStorageKey);
       if (saved) return JSON.parse(saved);
     } catch {
       // fallback
     }
-    return DEFAULT_CLIENT_KEYWORDS;
+    return (!selectedClientId || selectedClientId.includes('boulder')) ? DEFAULT_CLIENT_KEYWORDS : [];
   });
 
   useEffect(() => {
+    if (report?.clientKeywords && Array.isArray(report.clientKeywords) && report.clientKeywords.length > 0) {
+      setClientKeywords(report.clientKeywords);
+    } else {
+      try {
+        const saved = localStorage.getItem(clientStorageKey);
+        if (saved) {
+          setClientKeywords(JSON.parse(saved));
+          return;
+        }
+      } catch {
+        // fallback
+      }
+      if (!selectedClientId || selectedClientId.includes('boulder')) {
+        setClientKeywords(DEFAULT_CLIENT_KEYWORDS);
+      } else {
+        setClientKeywords([]);
+      }
+    }
+  }, [selectedClientId, report?.clientKeywords, clientStorageKey]);
+
+  useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(clientKeywords));
+      localStorage.setItem(clientStorageKey, JSON.stringify(clientKeywords));
     } catch (e) {
       console.warn('Failed to persist client keywords:', e);
     }
-  }, [clientKeywords]);
+  }, [clientKeywords, clientStorageKey]);
 
   const showToast = (msg) => {
     setFeedbackMsg(msg);

@@ -1,5 +1,6 @@
 import express from 'express';
 import { getLiveDashboardReport } from '../services/dashboardService.js';
+import { getUnifiedClientDashboard } from '../services/clientDataService.js';
 
 const router = express.Router();
 
@@ -7,6 +8,7 @@ const handleLiveReport = async (req, res) => {
   try {
     const q = req.method === 'POST' ? req.body : req.query;
     const {
+      clientId,
       startDate,
       endDate,
       prevStartDate,
@@ -27,6 +29,20 @@ const handleLiveReport = async (req, res) => {
       return res.status(400).json({
         error: 'startDate and endDate are required query parameters (format: YYYY-MM-DD)',
       });
+    }
+
+    if (clientId) {
+      const unified = await getUnifiedClientDashboard(clientId, {
+        req,
+        startDate,
+        endDate,
+        prevStartDate,
+        prevEndDate,
+        periodLabel,
+        previousPeriodLabel,
+        forceRefresh: forceRefresh === 'true' || forceRefresh === true,
+      });
+      return res.json(unified);
     }
 
     const report = await getLiveDashboardReport({

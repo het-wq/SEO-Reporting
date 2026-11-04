@@ -141,29 +141,33 @@ export const INITIAL_ACTIVITIES = [
   },
 ];
 
-export function getStoredActivities() {
-  if (typeof window === 'undefined') return INITIAL_ACTIVITIES;
+export function getStoredActivities(clientId = null) {
+  if (typeof window === 'undefined') return clientId ? [] : INITIAL_ACTIVITIES;
+  const storageKey = clientId ? `${ACTIVITIES_STORAGE_KEY}_${clientId}` : ACTIVITIES_STORAGE_KEY;
   try {
-    const raw = localStorage.getItem(ACTIVITIES_STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const existingIds = new Set(parsed.map((a) => a.id));
-        const missing = INITIAL_ACTIVITIES.filter((a) => !existingIds.has(a.id));
-        return [...parsed, ...missing];
+      if (Array.isArray(parsed)) {
+        return parsed;
       }
     }
   } catch (e) {
     console.warn('Failed to load activities from localStorage:', e);
   }
-  return INITIAL_ACTIVITIES;
+  // Only return Boulder default activities if no client or explicit boulder client
+  if (!clientId || clientId.includes('boulder')) {
+    return INITIAL_ACTIVITIES;
+  }
+  return [];
 }
 
-export function saveStoredActivities(activities) {
+export function saveStoredActivities(activities, clientId = null) {
   if (typeof window === 'undefined') return;
+  const storageKey = clientId ? `${ACTIVITIES_STORAGE_KEY}_${clientId}` : ACTIVITIES_STORAGE_KEY;
   try {
-    localStorage.setItem(ACTIVITIES_STORAGE_KEY, JSON.stringify(activities));
-    window.dispatchEvent(new CustomEvent('activities-updated', { detail: activities }));
+    localStorage.setItem(storageKey, JSON.stringify(activities));
+    window.dispatchEvent(new CustomEvent('activities-updated', { detail: { activities, clientId } }));
   } catch (e) {
     console.warn('Failed to save activities to localStorage:', e);
   }

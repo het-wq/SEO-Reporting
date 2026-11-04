@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { ClientProvider } from '@/context/ClientContext';
 import { ReportProvider, useReport } from '@/context/ReportContext';
 import { saveApiConfig, setCookie } from '@/services/liveSeoApi';
 import Sidebar, { NAV_ITEMS } from '@/components/layout/Sidebar';
@@ -118,9 +119,11 @@ function AppContent() {
   }
 
   return (
-    <ReportProvider>
-      <DashboardShell />
-    </ReportProvider>
+    <ClientProvider>
+      <ReportProvider>
+        <DashboardShell />
+      </ReportProvider>
+    </ClientProvider>
   );
 }
 

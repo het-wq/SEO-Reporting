@@ -173,27 +173,33 @@ export const DEFAULT_BACKLINKS = [
   },
 ];
 
-export function getStoredBacklinks() {
-  if (typeof window === 'undefined') return DEFAULT_BACKLINKS;
+export function getStoredBacklinks(clientId = null) {
+  if (typeof window === 'undefined') return clientId ? [] : DEFAULT_BACKLINKS;
+  const storageKey = clientId ? `${BACKLINKS_STORAGE_KEY}_${clientId}` : BACKLINKS_STORAGE_KEY;
   try {
-    const raw = localStorage.getItem(BACKLINKS_STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn('Failed to load backlinks from localStorage:', e);
   }
-  return DEFAULT_BACKLINKS;
+  // Only return Boulder default backlinks if no client or explicit boulder client
+  if (!clientId || clientId.includes('boulder')) {
+    return DEFAULT_BACKLINKS;
+  }
+  return [];
 }
 
-export function saveStoredBacklinks(backlinks) {
+export function saveStoredBacklinks(backlinks, clientId = null) {
   if (typeof window === 'undefined') return;
+  const storageKey = clientId ? `${BACKLINKS_STORAGE_KEY}_${clientId}` : BACKLINKS_STORAGE_KEY;
   try {
-    localStorage.setItem(BACKLINKS_STORAGE_KEY, JSON.stringify(backlinks));
-    window.dispatchEvent(new CustomEvent('backlinks-updated', { detail: backlinks }));
+    localStorage.setItem(storageKey, JSON.stringify(backlinks));
+    window.dispatchEvent(new CustomEvent('backlinks-updated', { detail: { backlinks, clientId } }));
   } catch (e) {
     console.warn('Failed to save backlinks to localStorage:', e);
   }

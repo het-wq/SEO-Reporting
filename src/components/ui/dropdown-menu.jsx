@@ -90,6 +90,14 @@ function DropdownMenuItem({ className, onSelect, children, ...props }) {
   );
 }
 
+function DropdownMenuLabel({ className, children, ...props }) {
+  return (
+    <div className={cn('px-2 py-1.5 text-xs font-semibold text-slate-900', className)} {...props}>
+      {children}
+    </div>
+  );
+}
+
 function DropdownMenuSeparator({ className }) {
   return <div className={cn('my-1 h-px bg-slate-100', className)} />;
 }
@@ -99,5 +107,6 @@ export {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
 };

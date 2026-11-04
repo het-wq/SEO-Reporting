@@ -125,8 +125,12 @@ function BrandTabPanel({ data, prevLabel, curLabel }) {
   );
 }
 
+import { useClient } from '@/context/ClientContext';
+import { fetchClientBrandTermsApi, saveClientBrandTermsApi } from '@/services/liveSeoApi';
+
 export default function BrandQueriesPage() {
   const { report, loading, selectedPeriod, previousPeriod, comparisonLabel, loadLiveReport } = useReport();
+  const { selectedClientId, selectedClient } = useClient();
   const [queryTab, setQueryTab] = useState('brand');
 
   // Classifier management state
@@ -137,69 +141,42 @@ export default function BrandQueriesPage() {
   const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [keywordSearch, setKeywordSearch] = useState('');
 
-  // Local active rules lists
+  // Local active rules lists scoped to client
   const [brandTerms, setBrandTerms] = useState(() => {
+    if (report?.clientBrandTerms?.length) return report.clientBrandTerms;
     const cfg = getApiConfig();
-    if (cfg.brandKeywords) {
-      return cfg.brandKeywords.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+    if (selectedClient?.name) {
+      const derived = deriveBrandKeywords({
+        accountName: selectedClient.name,
+        siteUrl: selectedClient.website_url,
+      });
+      return (derived || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
     }
-    const derived = deriveBrandKeywords({
-      accountName: cfg.selectedAccountName,
-      siteUrl: cfg.gscSiteUrl,
-    });
-    return (derived || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+    return ['boulder decision', 'boulder decisions'];
   });
-  const [nonBrandTerms, setNonBrandTerms] = useState(() => {
-    const cfg = getApiConfig();
-    if (cfg.nonBrandKeywords) {
-      return cfg.nonBrandKeywords.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
-    }
-    return [];
-  });
+
+  const [nonBrandTerms, setNonBrandTerms] = useState([]);
   const [isDirty, setIsDirty] = useState(false);
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved'
 
-  // Initialize keyword lists from saved config, database store, or report
+  // Initialize keyword lists when selected client or report updates
   useEffect(() => {
-    const cfg = getApiConfig();
-    let isMounted = true;
-
-    // Fetch from database store for current active account
-    fetchAccountKeywordsFromDb({
-      accountId: cfg.selectedAccountId,
-      propertyId: cfg.ga4PropertyId,
-      siteUrl: cfg.gscSiteUrl,
-      accountName: cfg.selectedAccountName,
-    }).then((dbData) => {
-      if (!isMounted || !dbData) return;
-      if (dbData.brandKeywords) {
-        const parsed = dbData.brandKeywords.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
-        if (parsed.length > 0) setBrandTerms(parsed);
-      }
-      if (dbData.nonBrandKeywords) {
-        const parsed = dbData.nonBrandKeywords.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
-        setNonBrandTerms(parsed);
-      }
-    });
-
-    if (cfg.brandKeywords) {
-      const parsed = cfg.brandKeywords.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
-      if (parsed.length > 0) setBrandTerms(parsed);
-    } else if (report?.brandQueries?.brandTerms?.length) {
-      setBrandTerms(report.brandQueries.brandTerms);
+    if (report?.clientBrandTerms && Array.isArray(report.clientBrandTerms) && report.clientBrandTerms.length > 0) {
+      setBrandTerms(report.clientBrandTerms);
+    } else if (selectedClientId) {
+      fetchClientBrandTermsApi(selectedClientId).then((terms) => {
+        if (terms && terms.length > 0) {
+          setBrandTerms(terms.map((t) => typeof t === 'string' ? t : t.term));
+        } else if (selectedClient?.name) {
+          const derived = deriveBrandKeywords({
+            accountName: selectedClient.name,
+            siteUrl: selectedClient.website_url,
+          });
+          setBrandTerms((derived || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean));
+        }
+      }).catch(() => {});
     }
-
-    if (cfg.nonBrandKeywords) {
-      const parsed = cfg.nonBrandKeywords.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
-      setNonBrandTerms(parsed);
-    } else if (report?.brandQueries?.nonBrandTerms?.length) {
-      setNonBrandTerms(report.brandQueries.nonBrandTerms);
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [report]);
+  }, [selectedClientId, selectedClient, report?.clientBrandTerms]);
 
   // Bulk add detection counter
   const detectedBulkKeywords = useMemo(() => {
@@ -294,6 +271,9 @@ export default function BrandQueriesPage() {
   const handleSaveAndReclassify = async () => {
     setSaveStatus('saving');
     try {
+      if (selectedClientId) {
+        await saveClientBrandTermsApi(selectedClientId, brandTerms).catch((e) => console.warn('Brand terms save warning:', e));
+      }
       const cfg = getApiConfig();
       saveBrandAndNonBrandKeywords({
         brandKeywords: brandTerms,
