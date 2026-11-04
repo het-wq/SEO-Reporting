@@ -31,6 +31,63 @@ import {
 export default function OverviewPage({ onNavigate }) {
   const { report, loading, selectedPeriod, previousPeriod, comparisonLabel } = useReport();
 
+  // Backlinks & SEO Activities State for Overview Section (declared at top to follow React Rules of Hooks)
+  const [backlinks, setBacklinks] = useState(() => getStoredBacklinks());
+  const [activities, setActivities] = useState(() => getStoredActivities());
+  const [overviewTab, setOverviewTab] = useState('backlinks'); // 'backlinks' | 'activities'
+  const [overviewCategoryView, setOverviewCategoryView] = useState('all'); // 'all' | 'active'
+
+  useEffect(() => {
+    const handleBacklinksUpdate = (e) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setBacklinks(e.detail);
+      } else {
+        setBacklinks(getStoredBacklinks());
+      }
+    };
+    const handleActivitiesUpdate = (e) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setActivities(e.detail);
+      } else {
+        setActivities(getStoredActivities());
+      }
+    };
+    window.addEventListener('backlinks-updated', handleBacklinksUpdate);
+    window.addEventListener('activities-updated', handleActivitiesUpdate);
+    window.addEventListener('storage', handleBacklinksUpdate);
+    window.addEventListener('storage', handleActivitiesUpdate);
+    return () => {
+      window.removeEventListener('backlinks-updated', handleBacklinksUpdate);
+      window.removeEventListener('activities-updated', handleActivitiesUpdate);
+      window.removeEventListener('storage', handleBacklinksUpdate);
+      window.removeEventListener('storage', handleActivitiesUpdate);
+    };
+  }, []);
+
+  const {
+    total: totalBacklinks,
+    live: liveBacklinks,
+    inProgress: inProgressBacklinks,
+    planned: plannedBacklinks,
+    avgDa: backlinkAvgDa,
+    categoryCards: backlinkCategoryCards,
+  } = useMemo(() => calculateBacklinkStats(backlinks), [backlinks]);
+
+  const {
+    total: totalActivities,
+    completed: completedActivities,
+    inProgress: inProgressActivities,
+    planned: plannedActivities,
+    categoryCards: activityCategoryCards,
+  } = useMemo(() => calculateActivityStats(activities), [activities]);
+
+  const currentCategoryCards = overviewTab === 'backlinks' ? backlinkCategoryCards : activityCategoryCards;
+
+  const activeCategoriesCount = useMemo(
+    () => currentCategoryCards.filter((c) => c.count > 0).length,
+    [currentCategoryCards]
+  );
+
   if (loading && !report) {
     return (
       <div className="space-y-4">
@@ -106,63 +163,6 @@ export default function OverviewPage({ onNavigate }) {
     { name: 'Brand Clicks', previous: brandQueries?.all?.brandClicks?.previous || 0, current: brandQueries?.all?.brandClicks?.current || 0 },
     { name: 'Non-Brand Clicks', previous: brandQueries?.all?.nonBrandClicks?.previous || 0, current: brandQueries?.all?.nonBrandClicks?.current || 0 },
   ];
-
-  // Backlinks & SEO Activities State for Overview Section
-  const [backlinks, setBacklinks] = useState(() => getStoredBacklinks());
-  const [activities, setActivities] = useState(() => getStoredActivities());
-  const [overviewTab, setOverviewTab] = useState('backlinks'); // 'backlinks' | 'activities'
-  const [overviewCategoryView, setOverviewCategoryView] = useState('all'); // 'all' | 'active'
-
-  useEffect(() => {
-    const handleBacklinksUpdate = (e) => {
-      if (e?.detail && Array.isArray(e.detail)) {
-        setBacklinks(e.detail);
-      } else {
-        setBacklinks(getStoredBacklinks());
-      }
-    };
-    const handleActivitiesUpdate = (e) => {
-      if (e?.detail && Array.isArray(e.detail)) {
-        setActivities(e.detail);
-      } else {
-        setActivities(getStoredActivities());
-      }
-    };
-    window.addEventListener('backlinks-updated', handleBacklinksUpdate);
-    window.addEventListener('activities-updated', handleActivitiesUpdate);
-    window.addEventListener('storage', handleBacklinksUpdate);
-    window.addEventListener('storage', handleActivitiesUpdate);
-    return () => {
-      window.removeEventListener('backlinks-updated', handleBacklinksUpdate);
-      window.removeEventListener('activities-updated', handleActivitiesUpdate);
-      window.removeEventListener('storage', handleBacklinksUpdate);
-      window.removeEventListener('storage', handleActivitiesUpdate);
-    };
-  }, []);
-
-  const {
-    total: totalBacklinks,
-    live: liveBacklinks,
-    inProgress: inProgressBacklinks,
-    planned: plannedBacklinks,
-    avgDa: backlinkAvgDa,
-    categoryCards: backlinkCategoryCards,
-  } = useMemo(() => calculateBacklinkStats(backlinks), [backlinks]);
-
-  const {
-    total: totalActivities,
-    completed: completedActivities,
-    inProgress: inProgressActivities,
-    planned: plannedActivities,
-    categoryCards: activityCategoryCards,
-  } = useMemo(() => calculateActivityStats(activities), [activities]);
-
-  const currentCategoryCards = overviewTab === 'backlinks' ? backlinkCategoryCards : activityCategoryCards;
-
-  const activeCategoriesCount = useMemo(
-    () => currentCategoryCards.filter((c) => c.count > 0).length,
-    [currentCategoryCards]
-  );
 
   const displayedCategoryCards = useMemo(() => {
     if (overviewCategoryView === 'active') {
