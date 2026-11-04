@@ -89,8 +89,6 @@ export default function GoogleAdsPage({ onNavigate }) {
   const cfg = getApiConfig();
   const activeAccountName = cfg.selectedAccountName || adsData?.accountName || 'Boulder Decision';
 
-  if (loading && !adsData) return <Skeleton className="h-96" />;
-
   const data = adsData || report?.googleAds || {
     metrics: {
       cost: { current: 0, previous: 0, diffPct: 0 },
@@ -142,6 +140,8 @@ export default function GoogleAdsPage({ onNavigate }) {
       (s) => s.query.toLowerCase().includes(q) || (s.campaign && s.campaign.toLowerCase().includes(q))
     );
   }, [searchTerms, searchTerm]);
+
+  if (loading && !adsData) return <Skeleton className="h-96" />;
 
   // Chart data for daily clicks & conversions
   const trendChartData = dailyTrends.map((d) => ({

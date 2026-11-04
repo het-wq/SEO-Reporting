@@ -88,6 +88,23 @@ export default function OverviewPage({ onNavigate }) {
     [currentCategoryCards]
   );
 
+  const displayedCategoryCards = useMemo(() => {
+    if (overviewCategoryView === 'active') {
+      return currentCategoryCards.filter((c) => c.count > 0);
+    }
+    return currentCategoryCards;
+  }, [currentCategoryCards, overviewCategoryView]);
+
+  const topBacklinks = useMemo(() => {
+    return [...backlinks]
+      .sort((a, b) => (Number(b.da) || 0) - (Number(a.da) || 0))
+      .slice(0, 5);
+  }, [backlinks]);
+
+  const recentActivities = useMemo(() => {
+    return [...activities].slice(0, 5);
+  }, [activities]);
+
   if (loading && !report) {
     return (
       <div className="space-y-4">
@@ -163,23 +180,6 @@ export default function OverviewPage({ onNavigate }) {
     { name: 'Brand Clicks', previous: brandQueries?.all?.brandClicks?.previous || 0, current: brandQueries?.all?.brandClicks?.current || 0 },
     { name: 'Non-Brand Clicks', previous: brandQueries?.all?.nonBrandClicks?.previous || 0, current: brandQueries?.all?.nonBrandClicks?.current || 0 },
   ];
-
-  const displayedCategoryCards = useMemo(() => {
-    if (overviewCategoryView === 'active') {
-      return currentCategoryCards.filter((c) => c.count > 0);
-    }
-    return currentCategoryCards;
-  }, [currentCategoryCards, overviewCategoryView]);
-
-  const topBacklinks = useMemo(() => {
-    return [...backlinks]
-      .sort((a, b) => (Number(b.da) || 0) - (Number(a.da) || 0))
-      .slice(0, 5);
-  }, [backlinks]);
-
-  const recentActivities = useMemo(() => {
-    return [...activities].slice(0, 5);
-  }, [activities]);
 
   const handleNavigateToActivities = () => {
     if (onNavigate) {

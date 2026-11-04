@@ -53,14 +53,14 @@ export default function ComparisonBarChart({
   defaultView,
   showToggle = true,
 }) {
-  if (!data || !data.length) return null;
-
   const rawId = useId();
-  const safeId = rawId.replace(/[^a-zA-Z0-9-_]/g, '');
+  const safeId = rawId ? rawId.replace(/[^a-zA-Z0-9-_]/g, '') : 'chart';
 
   // Default to graph for multi-point comparisons, bar for single-point
-  const initialView = defaultView || (data.length > 1 ? 'graph' : 'bar');
+  const initialView = defaultView || (data && data.length > 1 ? 'graph' : 'bar');
   const [view, setView] = useState(initialView);
+
+  if (!data || !data.length) return null;
 
   const firstItem = data[0] || {};
 
